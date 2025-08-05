@@ -35,8 +35,6 @@ from src.ui.WidgetLinker import LinksWidget
 
 
 
-
-
 class Prism_Badger_Pipeline_Functions(object):
 
 
@@ -63,7 +61,12 @@ class Prism_Badger_Pipeline_Functions(object):
         # This function is called when a master gets updated
         self.core.registerCallback("masterVersionUpdated", self.onMasterUpdated, plugin=self)
 
+        # This function is called when the user wants to create a new product
         self.core.registerCallback("openPBAssetContextMenu", self.onOpenPBAssetContextMenu, plugin=self)
+
+
+
+
 
         # Register the project structure items
 
@@ -78,6 +81,9 @@ class Prism_Badger_Pipeline_Functions(object):
         # Create a new entry in the project structure for the USD Shots path
         usdShots_data = {"label": "USD Shots", "key": "@usd_shots@", "value": "@usd_path@/02_Shots", "requires": []}
         self.core.projects.addProjectStructureItem("usd_shots", usdShots_data)
+
+
+
 
         sys.path.append("D:/Houdini 20.5.370/python311/lib/site-packages")
 
