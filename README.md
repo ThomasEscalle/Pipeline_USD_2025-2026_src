@@ -50,3 +50,9 @@ Ce projet est développé dans le cadre d’un projet personnel à l’**ESMA Mo
 
 Ce projet est distribué sous une licence personnalisée ou open source ? (à compléter ici)
 
+---
+
+## Contribuer
+
+Contactez-moi si vous souhaitez contribuer ou si vous avez des questions :
+- **Discord :** thomasesc
