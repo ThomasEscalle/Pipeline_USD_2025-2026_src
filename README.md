@@ -11,7 +11,7 @@ Ce projet a pour but de centraliser les outils nécessaires à l’intégration 
 ## Contenu du Repository
 
 ### 🔷 Prism Plugin
-- **Chemin :** `prism/pluggin_main`
+- **Chemin :** `prism/Badger_Pipeline`
 - **Fonctionnalités :**
   - Création de scènes procédurales
   - Import/export de scènes au format USD
