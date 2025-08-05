@@ -1,0 +1,19 @@
+#usda 1.0
+(
+    defaultPrim = "$$ITEM_NAME$$"
+    framesPerSecond = 24
+    metersPerUnit = 1
+    timeCodesPerSecond = 24
+    upAxis = "Y"
+)
+
+def "$$ITEM_NAME$$" (
+    kind = "component"
+    prepend references = [
+        @./geo.usda@,
+        @$$MTL_PATH$$@
+    ]
+)
+{
+}
+

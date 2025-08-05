@@ -1,0 +1,139 @@
+# RigL/Maya
+
+from src.core.FileTemplateBase import FileTemplateBase
+from src.core.StandaloneScriptMaya import StandaloneScriptMaya
+import os
+
+try:
+    from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QDialogButtonBox, QMessageBox
+except:
+    from PySide2.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QDialogButtonBox, QMessageBox
+
+
+
+class FileTemplateRLOMaya(FileTemplateBase):
+
+    def __init__(self):
+        super().__init__()
+        self.template_name = "RLOMaya"
+        self.template_software = "Maya"
+
+    def construct(self, parent, path, origin):
+        filepath = os.path.dirname(__file__)
+        outputMayaFilePath = os.path.join(filepath, "output.ma")
+        outputMayaFilePath = outputMayaFilePath.replace("\\", "/")
+
+
+        assetType = origin.getCurrentEntity()["type"]
+        assetName = origin.getCurrentEntity()["sequence"] + "_" + origin.getCurrentEntity()["shot"]
+        sequenceName = origin.getCurrentEntity()["sequence"]
+
+        #################################################
+        ### GET THE SET DRESS REFERENCE FILE ############
+        #################################################
+        setDress_ref_path = self.getMasterPathFromEntity(origin.getCurrentEntity(), ".usda", origin, ["SetD", "Publish"])
+        setDress_found = True
+        if setDress_ref_path == "":
+            setDress_found = False
+            QMessageBox.warning(parent, "Reference File Not Found", "No Set Dress reference file found for this shot. Proceeding without reference.")
+        
+
+        ##############################################
+        # GET THE SHOTS IN THE SAME SEQUENCE  ########
+        ##############################################
+        ### @Todo Utiliser getShotsFromSequence de projectEntities  
+
+        path = origin.getCurrentEntity()["paths"][0]["path"]
+        # Go one level up to get the sequence folder
+        sequence_path = os.path.dirname(path)
+        # Loop through all the shots and make sure they are not the current shot
+        shots = []
+        current_shot = origin.getCurrentEntity()["shot"]
+        for shot in os.listdir(sequence_path):
+            if os.path.isdir(os.path.join(sequence_path, shot)) and shot != current_shot:
+                shots.append(shot)
+        number_of_shots = len(shots)
+
+        print("Number of shots in the same sequence:", number_of_shots)
+        print("Shots in the same sequence:", shots)  # List of shots in the same sequence
+
+
+
+
+        ##################################################
+        ## GET THE ASSETS CONNECTED TO THE SHOT ##########
+        ###################################################
+        connected_entities = origin.core.entities.getConnectedEntities(origin.getCurrentEntity())
+        print("Connected entities:", connected_entities)
+
+        # Get the asset path  @todo 
+        assets_path = origin.getCurrentEntity()["paths"][0]["path"]
+        assets_path = os.path.dirname(assets_path)
+        assets_path = os.path.dirname(assets_path)
+        assets_path = os.path.dirname(assets_path)
+        asset_path = os.path.join(assets_path, "01_Assets")
+
+        # Loop through the connected entities and get their paths
+        rig_paths_props = []
+        rig_paths_chars = []
+
+        for entity in connected_entities:
+
+            if "char" in entity["asset_path"].lower() or "prop" in entity["asset_path"].lower():
+                
+                asset_path = os.path.join(asset_path, entity["asset_path"])
+                asset_path = asset_path.replace("\\", "/")
+
+                rig_path = os.path.join(asset_path, "Export", "RigL_Publish" , "master" )
+                rig_path = rig_path.replace("\\", "/")
+
+                # Check if the rig file exists
+                if not os.path.exists(rig_path):
+                    parent.console.log(f"Rig file does not exist: {rig_path}")
+                    return
+                
+                # Get the first .ma file in the rig directory
+                maFiles = [f for f in os.listdir(rig_path) if f.endswith('.ma')]
+                if not maFiles:
+                    parent.console.log(f"No .ma files found in the rig directory: {rig_path}")
+                    return
+                
+                rig_path = os.path.join(rig_path, maFiles[0])
+                rig_path = rig_path.replace("\\", "/")
+
+                # Check if the rig_path exists
+                if not os.path.exists(rig_path):
+                    parent.console.log(f"Rig file does not exist: {rig_path}")
+                    return
+                
+                # Check if the rig is a prop or a character
+                if "char" in entity["asset_path"].lower():  
+                    rig_paths_chars.append(rig_path)
+                elif "prop" in entity["asset_path"].lower():
+                    rig_paths_props.append(rig_path)
+
+        print("Rig paths for characters:", rig_paths_chars)
+        print("Rig paths for props:", rig_paths_props)
+        
+
+
+        ###################################################
+        ### CREATE THE SCENE ##############################
+        ###################################################
+        script = StandaloneScriptMaya("Stdl_RLO_Maya.py")
+        script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
+        script.replaceVariable("$$ASSET_NAME$$", assetName)
+        script.replaceVariable("$$RIG_PATHS_PROPS$$", str(rig_paths_props))
+        script.replaceVariable("$$RIG_PATHS_CHARS$$", str(rig_paths_chars))
+        script.replaceVariable("$$SHOTS$$", str(shots))
+        script.replaceVariable("$$SEQUENCE_NAME$$", sequenceName)
+
+        script.replaceVariable("$$SET_DRESS_PATH$$", setDress_ref_path)    # <- If there was some set dress that was found
+        script.replaceVariable("$$SET_DRESS_FOUND$$", "True" if setDress_found else "False")
+
+        script.run()
+
+
+        # Add the scene to the current project
+        scene = { "path": outputMayaFilePath }
+        origin.createSceneFromPreset(scene)

@@ -1,0 +1,21 @@
+#usda 1.0
+(
+    defaultPrim = "$$ITEM_NAME$$"
+    framesPerSecond = 24
+    metersPerUnit = 1
+    timeCodesPerSecond = 24
+    upAxis = "Y"
+)
+
+def Xform "$$ITEM_NAME$$" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @./$$ITEM_NAME$$.usda@
+        string name = "$$ITEM_NAME$$"
+        asset thumbnail = @./thumbnail.png@
+    }
+    kind = "component"
+    prepend payload = @./payload.usda@
+)
+{
+}

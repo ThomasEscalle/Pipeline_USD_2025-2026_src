@@ -1,0 +1,22 @@
+Les gros enviros : 
+Faire du light sur du gris pur (peut etre faire une option pour assigner)
+
+Faire comme si les gens etaient des enfants (scrips les plus simple possible)
+
+
+MINERVA : Est géré avec un petit nombre de thread. Les scenes ne sont pas sauvegardées.
+Faire un systeme de verification que la scene soit intacte / comparer le poid des scenes.
+
+
+
+
+
+
+Success! To use USD, please ensure that you have:
+
+    The following in your PYTHONPATH environment variable:
+    D:\USD\pxr_USD_Build\lib\python
+
+    The following in your PATH environment variable:
+    D:\USD\pxr_USD_Build\bin
+    D:\USD\pxr_USD_Build\lib

@@ -1,0 +1,10 @@
+#usda 1.0
+(
+    framesPerSecond = 24
+    metersPerUnit = 1
+    timeCodesPerSecond = 24
+    upAxis = "Y"
+    subLayers = [
+        @$$MODU_PATH$$@
+    ]
+)

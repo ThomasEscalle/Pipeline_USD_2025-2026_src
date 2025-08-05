@@ -1,0 +1,58 @@
+import os
+import subprocess
+from src.core.PathHelper import find_mayapy
+
+# This is a class to call maya from a standalone script
+class StandaloneScriptMaya:
+    def __init__(self, script=None):
+        self.script = script
+        
+        folder = os.path.dirname(__file__)
+        folder = os.path.join(folder, "StandaloneScripts")
+        
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        pythonPath = os.path.join(folder, script)
+
+        # Check if the script exists
+        if not os.path.exists(pythonPath):
+            raise FileNotFoundError(f"The script {script} does not exist in {folder}")
+        
+        # Copy the script and rename it to SCRIPT.py
+        self.scriptPath = os.path.join(folder, "SCRIPT.py")
+        content = ""
+        with open(pythonPath, 'r') as original_file:
+            content = original_file.read()
+
+        with open(self.scriptPath, 'w') as new_file:
+            new_file.write(content)
+
+
+    def replaceVariable(self, variable, value):
+        # Replace the variable in the script with the value
+        with open(self.scriptPath, 'r') as file:
+            content = file.read()
+        
+        content = content.replace(variable, value)
+        
+        with open(self.scriptPath, 'w') as file:
+            file.write(content)
+
+    def run(self):
+        # Run the script in mayapy.exe
+        mayapyPath = find_mayapy("2024")  # Get the 2024 version of maya. Change if needed
+
+        if mayapyPath is None:
+            raise FileNotFoundError("mayapy.exe not found. Please ensure Maya is installed and the path is set correctly.")
+
+        if not os.path.exists(mayapyPath):
+            raise FileNotFoundError(f"mayapy.exe not found in {mayapyPath}")
+        
+        # Run the script
+        subprocess.run([mayapyPath, self.scriptPath], check=True)
+
+        
+
+
+        
