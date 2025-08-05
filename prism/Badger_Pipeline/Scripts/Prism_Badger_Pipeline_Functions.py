@@ -289,9 +289,13 @@ class Prism_Badger_Pipeline_Functions(object):
     # This function is called when prism UI is started
     def onProjectBrowserStartup(self, origin):
 
+        # Create the console
         self.console = ConsoleDialog(origin)
+
+        # Create the Create Product dialog
         self.createProductDialog = CreateProductDialog(origin, self.core)
-        # self.console.show()
+
+
         self.projectBrowser = origin
 
         origin.mainMenu = QMenu("Uptight")
@@ -309,6 +313,16 @@ class Prism_Badger_Pipeline_Functions(object):
         showConsoleAction.setShortcut(QKeySequence("Shift+C"))
         origin.mainMenu.addAction(showConsoleAction)
 
+
+        # Create a "Open Product 3D View" action
+        if self.isStandalone():
+            openUSDViewAction = QAction(self.getIcon("usd.png"), "Open Product 3D View", origin)
+            openUSDViewAction.triggered.connect(self.open3DViewerAction)
+            openUSDViewAction.setShortcut(QKeySequence("Ctrl+Shift+U"))
+            origin.mainMenu.addAction(openUSDViewAction)
+
+
+
         # Create a help action
         helpAction = QAction(self.getIcon("help.png"), "Help", origin)
         helpAction.triggered.connect(self.onActionHelp)
@@ -319,22 +333,32 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
         self.productBrowser = origin.productBrowser
-
+    
         self.usdView = USD_View(origin, self)
         origin.addTab("USD", self.usdView)
 
         # Monkeypath the updateIdentifiers function of the product browser
         self.productBrowserUpdateIdentifiers()
 
+
         self.productBrowser.tw_versions.itemDoubleClicked.connect(self.productOnVersionDoubleClicked)
+
+        
+
+    def open3DViewerAction(self):
+
+        if not self.isStandalone():
+            print("This action can only be triggered in the Standalone mode")
+            return
 
 
         from src.ui.ProductViewer import ProductViewer
-        self.productViewer = ProductViewer(self.productBrowser)
-        splitter = self.productBrowser.findChild(QSplitter, "splitter1")
-        splitter.addWidget(self.productViewer)
 
-        self.productViewer.setFileStage("C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda")
+        # Check if the product viewer is already open
+        if not hasattr(self, 'productViewer'):
+            self.productViewer = ProductViewer(self.productBrowser)
+            self.productViewer.setFileStage("C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda")
+        self.productViewer.show()
 
 
 
@@ -621,7 +645,9 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
 
-
+    def isStandalone(self):
+        # Check if the core.appPlugin.pluginName is "Standalone"
+        return self.core.appPlugin.pluginName == "Standalone"
 
     def getIcon(self, iconName):
         folder = os.path.dirname(__file__)
@@ -659,6 +685,12 @@ class Prism_Badger_Pipeline_Functions(object):
     # Open the help page in the default web browser
     def onActionHelp(self):
 
+        # Open the help page in the default web browser
+        self.openUrl("https://thomasescalle.github.io/Pipeline_USD_2025/")
+        
+        
+        """
+
         # Dans un script Python USD
         from pxr import Plug
 
@@ -673,12 +705,7 @@ class Prism_Badger_Pipeline_Functions(object):
                 print(f"Chemin: {plugin.path}")
                 print(f"Chargé: {plugin.isLoaded}")
                 plugin.Load()  # Charger le plugin si ce n'est pas déjà fait
-        """
 
-
-        
-
-        
 
         import argparse
 
@@ -692,11 +719,9 @@ class Prism_Badger_Pipeline_Functions(object):
 
         stage.GetRootLayer().Save()
 
-
-
-        # Open the help page in the default web browser
-        #self.openUrl("https://thomasescalle.github.io/Pipeline_USD_2025/")
         """
+
+        
         pass
 
     def createTemplate(self, path, origin):

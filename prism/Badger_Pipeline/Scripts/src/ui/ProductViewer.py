@@ -4,8 +4,8 @@ from qtpy.QtWidgets import *
 
 from pxr import Usdviewq, Usd, UsdGeom
 
-# Product Viewer is a Horizontal Layout with a menu bar, a 3D view and a timeline
-class ProductViewer(QWidget):
+# Product Viewer is a 3D Viewer for the USD Files
+class ProductViewer(QDialog):
     def __init__(self, parent=None):
         super(ProductViewer, self).__init__(parent)
         self.setObjectName("ProductViewer")

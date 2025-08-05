@@ -1,0 +1,23 @@
+{
+    "actionButtons": {
+        
+        
+        "commands": [
+            {
+                "cwd": "D:/Prism/Python311", 	// Terminal initial folder ${workspaceFolder} and os user home as defaults
+                "name": "$(triangle-right) Start Prism",
+                "singleInstance": true,
+                "command": "D:/Prism/Python311/Prism.exe \"D:/Prism/Scripts/PrismTray.py\" projectBrowser"
+            },
+            {
+                "cwd": "D:/Prism/Python311", 	// Kill prism
+                "name": "$(stop) Stop Prism",
+                "singleInstance": true,
+                "command": "taskkill /F /IM Prism.exe"
+            }
+        ],
+        "defaultColor": "white",
+        "reloadButton": "↻",
+        "loadNpmCommands": false
+    }
+}
