@@ -96,12 +96,15 @@ class Prism_Badger_Pipeline_Functions(object):
     # Import the USD Packages from the Prism_Pluggins folder
     def importUsdPackages(self):
         
-        os.environ["PATH"] += os.pathsep + "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/bin"
-        os.environ["PATH"] += os.pathsep + "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/lib"
-        os.environ["PYTHONPATH"] = "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/lib/python"
+        extModPath = os.path.join(self.pluginDirectory, "ExternalModules", "python3")
+        extModPath = extModPath.replace("\\", "/")  # Ensure the path is in the correct format
 
-        sys.path.append("C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules")
-        sys.path.insert(0, "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/lib/python")
+        os.environ["PATH"] += os.pathsep + extModPath + "USD/ExternalModules/USD/bin"
+        os.environ["PATH"] += os.pathsep + extModPath + "USD/ExternalModules/USD/lib"
+        os.environ["PYTHONPATH"] = extModPath + "USD/ExternalModules/USD/lib/python"
+
+        sys.path.append(extModPath + "USD/ExternalModules")
+        sys.path.insert(0, extModPath + "USD/ExternalModules/USD/lib/python")
 
 
 
