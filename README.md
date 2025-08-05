@@ -1,4 +1,4 @@
-# 🦡 Badger Pipeline
+# Badger Pipeline 🦡
 
 Ce repository regroupe les différents plugins et scripts développés dans le cadre du **pipeline USD** utilisé à l’**ESMA Montpellier** pour l’année scolaire **2025-2026**.
 
