@@ -44,6 +44,12 @@ class Prism_Badger_Pipeline_Functions(object):
 
         self.usdView = None
 
+        
+        # Import the USD packages
+        self.importUsdPackages()
+
+
+
         # Register the callbacks
 
         # This function is called when prism UI is started
@@ -65,9 +71,6 @@ class Prism_Badger_Pipeline_Functions(object):
         self.core.registerCallback("openPBAssetContextMenu", self.onOpenPBAssetContextMenu, plugin=self)
 
 
-
-
-
         # Register the project structure items
 
         # Create a new entry in the project structure for the USD path
@@ -83,22 +86,24 @@ class Prism_Badger_Pipeline_Functions(object):
         self.core.projects.addProjectStructureItem("usd_shots", usdShots_data)
 
 
-
-
-        sys.path.append("D:/Houdini 20.5.370/python311/lib/site-packages")
+        ## sys.path.append("D:/Houdini 20.5.370/python311/lib/site-packages")
 
 
         # Monkey patch the setEntityPreview function to paste the asset preview in the USD folder when it is updated
         self.core.plugins.monkeyPatch(self.core.entities.setEntityPreview, self.setEntityPreview, self, force=True)
 
 
+    # Import the USD Packages from the Prism_Pluggins folder
+    def importUsdPackages(self):
+        
         os.environ["PATH"] += os.pathsep + "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/bin"
         os.environ["PATH"] += os.pathsep + "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/lib"
         os.environ["PYTHONPATH"] = "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/lib/python"
 
         sys.path.append("C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules")
         sys.path.insert(0, "C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/USD_modules_v2.0.10/USD/ExternalModules/USD/lib/python")
-        
+
+
 
     # region Callbacks
 
