@@ -352,13 +352,13 @@ class Prism_Badger_Pipeline_Functions(object):
             return
 
 
-        from src.ui.ProductViewer import ProductViewer
+        from src.ui.Product3DViewer import Product3DViewer
 
         # Check if the product viewer is already open
-        if not hasattr(self, 'productViewer'):
-            self.productViewer = ProductViewer(self.productBrowser)
-            self.productViewer.setFileStage("C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda")
-        self.productViewer.show()
+        if not hasattr(self, 'product3DViewer'):
+            self.product3DViewer = Product3DViewer(self.productBrowser)
+            self.product3DViewer.setFileStage("C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda")
+        self.product3DViewer.show()
 
 
 

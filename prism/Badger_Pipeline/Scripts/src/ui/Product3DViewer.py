@@ -5,10 +5,12 @@ from qtpy.QtWidgets import *
 from pxr import Usdviewq, Usd, UsdGeom
 
 # Product Viewer is a 3D Viewer for the USD Files
-class ProductViewer(QDialog):
+class Product3DViewer(QDialog):
     def __init__(self, parent=None):
-        super(ProductViewer, self).__init__(parent)
-        self.setObjectName("ProductViewer")
+        super(Product3DViewer, self).__init__(parent)
+        self.setObjectName("Product3DViewer")
+
+        self.setWindowTitle("Product 3D Viewer")
 
         # Create the main layout
         self.layout = QVBoxLayout(self)
