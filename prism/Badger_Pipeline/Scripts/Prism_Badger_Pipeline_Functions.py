@@ -10,7 +10,7 @@
 # @file Badger Pipeline Functions
 # @brief This file contains the entry functions for the Badger Pipeline plugin for Prism.
 
-
+from __future__ import print_function
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
@@ -26,6 +26,7 @@ from PrismUtils.Decorators import err_catcher_plugin as err_catcher
 from src.ui.USD_View import USD_View
 from src.ui.ConsoleDialog import ConsoleDialog
 from src.ui.CreateProduct import CreateProductDialog
+from src.ui.AskForProductToImport import test_product_import_dialog
 
 from src.core.USD_utils import USDUtils
 from src.core.FileTemplateManager import FileTemplateManager
@@ -45,9 +46,9 @@ class Prism_Badger_Pipeline_Functions(object):
         self.usdView = None
 
         
+
         # Import the USD packages
         self.importUsdPackages()
-
 
 
         # Register the callbacks
@@ -95,16 +96,16 @@ class Prism_Badger_Pipeline_Functions(object):
 
     # Import the USD Packages from the Prism_Pluggins folder
     def importUsdPackages(self):
-        
         extModPath = os.path.join(self.pluginDirectory, "ExternalModules", "python3")
         extModPath = extModPath.replace("\\", "/")  # Ensure the path is in the correct format
 
-        os.environ["PATH"] += os.pathsep + extModPath + "USD/ExternalModules/USD/bin"
-        os.environ["PATH"] += os.pathsep + extModPath + "USD/ExternalModules/USD/lib"
-        os.environ["PYTHONPATH"] = extModPath + "USD/ExternalModules/USD/lib/python"
+        os.environ["PATH"] += os.pathsep + extModPath + "/USD/bin"
+        os.environ["PATH"] += os.pathsep + extModPath + "/USD/lib"
+        os.environ["PYTHONPATH"]  = extModPath + "/USD/lib/python"
+        os.environ["PYTHONPATH"] += extModPath + "/USD/bin"
 
-        sys.path.append(extModPath + "USD/ExternalModules")
-        sys.path.insert(0, extModPath + "USD/ExternalModules/USD/lib/python")
+        sys.path.append(extModPath)
+        sys.path.insert(0, extModPath + "/USD/lib/python")
 
 
 
@@ -324,18 +325,27 @@ class Prism_Badger_Pipeline_Functions(object):
 
         # Create a "Open Product 3D View" action
         if self.isStandalone():
+            # Only add the action if we are in standalone mode
+
+            # Create the action and connect it to the open3DViewerAction method
             openUSDViewAction = QAction(self.getIcon("usd.png"), "Open Product 3D View", origin)
             openUSDViewAction.triggered.connect(self.open3DViewerAction)
             openUSDViewAction.setShortcut(QKeySequence("Ctrl+Shift+U"))
             origin.mainMenu.addAction(openUSDViewAction)
-
-
 
         # Create a help action
         helpAction = QAction(self.getIcon("help.png"), "Help", origin)
         helpAction.triggered.connect(self.onActionHelp)
         helpAction.setShortcut(QKeySequence("Ctrl+,"))
         origin.mainMenu.addAction(helpAction)
+
+
+        # Create a test action
+        testAction = QAction(self.getIcon("test.png"), "Test Action", origin)
+        testAction.triggered.connect(self.onActionTest)
+        testAction.setShortcut(QKeySequence("Ctrl+T"))
+        origin.mainMenu.addAction(testAction)
+
 
         origin.menubar.addMenu(origin.mainMenu)
 
@@ -354,7 +364,6 @@ class Prism_Badger_Pipeline_Functions(object):
         
 
     def open3DViewerAction(self):
-
         if not self.isStandalone():
             print("This action can only be triggered in the Standalone mode")
             return
@@ -369,6 +378,10 @@ class Prism_Badger_Pipeline_Functions(object):
         self.product3DViewer.show()
 
 
+
+    def onActionTest(self):
+        # Données d'exemple
+        test_product_import_dialog()
 
     def productOnVersionDoubleClicked(self):
         print("Current product version changed")
@@ -623,31 +636,6 @@ class Prism_Badger_Pipeline_Functions(object):
         if "02_Shots" in path:
             return
 
-        
-        """
-        # If the updated file is a ModL, we want to copy it to the USD folder
-        if "ModL" in name:
-            # Create the new path
-            targetPath = os.path.join(usdPath, assetPath,"geo" )
-            if not os.path.exists(targetPath):
-                os.makedirs(targetPath)
-            targetPath = os.path.join(targetPath ,"geo_low_" + variation + ".abc")
-
-            # Copy the file to the usd folder
-            self.copyFile(path, targetPath)
-
-        # If the updated file is a ModH, we want to copy it to the USD folder
-        elif "ModH" in name:
-            # Create the new path
-            targetPath = os.path.join(usdPath, assetPath,"geo" )
-            if not os.path.exists(targetPath):
-                os.makedirs(targetPath)
-            targetPath = os.path.join(targetPath ,"geo_high_" + variation + ".abc")
-
-            # Copy the file to the usd folder
-            self.copyFile(path, targetPath)
-        """
-
 
     #endregion Callbacks
 
@@ -695,40 +683,6 @@ class Prism_Badger_Pipeline_Functions(object):
 
         # Open the help page in the default web browser
         self.openUrl("https://thomasescalle.github.io/Pipeline_USD_2025/")
-        
-        
-        """
-
-        # Dans un script Python USD
-        from pxr import Plug
-
-        # Lister tous les plugins
-        registry = Plug.Registry()
-        plugins = registry.GetAllPlugins()
-
-        # Chercher le plugin Alembic
-        for plugin in plugins:
-            if 'alembic' in plugin.name.lower() or 'abc' in plugin.name.lower():
-                print(f"Plugin Alembic trouvé: {plugin.name}")
-                print(f"Chemin: {plugin.path}")
-                print(f"Chargé: {plugin.isLoaded}")
-                plugin.Load()  # Charger le plugin si ce n'est pas déjà fait
-
-
-        import argparse
-
-        stage = Usd.Stage.CreateNew('C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda')
-        xformPrim = UsdGeom.Xform.Define(stage, '/hello')
-        spherePrim = UsdGeom.Sphere.Define(stage, '/hello/world')
-
-        # Delete the file if it already exists
-        if os.path.exists('C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda'):
-            os.remove('C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda')
-
-        stage.GetRootLayer().Save()
-
-        """
-
         
         pass
 
