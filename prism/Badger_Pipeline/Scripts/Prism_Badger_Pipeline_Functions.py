@@ -33,6 +33,7 @@ from src.core.FileTemplateManager import FileTemplateManager
 
 from src.ui.WidgetLinker import LinksWidget
 
+from src.ui.Aniversaires import get_anniversaires_aujourd_hui
 
 
 
@@ -333,6 +334,7 @@ class Prism_Badger_Pipeline_Functions(object):
             openUSDViewAction.setShortcut(QKeySequence("Ctrl+Shift+U"))
             origin.mainMenu.addAction(openUSDViewAction)
 
+
         # Create a help action
         helpAction = QAction(self.getIcon("help.png"), "Help", origin)
         helpAction.triggered.connect(self.onActionHelp)
@@ -349,11 +351,11 @@ class Prism_Badger_Pipeline_Functions(object):
 
         origin.menubar.addMenu(origin.mainMenu)
 
-
         self.productBrowser = origin.productBrowser
     
         self.usdView = USD_View(origin, self)
         origin.addTab("USD", self.usdView)
+
 
         # Monkeypath the updateIdentifiers function of the product browser
         self.productBrowserUpdateIdentifiers()
@@ -361,14 +363,27 @@ class Prism_Badger_Pipeline_Functions(object):
 
         self.productBrowser.tw_versions.itemDoubleClicked.connect(self.productOnVersionDoubleClicked)
 
-        
+
+        # Set the window title to the aniversaires of the day
+        aniversaires = get_anniversaires_aujourd_hui()
+        aniversairesTxt = "Aniversaires du jour: 🥳🎉🎂 "
+        for aniversaire in aniversaires:
+            # Print the aniversaire
+            print("Aniversaire: %s" % (aniversaire["nom"]))
+            aniversairesTxt += "- %s " % (aniversaire["nom"])
+
+        if len(aniversaires) > 0:
+            self.projectBrowser.setWindowTitle(aniversairesTxt)
+        else:
+            self.projectBrowser.setWindowTitle("Prism - Badger Pipeline")
+
+
 
     def open3DViewerAction(self):
         if not self.isStandalone():
             print("This action can only be triggered in the Standalone mode")
             return
-
-
+        
         from src.ui.Product3DViewer import Product3DViewer
 
         # Check if the product viewer is already open
