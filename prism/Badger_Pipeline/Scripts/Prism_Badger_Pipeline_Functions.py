@@ -397,7 +397,7 @@ class Prism_Badger_Pipeline_Functions(object):
 
     def onActionTest(self):
         # Données d'exemple
-        test_product_import_dialog()
+        test_product_import_dialog(self.core, self)
 
     def productOnVersionDoubleClicked(self):
         print("Current product version changed")
