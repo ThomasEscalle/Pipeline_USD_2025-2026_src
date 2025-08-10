@@ -366,13 +366,14 @@ class Prism_Badger_Pipeline_Functions(object):
 
         # Set the window title to the aniversaires of the day
         aniversaires = get_anniversaires_aujourd_hui()
-        aniversairesTxt = "Aniversaires du jour: 🥳🎉🎂 "
-        for aniversaire in aniversaires:
-            # Print the aniversaire
-            print("Aniversaire: %s" % (aniversaire["nom"]))
-            aniversairesTxt += "- %s " % (aniversaire["nom"])
+
 
         if len(aniversaires) > 0:
+            aniversairesTxt = "Aniversaires du jour: 🥳🎉🎂 "
+            for aniversaire in aniversaires:
+                # Print the aniversaire
+                print("Aniversaire: %s" % (aniversaire["nom"]))
+                aniversairesTxt += "- %s " % (aniversaire["nom"])
             self.projectBrowser.setWindowTitle(aniversairesTxt)
         else:
             self.projectBrowser.setWindowTitle("Prism - Badger Pipeline")
