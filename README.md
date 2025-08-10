@@ -10,7 +10,7 @@ Ce projet a pour but de centraliser les outils nécessaires à l’intégration 
 
 ## Contenu du Repository
 
-### Installer
+### 🛠️ Installer
 - **Chemin :** `installer`
 - **Fonctionnalités :**
   - Installer pour le pipeline, écris en c++.
