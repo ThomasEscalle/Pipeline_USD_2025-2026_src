@@ -10,6 +10,12 @@ Ce projet a pour but de centraliser les outils nécessaires à l’intégration 
 
 ## Contenu du Repository
 
+### Installer
+- **Chemin :** `installer`
+- **Fonctionnalités :**
+  - Installer pour le pipeline, écris en c++.
+  - Lancez le fichier `installer/bin/BadgerInstaller.exe` pour démarrer l'installation.
+
 ### 🔷 Prism Plugin
 - **Chemin :** `prism/Badger_Pipeline`
 - **Fonctionnalités :**
