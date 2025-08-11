@@ -4,6 +4,7 @@ from qtpy.QtWidgets import *
 import os
 
 
+
 class ProductImportDialog(QDialog):
     """
     Dialog for selecting products to import into a scene.
@@ -44,7 +45,7 @@ class ProductImportDialog(QDialog):
 
         # Left Tree widget
         self.available_tree = QTreeWidget(self.left_splitter)
-        self.available_tree.setHeaderLabels(["Product name" , "Product type"])
+        self.available_tree.setHeaderLabels(["Product name" , "Format" , "File path"])
 
 
         # RIGHT
@@ -54,7 +55,7 @@ class ProductImportDialog(QDialog):
 
         # Right Tree widget
         self.selected_tree = QTreeWidget()
-        self.selected_tree.setHeaderLabels(["Selected Products"])
+        self.selected_tree.setHeaderLabels(["Product name" , "Format" , "File path"])
         self.right_layout.addWidget(self.selected_tree)
 
         # Right Button layout (left to right)
@@ -139,9 +140,32 @@ class ProductImportDialog(QDialog):
             self.available_tree.addTopLevelItem(treeWidgetItem)
         
     def createItemFromProduct(self, product , tree) :
+
+        pformat = ""
+        filepath = ""
+
+        if "path" in product:
+            data = self.core.products.getVersionsFromContext(product)
+
+            if not data:
+                print("No versions found for product:", product["product"])
+                return None
+            
+            latestVersion = self.core.products.getLatestVersionFromVersions(data)
+
+            if not latestVersion:
+                print("No latest version found for product:", product["product"])
+                return None
+            
+            filepath = latestVersion.get("path", "")
+            prefered_file = self.core.products.getPreferredFileFromVersion(latestVersion)
+            if prefered_file:
+                pformat = prefered_file.split(".")[-1]
+        
         treeWidgetItem = QTreeWidgetItem(tree)
         treeWidgetItem.setText(0, product["product"])
-        treeWidgetItem.setText(1, product["type"])
+        treeWidgetItem.setText(1, pformat)
+        treeWidgetItem.setText(2, filepath)
 
         product_str = str(product)
         treeWidgetItem.setData(0, Qt.UserRole, product_str)
@@ -160,10 +184,16 @@ class ProductImportDialog(QDialog):
         for product in products:
             treeWidgetItem = QTreeWidgetItem(self.selected_tree)
             treeWidgetItem.setText(0, product["name"])
+            treeWidgetItem.setWhatsThis(0, "folder")
             if "folder" in product["type"]:
                 treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("folder.png"))
             else:
                 treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("other.png"))
+
+            if "settings" in product:
+                settings = product["settings"]
+                settings_str =  str(settings)
+                treeWidgetItem.setToolTip(0, settings_str)
 
             # If there are child items
             if "items" in product:
@@ -194,6 +224,17 @@ class ProductImportDialog(QDialog):
         if right_selected_item.parent() is not None:
             # Get the parent item
             right_selected_item = right_selected_item.parent()
+
+        # Check if the right_selected_item is a folder
+        if right_selected_item.whatsThis(0) != "folder":
+            QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
+            return
+
+        # Check if the right_selected_item has settings
+        settings = right_selected_item.toolTip(0)
+        if settings:
+            # Check if the settings allow to pass
+            pass
 
         # Add the item inside of the right selected item
         for item in left_selected_items:
