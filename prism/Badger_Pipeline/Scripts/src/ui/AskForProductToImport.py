@@ -2,6 +2,7 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 import os
+from .SettingsWidget import SettingsWidget
 
 
 
@@ -25,9 +26,22 @@ class ProductImportDialog(QDialog):
     def setupUi(self) :
         self.main_layout = QVBoxLayout(self)
 
-        self.splitter = QSplitter(Qt.Horizontal, self)
-
-
+        # Create the tab widget
+        self.tab_widget = QTabWidget(self)
+        
+        # First tab - Settings
+        self.settings_tab = QWidget()
+        self.settings_layout = QVBoxLayout(self.settings_tab)
+        
+        # Create the settings widget
+        self.settings_widget = SettingsWidget(parent=self.settings_tab)
+        self.settings_layout.addWidget(self.settings_widget)
+        
+        # Second tab - Product Import
+        self.import_tab = QWidget()
+        self.import_layout = QVBoxLayout(self.import_tab)
+        
+        self.splitter = QSplitter(Qt.Horizontal, self.import_tab)
 
         # LEFT
         self.left_splitter = QSplitter(Qt.Vertical, self.splitter)
@@ -81,6 +95,12 @@ class ProductImportDialog(QDialog):
 
         self.right_layout.addLayout(self.right_buttons_layout)
 
+        # Add the splitter to the import tab layout
+        self.import_layout.addWidget(self.splitter)
+        
+        # Add tabs to the tab widget
+        self.tab_widget.addTab(self.settings_tab, "Settings")
+        self.tab_widget.addTab(self.import_tab, "Import Products")
 
         # BOTTOM
         # Button layout 
@@ -98,7 +118,8 @@ class ProductImportDialog(QDialog):
         self.buttons_layout.addWidget(self.btn_import)
         self.buttons_layout.addWidget(self.btn_cancel)
 
-        self.main_layout.addWidget(self.splitter)
+        # Add tab widget and buttons to main layout
+        self.main_layout.addWidget(self.tab_widget)
         self.main_layout.addLayout(self.buttons_layout)
         self.setLayout(self.main_layout)
         
@@ -106,6 +127,22 @@ class ProductImportDialog(QDialog):
     def onCreate(self):
         print("CREATE")
         self.accept()
+
+    def setSettings(self, settings_config):
+        """Set the settings configuration for the settings widget"""
+        self.settings_widget.setSettingsConfig(settings_config)
+
+    def getSettings(self):
+        """Get the current settings values as a dictionary"""
+        return self.settings_widget.getSettings()
+
+    def getSettingsAsJson(self):
+        """Get the current settings values as a JSON string"""
+        return self.settings_widget.getSettingsAsJson()
+
+    def setSettingsValues(self, settings_dict):
+        """Set specific settings values"""
+        self.settings_widget.setSettingsFromDict(settings_dict)
 
     def onSelectedEntityChanged(self, item=None):
         if item:
@@ -255,6 +292,29 @@ class ProductImportDialog(QDialog):
                 return
             item.parent().removeChild(item)
 
+    def getResult(self):
+        """ Get the result of the dialog """
+        result = {}
+
+        # Iterate through the folders in the right tree
+        for i in range(self.selected_tree.topLevelItemCount()):
+            folder_item = self.selected_tree.topLevelItem(i)
+            folder_name = folder_item.text(0)
+            folder_settings = folder_item.toolTip(0)
+            folder_items = []
+
+            # Iterate through the child items
+            for j in range(folder_item.childCount()):
+                child_item = folder_item.child(j)
+                child_name = child_item.text(0)
+                child_data = child_item.toolTip(0)
+                child_data = eval(child_data)
+
+                folder_items.append(child_data)
+
+            result[folder_name] = folder_items
+
+        return result
 
     def clearItems(self):
         """ When the clear button is pressed """
@@ -297,6 +357,69 @@ def test_product_import_dialog(core , pluggin_parent):
         }
     ]
 
+    # Example settings configuration
+    settings_config = [
+        {
+            "setting_name": "import_title",
+            "type": "title",
+            "default_value": "Import Settings"
+        },
+        {
+            "setting_name": "Create References",
+            "type": "checkbox",
+            "default_value": True
+        },
+        {
+            "setting_name": "Import Namespace",
+            "type": "lineedit",
+            "default_value": "imported"
+        },
+        {
+            "setting_name": "Import Mode",
+            "type": "combobox",
+            "default_value": "Reference",
+            "options": ["Reference", "Import", "Proxy"]
+        },
+        {
+            "setting_name": "transform_title",
+            "type": "title",
+            "default_value": "Transform Settings"
+        },
+        {
+            "setting_name": "Maintain Hierarchy",
+            "type": "checkbox",
+            "default_value": True
+        },
+        {
+            "setting_name": "Scale Factor",
+            "type": "lineedit",
+            "default_value": "1.0"
+        },
+        {
+            "setting_name": "Up Axis",
+            "type": "combobox",
+            "default_value": "Y",
+            "options": ["X", "Y", "Z"]
+        }
+    ]
+
     dialog = ProductImportDialog(core=core, pluggin_parent=pluggin_parent)
+    
+    # Set the settings configuration
+    dialog.setSettings(settings_config)
+    
+    # Set the default selected products
     dialog.setDefaultSelectedProduct(default_selected)
-    dialog.exec_()
+    
+    # Show the dialog
+    if dialog.exec_() == QDialog.Accepted:
+        print("Dialog accepted!")
+        print("Settings values:")
+        settings = dialog.getSettings()
+        for key, value in settings.items():
+            print(f"  {key}: {value}")
+        
+        print("\nSettings as JSON:")
+        print(dialog.getSettingsAsJson())
+    else:
+        print("Dialog cancelled")

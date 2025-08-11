@@ -1,113 +1,73 @@
-import hou
+import maya.standalone
+maya.standalone.initialize(name='python')
+
+import maya.cmds as cmds
 import os
 
-# Template to create houdini low geo
+assetName = "Tube_Coral"   # <-- Name of the asset, string to be set by the user
+outputPath = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.ma" # <-- Path where to save the scene
+assetType = "Items"   # <-- Type of the asset, string to be set by the user, e.g. "character", "prop", etc.
 
-output_hip_path = "S:/Cours/4A/Pipe/Thomas_00/Scripts/src/core/FileTemplates/output.hip"
-assetName = "Champignon_Arbre"
-assetType = "Items"
+importReference = "True"   # <-- If we want to import the reference, string set to "True", otherwise "False"               
+importReferencePaths = "['E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Items/Tube_Coral/Export/ModL_Publish/master/Tube_Coral_ModL_Publish_master.abc', 'E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Items/Pavot_Flower/Export/ModH_Publish/master/Pavot_Flower_ModH_Publish_master.abc']" # <-- Path to the reference file if importReference is "True". It is a an array of paths contained into a string. Use eval() before to use it.
 
-import_reference = "True"
-reference_path = "E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Items/Champignon_Arbre/Export/ModL_Publish/master/Champignon_Arbre_ModL_Publish_master.abc"
+importMethod = "Import" # <-- Method to use for importing, can be "Reference" or "Import"
+doImportNamespace = "True" # <-- Whether to import with namespace or not . Set to "True" or "False"
+importNamespace = "MOD_LOWE" # <-- Namespace to use for importing
 
-# Create a new Houdini scene
-hou.hipFile.clear(suppress_save_prompt=True)
-
-# Create the Stage node if it doesn't exist
-obj = hou.node("/obj")
-if obj is None:
-    obj = hou.node("/").createNode("geo", "stage")
+numberOfGroups = "04" # <-- Number of output groups
 
 
-###############################################
-#### Create the nodes in the OBJ   context ####
-###############################################
+def build_template():
+    cmds.file(new=True, force=True)
 
-# Create a geo node
-geo_node = obj.createNode("geo", "ModH_Main")
+    # Make sure the AbcImport plugin is loaded
+    if not cmds.pluginInfo("AbcImport", query=True, loaded=True):
+        cmds.loadPlugin("AbcImport")
+    # Make sure the AbcExport plugin is loaded
+    if not cmds.pluginInfo("AbcExport", query=True, loaded=True):
+        cmds.loadPlugin("AbcExport")
+    
 
-# Create a "Import" subnet node
-import_subnet = geo_node.createNode("subnet", "Import")
-import_subnet.setColor(hou.Color(0.776, 0.776, 0.157)) # Yellow
-import_subnet.setPosition(hou.Vector2(0, 2))
-def buildImportSubnet():
-    # Get the ouput0 node of the import subnet
-    output0 = import_subnet.node("output0")
-    if output0 is None:
-        output0 = import_subnet.createNode("output", "output0")
-        output0.setColor(hou.Color(0.776, 0.776, 0.157))
+    # Importe la référence si elle existe
+    if importReference == "True":
+        references = eval(importReferencePaths)
 
-    # Get the input0 node of the import subnet
-    inputs = import_subnet.indirectInputs()
-    input_stage = inputs[0] if inputs else None
+        for reference in references:
+            if importMethod == "Reference":
+                if doImportNamespace == "True":
+                    cmds.file(reference, reference=True, namespace=importNamespace)
+                else:
+                    cmds.file(reference, i=True)
+            else:
+                if doImportNamespace == "True":
+                    cmds.file(reference, i=True, namespace=importNamespace)
+                else:
+                    cmds.file(reference, i=True)
 
-    # Place the input and output nodes
-    input_stage.setPosition(hou.Vector2(0, 2))
-    output0.setPosition(hou.Vector2(0, -4))
+    # Parse the number of output groups as an integer
+    numberOfGroupsInt = int(numberOfGroups)
 
-    # Create a "File" node inside the import subnet
-    file_node = import_subnet.createNode("file", "Import_File")
-    file_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-    file_node.setPosition(hou.Vector2(0, 0))
-    if import_reference == "True":
-        file_node.parm("file").set(reference_path)
+    if numberOfGroupsInt == 1:
+        # Crée les groupes standards
+        group_name = assetType + "_" + assetName + "_modh_grp"
+        grp = cmds.group(empty=True, name=group_name)
 
-    # Create a "Transform_Cm_To_M" node inside the import subnet
-    transform_node = import_subnet.createNode("xform", "Transform_Cm_To_M")
-    transform_node.setColor(hou.Color(0.776, 0.157, 0.157))  # Red
-    transform_node.setPosition(hou.Vector2(0, -2))
-    transform_node.parm("sx").set(0.01)  # Convert cm to m
-    transform_node.parm("sy").set(0.01)  # Convert cm to m
-    transform_node.parm("sz").set(0.01)  # Convert cm to
+        # Set the outliner color of the root group to blue
+        cmds.setAttr(grp + ".useOutlinerColor", 1)
+        cmds.setAttr(grp + ".outlinerColor", 0, 0.847, 0.813, type="double3")
 
+    else :
+        for i in range(numberOfGroupsInt):
+            group_name = assetType + "_" + assetName + "_variant_" +  str(i + 1) + "_modh_grp"
+            grp = cmds.group(empty=True, name=group_name)
 
+            # Set the outliner color of the root group to blue
+            cmds.setAttr(grp + ".useOutlinerColor", 1)
+            cmds.setAttr(grp + ".outlinerColor", 0, 0.847, 0.813, type="double3")
 
-
-    # Connect the nodes together
-    if input_stage:
-        file_node.setInput(0, input_stage)
-    transform_node.setInput(0, file_node)
-    output0.setInput(0, transform_node)
-buildImportSubnet()
-
-
-
-# Create a "ModL" subnet node
-modl_subnet = geo_node.createNode("subnet", "ModH")
-modl_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
-modl_subnet.setUserData("nodeshape", "burst")
-modl_subnet.setPosition(hou.Vector2(0, 0))
-
-# Create " OUT_Null" node in the geo
-out_null = geo_node.createNode("null", "OUT_Null")
-out_null.setPosition(hou.Vector2(0, -2))
+    cmds.file(rename=outputPath)
+    cmds.file(save=True, type='mayaAscii')
 
 
-
-# Create a prism::FileCache::1.0 
-file_cache = geo_node.createNode("prism::Filecache::1.0", "ModH_FileCache_Publish")
-file_cache.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-file_cache.setPosition(hou.Vector2(0, -4))
-# Set the "task" parameter to "ModL_Export"
-file_cache.parm("task").set("ModH_Publish")
-file_cache.parm("framerange").set(0)
-file_cache.parm("format").set(".abc")
-
-file_cache_export = file_cache.createOutputNode("prism::Filecache::1.0", "ModH_FileCache_Export")
-file_cache_export.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-file_cache_export.setPosition(hou.Vector2(4, -4))
-file_cache_export.parm("task").set("ModH_Export")
-file_cache_export.parm("framerange").set(0)
-file_cache_export.parm("format").set(".abc")
-
-
-
-# Connect the nodes together
-modl_subnet.setInput(0, import_subnet)
-out_null.setInput(0, modl_subnet)
-file_cache.setInput(0, out_null)
-file_cache_export.setInput(0, out_null)
-
-
-# Save the Houdini file
-hou.hipFile.save(output_hip_path)
+build_template()

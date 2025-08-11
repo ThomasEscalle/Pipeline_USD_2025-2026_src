@@ -13,38 +13,37 @@ class FileTemplateBase:
         pass
 
     # Get the path of a specified entity's master file based on formats and filters
-    def getMasterPathFromEntity(self, entity , formats, origin, filters = [ "Publish"]): 
+    def getMatchingProductsFromEntity(self, entity , formats, origin, filters = [ "Publish"] , onlyOne = False): 
 
         products = origin.core.products.getProductsFromEntity(entity)
 
-        
         # Get the product that contains "ModL" and "Publish"
-        foundProduct = None
+        foundProduct = []
         for product in products:
             productType = product["product"]
             # Check if the filter criteria are met
             if all(f in productType for f in filters):
-                foundProduct = product
-                break
 
-        if foundProduct is not None:
-            path = foundProduct["path"]
-            exportPath = os.path.join(path, "master")
-            exportPath = exportPath.replace("\\", "/")
+                data = origin.core.products.getVersionsFromContext(product)
+                latestVersion = origin.core.products.getLatestVersionFromVersions(data)
+                path = origin.core.products.getPreferredFileFromVersion(latestVersion)
 
-            # Check if the export path exists
-            if os.path.exists(exportPath):
-                # Check if there is an abc file in the directory
-                abcFiles = [f for f in os.listdir(exportPath) if f.endswith(formats)]
+                # Check if the file has the right format
+                if path is not None and any(path.endswith(fmt) for fmt in formats):
+                    foundProduct.append(product)
 
-                if abcFiles:
-                    # Get the first abc file in the directory
-                    ReferenceFile = os.path.join(exportPath, abcFiles[0])
-                    ReferenceFile = ReferenceFile.replace("\\", "/")
-                    ImportReference = True
+                    if onlyOne:
+                        break
 
-        if not ImportReference:
-            ImportReference = False
-            ReferenceFile = ""
+        return foundProduct
 
-        return ReferenceFile
+    def getPreferedFilePathsFromProductList(self, productList, origin):
+        paths = []
+        for product in productList:
+            data = origin.core.products.getVersionsFromContext(product)
+            latestVersion = origin.core.products.getLatestVersionFromVersions(data)
+            path = origin.core.products.getPreferredFileFromVersion(latestVersion)
+            if path is not None:
+                path = path.replace("\\", "/")  # Normalize path for consistency
+                paths.append(path)
+        return paths
