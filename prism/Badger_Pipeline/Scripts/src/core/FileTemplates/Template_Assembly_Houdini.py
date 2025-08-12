@@ -5,6 +5,9 @@ from src.core.StandaloneScriptHoudini import StandaloneScriptHoudini
 import os
 
 
+
+
+ 
 class FileTemplateAssemblyHoudini(FileTemplateBase):
 
     def __init__(self):
