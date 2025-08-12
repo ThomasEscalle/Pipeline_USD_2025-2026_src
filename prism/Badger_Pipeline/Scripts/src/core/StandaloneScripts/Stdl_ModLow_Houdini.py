@@ -30,6 +30,7 @@ numberOfGroupsInt = int(numberOfGroups)
 ###############################################
 
 
+
 for i in range(numberOfGroupsInt):
 
     # Create a geo node
@@ -112,9 +113,9 @@ for i in range(numberOfGroupsInt):
     file_cache_export = file_cache.createOutputNode("prism::Filecache::1.0", "ModL_FileCache_Export")
     file_cache_export.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
     file_cache_export.setPosition(out_null.position() + hou.Vector2(5, -2))
-    file_cache_export.parm("task").set("ModL_Export")
+    file_cache_export.parm("task").set("ModL_Export_" + task_name)
     if numberOfGroupsInt > 1:
-        file_cache_export.parm("task").set("ModL_Export_var{}".format(i + 1))
+        file_cache_export.parm("task").set("ModL_Export_" + task_name +"_var{}".format(i + 1))
     file_cache_export.parm("framerange").set(0)
     file_cache_export.parm("format").set(".usdc")
 
@@ -124,5 +125,24 @@ for i in range(numberOfGroupsInt):
     file_cache.setInput(0, out_null)
     file_cache_export.setInput(0, out_null)
 
-    # Save the Houdini file
-    hou.hipFile.save(output_hip_path)
+
+
+
+
+# Add a sticky note 
+sticky_note = obj.createStickyNote("title")
+sticky_note.setPosition(hou.Vector2(0, 0.5))
+sticky_note.resize(hou.Vector2(8, 0.1))
+sticky_note_text = "Departement : " + department_name + "\n"
+sticky_note_text += "Asset : " + assetName
+sticky_note.setText(sticky_note_text)
+sticky_note.setDrawBackground(False)
+sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
+sticky_note.setTextSize(0.5)
+
+# Save the Houdini file
+hou.hipFile.save(output_hip_path)
+
+
+
+
