@@ -31,6 +31,9 @@ from src.ui.AskForProductToImport import test_product_import_dialog
 from src.core.USD_utils import USDUtils
 from src.core.FileTemplateManager import FileTemplateManager
 
+from src.core.MayaExportUsd import MayaExportUsd
+
+
 from src.ui.WidgetLinker import LinksWidget
 
 from src.ui.Aniversaires import get_anniversaires_aujourd_hui
@@ -45,8 +48,7 @@ class Prism_Badger_Pipeline_Functions(object):
         self.version = "v1.0.0"
 
         self.usdView = None
-
-        
+        self.MayaExportUsd = MayaExportUsd(core)
 
         # Import the USD packages
         self.importUsdPackages()
@@ -72,6 +74,16 @@ class Prism_Badger_Pipeline_Functions(object):
         # This function is called when the user wants to create a new product
         self.core.registerCallback("openPBAssetContextMenu", self.onOpenPBAssetContextMenu, plugin=self)
 
+        # use a lower priority than 50 to make sure the function gets called after the "onStateStartup" function of the Deadline plugin
+        self.core.registerCallback("onStateStartup", self.MayaExportUsd.onStateStartup, plugin=self, priority=40)
+        self.core.registerCallback("onStateGetSettings", self.MayaExportUsd.onStateGetSettings, plugin=self)
+        self.core.registerCallback("onStateSettingsLoaded", self.MayaExportUsd.onStateSettingsLoaded, plugin=self)
+        self.core.registerCallback("preExport", self.MayaExportUsd.preExport, plugin=self)
+        self.core.registerCallback("postExport", self.MayaExportUsd.postExport, plugin=self)
+
+
+
+
 
         # Register the project structure items
 
@@ -95,6 +107,15 @@ class Prism_Badger_Pipeline_Functions(object):
         self.core.plugins.monkeyPatch(self.core.entities.setEntityPreview, self.setEntityPreview, self, force=True)
 
 
+
+    # region Callbacks
+
+
+
+
+
+
+
     # Import the USD Packages from the Prism_Pluggins folder
     def importUsdPackages(self):
         extModPath = os.path.join(self.pluginDirectory, "ExternalModules", "python3")
@@ -108,9 +129,6 @@ class Prism_Badger_Pipeline_Functions(object):
         sys.path.append(extModPath)
         sys.path.insert(0, extModPath + "/USD/lib/python")
 
-
-
-    # region Callbacks
 
 
 
