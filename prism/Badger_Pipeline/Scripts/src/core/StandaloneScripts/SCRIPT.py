@@ -1,73 +1,125 @@
-import maya.standalone
-maya.standalone.initialize(name='python')
-
-import maya.cmds as cmds
+import hou
 import os
 
-assetName = "Tube_Coral"   # <-- Name of the asset, string to be set by the user
-outputPath = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.ma" # <-- Path where to save the scene
-assetType = "Items"   # <-- Type of the asset, string to be set by the user, e.g. "character", "prop", etc.
+# Template to create houdini low geo
 
-importReference = "True"   # <-- If we want to import the reference, string set to "True", otherwise "False"               
-importReferencePaths = "['E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Items/Tube_Coral/Export/ModL_Publish/master/Tube_Coral_ModL_Publish_master.abc', 'E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Items/Pavot_Flower/Export/ModH_Publish/master/Pavot_Flower_ModH_Publish_master.abc']" # <-- Path to the reference file if importReference is "True". It is a an array of paths contained into a string. Use eval() before to use it.
+output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"
+assetName = "TEST"
+assetType = "Chars"
+numberOfGroups = "03"
 
-importMethod = "Import" # <-- Method to use for importing, can be "Reference" or "Import"
-doImportNamespace = "True" # <-- Whether to import with namespace or not . Set to "True" or "False"
-importNamespace = "MOD_LOWE" # <-- Namespace to use for importing
+# Create a new Houdini scene
+hou.hipFile.clear(suppress_save_prompt=True)
 
-numberOfGroups = "04" # <-- Number of output groups
+# Create the Stage node if it doesn't exist
+obj = hou.node("/obj")
+if obj is None:
+    obj = hou.node("/").createNode("geo", "stage")
 
 
-def build_template():
-    cmds.file(new=True, force=True)
+# Convert the number of groups to integer
+numberOfGroupsInt = int(numberOfGroups)
 
-    # Make sure the AbcImport plugin is loaded
-    if not cmds.pluginInfo("AbcImport", query=True, loaded=True):
-        cmds.loadPlugin("AbcImport")
-    # Make sure the AbcExport plugin is loaded
-    if not cmds.pluginInfo("AbcExport", query=True, loaded=True):
-        cmds.loadPlugin("AbcExport")
+
+
+###############################################
+#### Create the nodes in the OBJ   context ####
+###############################################
+
+
+for i in range(numberOfGroupsInt):
+
+    # Create a geo node
+    geo_node = None
+
+    if numberOfGroupsInt <= 1:
+        geo_node = obj.createNode("geo", "ModL_Main")
+    else:
+        geo_node = obj.createNode("geo", "ModL_Variant_{}".format(i + 1))
+        geo_node.setPosition(hou.Vector2(i * 3, 0))
+
+    # Create a "ModL" subnet node
+    modl_subnet = geo_node.createNode("subnet", "ModL")
+    modl_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
+    modl_subnet.setUserData("nodeshape", "burst")
+    modl_subnet.setPosition(hou.Vector2(0, 0))
+
     
+    # Create a "SceneCleaning" subnet called "Scene_Cleaning"
+    sceneCleaning_subnet = geo_node.createNode("subnet", "Scene_Cleaning")
+    sceneCleaning_subnet.setColor(hou.Color(0.776, 0.157, 0.157)) # Red
+    sceneCleaning_subnet.setPosition(modl_subnet.position() + hou.Vector2(0, -2))
+    sceneCleaning_subnet.setComment("Ne pas toucher a ce node !")
+    sceneCleaning_subnet.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+    def build_sceneCleaning_subnet():    # Get the ouput0 node of the sceneCleaning subnet
+        output0 = sceneCleaning_subnet.createNode("output", "Output0")
+        # Get the input0 node of the sceneCleaning subnet
+        inputs = sceneCleaning_subnet.indirectInputs()
+        input_stage = inputs[0] if inputs else None
 
-    # Importe la référence si elle existe
-    if importReference == "True":
-        references = eval(importReferencePaths)
+        # Create a "Null" node called "IN_SCENE_CLEANING"
+        in_scene_cleaning = sceneCleaning_subnet.createNode("null", "IN_SCENE_CLEANING")
+        in_scene_cleaning.setPosition(hou.Vector2(0, 0))
 
-        for reference in references:
-            if importMethod == "Reference":
-                if doImportNamespace == "True":
-                    cmds.file(reference, reference=True, namespace=importNamespace)
-                else:
-                    cmds.file(reference, i=True)
-            else:
-                if doImportNamespace == "True":
-                    cmds.file(reference, i=True, namespace=importNamespace)
-                else:
-                    cmds.file(reference, i=True)
+        # Create a "Transform" node called "Transform_m_to_cm"
+        transform_m_to_cm = sceneCleaning_subnet.createNode("xform", "Transform_m_to_cm")
+        transform_m_to_cm.setPosition(hou.Vector2(0, -2))
+        transform_m_to_cm.parm("sx").set(100)
+        transform_m_to_cm.parm("sy").set(100)
+        transform_m_to_cm.parm("sz").set(100)
 
-    # Parse the number of output groups as an integer
-    numberOfGroupsInt = int(numberOfGroups)
-
-    if numberOfGroupsInt == 1:
-        # Crée les groupes standards
-        group_name = assetType + "_" + assetName + "_modh_grp"
-        grp = cmds.group(empty=True, name=group_name)
-
-        # Set the outliner color of the root group to blue
-        cmds.setAttr(grp + ".useOutlinerColor", 1)
-        cmds.setAttr(grp + ".outlinerColor", 0, 0.847, 0.813, type="double3")
-
-    else :
-        for i in range(numberOfGroupsInt):
-            group_name = assetType + "_" + assetName + "_variant_" +  str(i + 1) + "_modh_grp"
-            grp = cmds.group(empty=True, name=group_name)
-
-            # Set the outliner color of the root group to blue
-            cmds.setAttr(grp + ".useOutlinerColor", 1)
-            cmds.setAttr(grp + ".outlinerColor", 0, 0.847, 0.813, type="double3")
-
-    cmds.file(rename=outputPath)
-    cmds.file(save=True, type='mayaAscii')
+        # Create a "null" node called "OUT_SCENE_CLEANING"
+        out_scene_cleaning = sceneCleaning_subnet.createNode("null", "OUT_SCENE_CLEANING")
+        out_scene_cleaning.setPosition(hou.Vector2(0, -4))
 
 
-build_template()
+        # Place the input and output nodes
+        input_stage.setPosition(hou.Vector2(0, 2))
+        output0.setPosition(hou.Vector2(0, -6))
+
+        # Connect the nodes together
+        # Connect the IN_SCENE_CLEANING node to the graftstages node
+        transform_m_to_cm.setInput(0, in_scene_cleaning, 0)
+        out_scene_cleaning.setInput(0, transform_m_to_cm, 0)
+        in_scene_cleaning.setInput(0, input_stage, 0)
+        # Connect the output0 node to the out_scene_cleaning node
+        output0.setInput(0, out_scene_cleaning, 0)
+
+        return
+
+    build_sceneCleaning_subnet()
+
+    # Create " OUT_Null" node in the geo
+    out_null = geo_node.createNode("null", "OUT_Null")
+    out_null.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
+
+
+
+    # Create a prism::FileCache::1.0 
+    file_cache = geo_node.createNode("prism::Filecache::1.0", "ModL_FileCache_Publish")
+    file_cache.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+    file_cache.setPosition(out_null.position() + hou.Vector2(0, -2))
+    file_cache.parm("task").set("ModL_Publish")
+    if numberOfGroupsInt > 1:
+        file_cache.parm("task").set("ModL_Publish_var{}".format(i + 1))
+    file_cache.parm("framerange").set(0)
+    file_cache.parm("format").set(".usdc")
+
+    # Create a prism::FileCache::1.0 for the exports
+    file_cache_export = file_cache.createOutputNode("prism::Filecache::1.0", "ModL_FileCache_Export")
+    file_cache_export.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+    file_cache_export.setPosition(out_null.position() + hou.Vector2(5, -2))
+    file_cache_export.parm("task").set("ModL_Export")
+    if numberOfGroupsInt > 1:
+        file_cache_export.parm("task").set("ModL_Export_var{}".format(i + 1))
+    file_cache_export.parm("framerange").set(0)
+    file_cache_export.parm("format").set(".usdc")
+
+    # Connect the nodes together
+    sceneCleaning_subnet.setInput(0, modl_subnet)
+    out_null.setInput(0, sceneCleaning_subnet)
+    file_cache.setInput(0, out_null)
+    file_cache_export.setInput(0, out_null)
+
+    # Save the Houdini file
+    hou.hipFile.save(output_hip_path)

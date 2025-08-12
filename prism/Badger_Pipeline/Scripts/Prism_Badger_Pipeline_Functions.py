@@ -34,7 +34,7 @@ from src.core.FileTemplateManager import FileTemplateManager
 from src.ui.WidgetLinker import LinksWidget
 
 from src.ui.Aniversaires import get_anniversaires_aujourd_hui
-
+from src.ui.Games_Snake import Snake
 
 
 class Prism_Badger_Pipeline_Functions(object):
@@ -334,6 +334,20 @@ class Prism_Badger_Pipeline_Functions(object):
             openUSDViewAction.setShortcut(QKeySequence("Ctrl+Shift+U"))
             origin.mainMenu.addAction(openUSDViewAction)
 
+        # Create a Snake Game action
+        snakeGameAction = QAction(self.getIcon("snake.png"), "Snake Game", origin)
+        snakeGameAction.triggered.connect(self.onActionSnakeGame)
+        snakeGameAction.setShortcut(QKeySequence("Ctrl+Shift+S"))
+        origin.mainMenu.addAction(snakeGameAction)
+
+
+        # Create a test action
+        testAction = QAction(self.getIcon("test.png"), "Test Action", origin)
+        testAction.triggered.connect(self.onActionTest)
+        testAction.setShortcut(QKeySequence("Ctrl+T"))
+        origin.mainMenu.addAction(testAction)
+
+
 
         # Create a help action
         helpAction = QAction(self.getIcon("help.png"), "Help", origin)
@@ -342,11 +356,7 @@ class Prism_Badger_Pipeline_Functions(object):
         origin.mainMenu.addAction(helpAction)
 
 
-        # Create a test action
-        testAction = QAction(self.getIcon("test.png"), "Test Action", origin)
-        testAction.triggered.connect(self.onActionTest)
-        testAction.setShortcut(QKeySequence("Ctrl+T"))
-        origin.mainMenu.addAction(testAction)
+
 
 
         origin.menubar.addMenu(origin.mainMenu)
@@ -379,7 +389,6 @@ class Prism_Badger_Pipeline_Functions(object):
             self.projectBrowser.setWindowTitle("Prism - Badger Pipeline")
 
 
-
     def open3DViewerAction(self):
         if not self.isStandalone():
             print("This action can only be triggered in the Standalone mode")
@@ -398,6 +407,10 @@ class Prism_Badger_Pipeline_Functions(object):
     def onActionTest(self):
         # Données d'exemple
         test_product_import_dialog(self.core, self)
+
+    def onActionSnakeGame(self):
+        snakeGame = Snake()
+        snakeGame.exec_()
 
     def productOnVersionDoubleClicked(self):
         print("Current product version changed")

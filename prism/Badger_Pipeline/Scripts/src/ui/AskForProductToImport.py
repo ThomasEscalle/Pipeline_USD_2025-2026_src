@@ -122,7 +122,10 @@ class ProductImportDialog(QDialog):
         self.main_layout.addWidget(self.tab_widget)
         self.main_layout.addLayout(self.buttons_layout)
         self.setLayout(self.main_layout)
-        
+
+    # Hide the import tab
+    def hideImportTab(self):
+        self.tab_widget.removeTab(self.tab_widget.indexOf(self.import_tab))
 
     def onCreate(self):
         print("CREATE")
