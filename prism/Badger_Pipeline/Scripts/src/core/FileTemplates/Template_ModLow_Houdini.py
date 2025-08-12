@@ -63,6 +63,8 @@ class FileTemplateModelingLowHoudini(FileTemplateBase):
         assetType = origin.getCurrentEntity()["asset_path"].split("\\")[0]
         assetName = origin.getCurrentEntity()["asset_path"].split("\\")[-1]
 
+        task = origin.getCurrentTask()
+        department = origin.getCurrentDepartment()
 
         # Create the standalone script and replace the variables
         script = StandaloneScriptHoudini("Stdl_ModLow_Houdini.py", parent)
@@ -70,6 +72,9 @@ class FileTemplateModelingLowHoudini(FileTemplateBase):
         script.replaceVariable("$$TYPE_ASSET$$", assetType)
         script.replaceVariable("$$OUTPUT_PATH$$", outputHoudiniFilePath)
         script.replaceVariable("$$NUMBER_OF_GROUPS$$", numberOfGroups)
+        script.replaceVariable("$$TASK_NAME$$", task)
+        script.replaceVariable("$$DEPARTMENT_NAME$$", department)
+
         script.run()
 
         # Add the scene to the current project

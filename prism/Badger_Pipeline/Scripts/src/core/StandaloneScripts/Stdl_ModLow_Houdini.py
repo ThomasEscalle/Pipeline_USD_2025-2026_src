@@ -8,6 +8,9 @@ assetName = "$$ASSET_NAME$$"
 assetType = "$$TYPE_ASSET$$"
 numberOfGroups = "$$NUMBER_OF_GROUPS$$"
 
+task_name = "$$TASK_NAME$$"
+department_name = "$$DEPARTMENT_NAME$$"
+
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
 

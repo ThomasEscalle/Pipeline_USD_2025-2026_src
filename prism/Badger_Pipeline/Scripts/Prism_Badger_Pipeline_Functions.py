@@ -301,6 +301,7 @@ class Prism_Badger_Pipeline_Functions(object):
 
         # Create the console
         self.console = ConsoleDialog(origin)
+        self.console.show()
 
         # Create the Create Product dialog
         self.createProductDialog = CreateProductDialog(origin, self.core)
