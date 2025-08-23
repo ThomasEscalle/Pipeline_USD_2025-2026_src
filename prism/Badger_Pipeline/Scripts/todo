@@ -1,3 +1,15 @@
+## Todo
+
+[ ] : Améliorer la recherche des .exe de Maya, houdini, et nuke en reprennant le code des pluggins.
+[ ] : Faire en sorte que les .usd des assets soient contenues dans le repertoire de l'asset.
+[ ] : Faire en sorte que les variants ne soient plus supportées dans la premiere version du pipeline. 
+    [ ] : Faire une branche dédiée pour les variants (plus tard).
+[ ] : Implementer dans le dialog settings de la création de scene les filtres.
+[ ] : Restructurer le site et faire un essai de vidéo tutoriel.
+
+
+## Notes de Hugo :
+
 Les gros enviros : 
 Faire du light sur du gris pur (peut etre faire une option pour assigner)
 
@@ -6,17 +18,3 @@ Faire comme si les gens etaient des enfants (scrips les plus simple possible)
 
 MINERVA : Est géré avec un petit nombre de thread. Les scenes ne sont pas sauvegardées.
 Faire un systeme de verification que la scene soit intacte / comparer le poid des scenes.
-
-
-
-
-
-
-Success! To use USD, please ensure that you have:
-
-    The following in your PYTHONPATH environment variable:
-    D:\USD\pxr_USD_Build\lib\python
-
-    The following in your PATH environment variable:
-    D:\USD\pxr_USD_Build\bin
-    D:\USD\pxr_USD_Build\lib
