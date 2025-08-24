@@ -1,6 +1,6 @@
 import os
 import subprocess
-from src.core.PathHelper import find_latest_hython
+from src.core.PathHelper import getHythonPath
 
 # This is a class to call houdini from a standalone script
 class StandaloneScriptHoudini:
@@ -42,7 +42,7 @@ class StandaloneScriptHoudini:
 
     def run(self):
         # Run the script in mayapy.exe
-        hythonPath = find_latest_hython()
+        hythonPath = getHythonPath()
         if not os.path.exists(hythonPath):
             raise FileNotFoundError(f"hython.exe not found in {hythonPath}")
 

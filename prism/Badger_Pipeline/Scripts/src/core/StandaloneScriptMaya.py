@@ -1,6 +1,6 @@
 import os
 import subprocess
-from src.core.PathHelper import find_mayapy
+from src.core.PathHelper import getMayaPyPath
 
 # This is a class to call maya from a standalone script
 class StandaloneScriptMaya:
@@ -41,7 +41,7 @@ class StandaloneScriptMaya:
 
     def run(self):
         # Run the script in mayapy.exe
-        mayapyPath = find_mayapy("2024")  # Get the 2024 version of maya. Change if needed
+        mayapyPath = getMayaPyPath()
 
         if mayapyPath is None:
             raise FileNotFoundError("mayapy.exe not found. Please ensure Maya is installed and the path is set correctly.")

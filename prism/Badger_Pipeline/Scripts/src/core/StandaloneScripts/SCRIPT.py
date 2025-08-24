@@ -6,9 +6,9 @@ import os
 output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"
 assetName = "TEST"
 assetType = "Chars"
-numberOfGroups = "03"
+numberOfGroups = "01"
 
-task_name = "Modeling_Houdini"
+task_name = "qzdzqd"
 department_name = "ModL"
 
 # Create a new Houdini scene
@@ -132,14 +132,13 @@ for i in range(numberOfGroupsInt):
 # Add a sticky note 
 sticky_note = obj.createStickyNote("title")
 sticky_note.setPosition(hou.Vector2(0, 0.5))
-sticky_note.resize(hou.Vector2(8, 1))
+sticky_note.resize(hou.Vector2(8, 0.1))
 sticky_note_text = "Departement : " + department_name + "\n"
 sticky_note_text += "Asset : " + assetName
 sticky_note.setText(sticky_note_text)
 sticky_note.setDrawBackground(False)
 sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
-sticky_note.setTextSize(0.7)
-
+sticky_note.setTextSize(0.5)
 
 # Save the Houdini file
 hou.hipFile.save(output_hip_path)

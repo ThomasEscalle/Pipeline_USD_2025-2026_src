@@ -32,7 +32,7 @@ from src.core.USD_utils import USDUtils
 from src.core.FileTemplateManager import FileTemplateManager
 
 from src.core.MayaExportUsd import MayaExportUsd
-
+from src.core.PathHelper import getMayaPath, getHoudiniPath
 
 from src.ui.WidgetLinker import LinksWidget
 
@@ -425,7 +425,10 @@ class Prism_Badger_Pipeline_Functions(object):
 
     def onActionTest(self):
         # Données d'exemple
-        test_product_import_dialog(self.core, self)
+        ## test_product_import_dialog(self.core, self)
+        path = getHoudiniPath()
+        path = path.replace("\\", "/")  # Ensure the path is in the correct format
+        print(path)
 
     def onActionSnakeGame(self):
         snakeGame = Snake()

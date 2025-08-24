@@ -3,51 +3,118 @@
 import os
 import winreg
 import re
+import sys
+import platform
+import shutil
+
+if platform.system() == "Windows":
+    if sys.version[0] == "3":
+        import winreg as _winreg
+    else:
+        import _winreg
+
 
 # Search for the mayapy.exe executable for a specific version of Maya
-def find_mayapy(version="2024"):
-    """
-    Tente de trouver le chemin vers mayapy.exe de Maya {version}
-    en utilisant le registre Windows et des chemins d'installation standards.
-    """
-    # 1. Essai via le registre Windows
-    try:
-        reg_path = fr"SOFTWARE/Autodesk/Maya/{version}/Setup/InstallPath"
-        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path) as key:
-            install_path, _ = winreg.QueryValueEx(key, "MAYA_INSTALL_LOCATION")
-            mayapy = os.path.join(install_path, "bin", "mayapy.exe")
-            if os.path.exists(mayapy):
-                return mayapy
-    except FileNotFoundError:
-        pass  # Rien trouvé dans le registre
+def getMayaPyPath():
 
-    # 2. Recherche dans les emplacements standards
-    possible_locations = [
-        fr"C:/Program Files/Autodesk/Maya{version}",
-        fr"D:/Program Files/Autodesk/Maya{version}",
-        fr"C:/Autodesk/Maya{version}",
-        fr"D:/Autodesk/Maya{version}",
-        fr"D:/Autodesk/Maya{version}/Maya{version}" # <-  Pour l'idiot qui sait pas installer 
-    ]
+    base = getMayaPath()
+    if not base:
+        return None
 
-    for base in possible_locations:
-        mayapy = os.path.join(base, "bin", "mayapy.exe")
-        mayapy = mayapy.replace("/", "//")  # Normaliser le chemin pour Windows
-        print(f"Checking {mayapy}...")
-        if os.path.exists(mayapy):
-            return mayapy
+    mayapy = os.path.join(base, "bin", "mayapy.exe")
+    mayapy = mayapy.replace("/", "//")  # Normaliser le chemin pour Windows
+
+    if os.path.exists(mayapy):
+        return mayapy
 
     return None  # Rien trouvé
 
-# Search for the mayapy.exe executable for Maya 2024
-def find_mayapy_2024():
-    """
-    Find the path to mayapy.exe for Maya 2024.
-    """
-    return find_mayapy("2024")
+
+def getMayaPath():
+    try:
+        key = _winreg.OpenKey(
+            _winreg.HKEY_LOCAL_MACHINE,
+            "SOFTWARE\\Autodesk\\Maya",
+            0,
+            _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY,
+        )
+
+        mayaVersions = []
+        try:
+            i = 0
+            while True:
+                mayaVers = _winreg.EnumKey(key, i)
+                if sys.version[0] == "2":
+                    mayaVers = unicode(mayaVers)
+                if mayaVers.isnumeric():
+                    mayaVersions.append(mayaVers)
+                i += 1
+
+        except WindowsError:
+            pass
+
+        validVersion = mayaVersions[-1]
+
+        key = _winreg.OpenKey(
+            _winreg.HKEY_LOCAL_MACHINE,
+            "SOFTWARE\\Autodesk\\Maya\\%s\\Setup\\InstallPath" % validVersion,
+            0,
+            _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY,
+        )
+        installDir = (_winreg.QueryValueEx(key, "MAYA_INSTALL_LOCATION"))[0]
+        return installDir
+    
+    except:
+        return ""
 
 
 
+
+def getHoudiniPath():
+    versions = {}
+    try:
+        # Print what is inside the Houdini key
+        key = _winreg.OpenKey(
+            _winreg.HKEY_LOCAL_MACHINE,
+            "SOFTWARE\\Side Effects Software\\Houdini",
+            0,
+            _winreg.KEY_READ | _winreg.KEY_WOW64_64KEY,
+        )
+        i = 0
+        while True:
+            try:
+                name, value, _ = _winreg.EnumValue(key, i)
+                if name != "LicenseServer":
+                    versions[name] = value
+                i += 1
+            except OSError:
+                break
+
+    except:
+        print("WARNING : Houdini n'est pas installé ou la clé de registre est manquante.")
+        return ""
+
+    # Get the latest version from the versions dictionary
+    if versions:
+        latest_version = sorted(versions.keys(), key=lambda v: list(map(int, v.split("."))), reverse=True)[0]
+        return versions[latest_version]
+
+    return ""
+
+
+def getHythonPath():
+    # Get the path to the hython executable for the latest version of Houdini
+    houdini_path = getHoudiniPath()
+    if not houdini_path:
+        return None
+
+    hython_path = os.path.join(houdini_path, "bin", "hython.exe")
+    hython_path = hython_path.replace("/", "//")  # Normaliser le chemin pour Windows
+
+    if os.path.exists(hython_path):
+        return hython_path
+
+    return None  # Rien trouvé
 
 # Search for the hython.exe executable for the latest version of Houdini
 def find_latest_hython():
