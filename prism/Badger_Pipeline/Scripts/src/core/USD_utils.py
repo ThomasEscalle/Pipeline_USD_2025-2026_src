@@ -82,19 +82,30 @@ class USDUtils:
 
 
 
+        # Create the geo.usda
+        geo_asset_path = self.createAssetGeo(entity, usd_asset, parent, master_path_low, master_path_high, subdirectory = "default")
+
+        # Create the mtl.usda
+        mtl_asset_path = self.createAssetMaterial(entity, usd_asset, parent, master_path_mtl, subdirectory = "default")
 
 
         # Create the asset.usda
         self.createAssetRoot(entity, usd_asset, parent)
 
         # Create the payload.usda
-        self.createAssetPayload(entity, usd_asset, parent)
-
-        # Create the geo.usda
-        self.createAssetGeo(entity, usd_asset, parent, master_path_low, master_path_high)
-
-        # Create the mtl.usda
-        self.createAssetMaterial(entity, usd_asset, parent, master_path_mtl)
+        payload_variants = [
+            {
+                "name": "variant_00",
+                "geo": geo_asset_path,
+                "mtl": mtl_asset_path
+            },
+            {
+                "name": "variant_01",
+                "geo": geo_asset_path,
+                "mtl": mtl_asset_path
+            }
+        ]
+        self.createAssetPayload(entity, usd_asset, parent , payload_variants)
 
         pass
 
@@ -140,7 +151,7 @@ class USDUtils:
         stage.GetRootLayer().Save()
 
     # Creates a payload file (payload.usda)
-    def createAssetPayload(self, entity, assetPath, parent ):
+    def createAssetPayload(self, entity, assetPath, parent , items = []):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
@@ -162,24 +173,69 @@ class USDUtils:
         model_API = Usd.ModelAPI(prim)
         model_API.SetKind(Kind.Tokens.component) # Set the kind to component
 
+
+        variant_sets_api = prim.GetVariantSets()
+
+        variant_set_api = variant_sets_api.AddVariantSet("variant", position=Usd.ListPositionBackOfPrependList)
+        
+
+
+        # Iterate over the items and add the variants
+        index = 0
+        for item in items:
+            name = item["name"]
+            geo_path = item["geo"]
+            mtl_path = item["mtl"]
+
+            # Check if the items are not empty
+            if geo_path == "" or mtl_path == "":
+                continue
+            variant_set_api.AddVariant(name)
+            variant_set_api.SetVariantSelection(name)
+
+            # Create a "Asset_root" 
+            with variant_set_api.GetVariantEditContext():
+                # Anything we write in the context, goes into the variant (prims and properties)
+                rootVariant = stage.DefinePrim("/" + entity["asset"] + "/Asset_root")
+
+                # Add the references, relative to the current directory
+                relative_geo = os.path.relpath(geo_path, assetPath).replace("\\", "/")
+                rootVariant.GetReferences().AddReference(relative_geo)
+                print("Adding reference to: " + relative_geo + " for item " + name)
+
+                relative_mtl = os.path.relpath(mtl_path, assetPath).replace("\\", "/")
+                rootVariant.GetReferences().AddReference(relative_mtl)
+                print("Adding reference to: " + relative_mtl + " for item " + name)
+
+            index += 1
+
+
+        # If there are item, set the variant selection to the first item's name
+        if items:
+            variant_set_api.SetVariantSelection(items[0]["name"])
+
         # Add references to the geo and the material
-        prim.GetReferences().AddReference("./geo.usda")
-        prim.GetReferences().AddReference("./mtl.usda")
+        # prim.GetReferences().AddReference("./geo.usda")
+        # prim.GetReferences().AddReference("./mtl.usda")
 
         # Save the file
         stage.SetDefaultPrim(prim)
         stage.GetRootLayer().Save()
 
-    def createAssetGeo(self, entity, assetPath, parent , geo_low_path, geo_high_path):
+    def createAssetGeo(self, entity, assetPath, parent , geo_low_path, geo_high_path, subdirectory = ""):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
             parent.console.log("Error importing pxr module: %s" % e)
             parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return
+        
+        directory = os.path.join(assetPath, subdirectory)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
         # Create the geo.usda
-        stage = Usd.Stage.CreateNew(os.path.join(assetPath, "geo.usda"))
+        stage = Usd.Stage.CreateNew(os.path.join(directory, "geo.usda"))
         stage.SetFramesPerSecond(24)
         stage.SetTimeCodesPerSecond(24)
         stage.SetMetadata("metersPerUnit", 1)
@@ -218,7 +274,7 @@ class USDUtils:
         purpose_attr = imageable_API.CreatePurposeAttr()
         purpose_attr.Set(UsdGeom.Tokens.proxy)
         # Add a reference to the geo_low
-        relative_low = os.path.relpath(geo_low_path, assetPath).replace("\\", "/")
+        relative_low = os.path.relpath(geo_low_path, directory).replace("\\", "/")
         proxy_scope.GetReferences().AddReference(relative_low)
 
 
@@ -232,7 +288,7 @@ class USDUtils:
         purpose_attr.Set(UsdGeom.Tokens.render)
         imageable_API.SetProxyPrim(proxy_scope)
         # Add a reference to the geo_high
-        relative_high = os.path.relpath(geo_high_path, assetPath).replace("\\", "/")
+        relative_high = os.path.relpath(geo_high_path, directory).replace("\\", "/")
         render_scope.GetReferences().AddReference(relative_high)
 
         
@@ -241,8 +297,11 @@ class USDUtils:
         stage.SetDefaultPrim(prim)
         stage.GetRootLayer().Save()
 
+        # Return the path of the created usd file
+        return os.path.join(directory, "geo.usda")
+
     # Create the asset material
-    def createAssetMaterial(self, entity, assetPath, parent, mtl_path):
+    def createAssetMaterial(self, entity, assetPath, parent, mtl_path , subdirectory = ""):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
@@ -251,7 +310,11 @@ class USDUtils:
             return
 
         # Create a mtl.usda
-        stage = Usd.Stage.CreateNew(os.path.join(assetPath, "mtl.usda"))
+        directory = os.path.join(assetPath, subdirectory)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        stage = Usd.Stage.CreateNew(os.path.join(directory, "mtl.usda"))
         stage.SetFramesPerSecond(24)
         stage.SetTimeCodesPerSecond(24)
         stage.SetMetadata("metersPerUnit", 1)
@@ -261,7 +324,7 @@ class USDUtils:
         prim = stage.DefinePrim("/" + entity["asset"])
 
         # Add a reference to the material
-        mtl_relative = os.path.relpath(mtl_path, assetPath).replace("\\", "/")
+        mtl_relative = os.path.relpath(mtl_path, directory).replace("\\", "/")
         prim.GetReferences().AddReference(mtl_relative)
 
         # Save the stage
@@ -271,7 +334,10 @@ class USDUtils:
         # Open the file with windows
         # os.startfile(os.path.join(assetPath, "mtl.usda"))
 
-    def createAssetModelingLow(self, entity, assetPath, parent):
+        # Return the path of the created usd file
+        return os.path.join(directory, "mtl.usda")
+
+    def createAssetModelingLow(self, entity, assetPath, parent, subdirectory = ""):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
