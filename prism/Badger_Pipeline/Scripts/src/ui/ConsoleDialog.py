@@ -1,4 +1,4 @@
-from qtpy.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QHBoxLayout, QPushButton
+from qtpy.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QHBoxLayout, QPushButton, QMessageBox
 
 import logging
 import sys
@@ -59,3 +59,6 @@ class ConsoleDialog(QDialog):
         from datetime import datetime
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.console.append(f"[{timestamp}] {message}")
+
+    def showMessageBoxError(self, title, message):
+        QMessageBox.warning(self, title, message)

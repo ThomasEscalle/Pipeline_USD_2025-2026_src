@@ -47,11 +47,11 @@ class Prism_Badger_Pipeline_Functions(object):
         self.core = core
         self.version = "v1.0.0"
 
-        self.usdView = None
         self.MayaExportUsd = MayaExportUsd(core)
 
         # Import the USD packages
-        self.importUsdPackages()
+        if self.isStandalone():
+            self.importUsdPackages()
 
 
         # Register the callbacks
@@ -73,16 +73,15 @@ class Prism_Badger_Pipeline_Functions(object):
 
         # This function is called when the user wants to create a new product
         self.core.registerCallback("openPBAssetContextMenu", self.onOpenPBAssetContextMenu, plugin=self)
+            
 
+        ### All of the Maya Export USD Callbacks
         # use a lower priority than 50 to make sure the function gets called after the "onStateStartup" function of the Deadline plugin
         self.core.registerCallback("onStateStartup", self.MayaExportUsd.onStateStartup, plugin=self, priority=40)
         self.core.registerCallback("onStateGetSettings", self.MayaExportUsd.onStateGetSettings, plugin=self)
         self.core.registerCallback("onStateSettingsLoaded", self.MayaExportUsd.onStateSettingsLoaded, plugin=self)
         self.core.registerCallback("preExport", self.MayaExportUsd.preExport, plugin=self)
         self.core.registerCallback("postExport", self.MayaExportUsd.postExport, plugin=self)
-
-
-
 
 
         # Register the project structure items
@@ -100,8 +99,6 @@ class Prism_Badger_Pipeline_Functions(object):
         self.core.projects.addProjectStructureItem("usd_shots", usdShots_data)
 
 
-        ## sys.path.append("D:/Houdini 20.5.370/python311/lib/site-packages")
-
 
         # Monkey patch the setEntityPreview function to paste the asset preview in the USD folder when it is updated
         self.core.plugins.monkeyPatch(self.core.entities.setEntityPreview, self.setEntityPreview, self, force=True)
@@ -114,22 +111,22 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
 
-
-
     # Import the USD Packages from the Prism_Pluggins folder
     def importUsdPackages(self):
-        extModPath = os.path.join(self.pluginDirectory, "ExternalModules", "python3")
-        extModPath = extModPath.replace("\\", "/")  # Ensure the path is in the correct format
+        try:
+            extModPath = os.path.join(self.pluginDirectory, "ExternalModules", "python3")
+            extModPath = extModPath.replace("\\", "/")  # Ensure the path is in the correct format
 
-        os.environ["PATH"] += os.pathsep + extModPath + "/USD/bin"
-        os.environ["PATH"] += os.pathsep + extModPath + "/USD/lib"
-        os.environ["PYTHONPATH"]  = extModPath + "/USD/lib/python"
-        os.environ["PYTHONPATH"] += extModPath + "/USD/bin"
+            os.environ["PATH"] += os.pathsep + extModPath + "/USD/bin"
+            os.environ["PATH"] += os.pathsep + extModPath + "/USD/lib"
+            os.environ["PYTHONPATH"]  = extModPath + "/USD/lib/python"
+            os.environ["PYTHONPATH"] += extModPath + "/USD/bin"
 
-        sys.path.append(extModPath)
-        sys.path.insert(0, extModPath + "/USD/lib/python")
+            sys.path.append(extModPath)
+            sys.path.insert(0, extModPath + "/USD/lib/python")
 
-
+        except Exception as e:
+            self.console.showMessageBoxError("Error importing USD packages", str(e))
 
 
     # This function is called when the entity preview is set
@@ -177,7 +174,7 @@ class Prism_Badger_Pipeline_Functions(object):
 
         return returnValue
 
-
+    # When we click on an entity on the left
     def onOpenPBAssetContextMenu(self, origin, rcMenu, asset):
         # Asset is a PySide6.QtCore.QModelIndex
         # Get the item
@@ -203,7 +200,7 @@ class Prism_Badger_Pipeline_Functions(object):
         variantsConnectionAction.triggered.connect(lambda: self.openVariantsConnection(item))
         rcMenu.addAction(variantsConnectionAction)
 
-
+    # Open the variant connection dialog
     def openVariantsConnection(self, item):
         print("Open variants connection for asset: %s" % item["asset"])
 
@@ -261,7 +258,7 @@ class Prism_Badger_Pipeline_Functions(object):
     def onAssetCreated(self, origin, entity, dlg):
         ## Asset created: {'type': 'asset', 'asset_path': 'Chars/zqdqz', 'asset': 'zqdqz', 'project_path': 'E:\\3D\\PIPELINE\\USD_Uptight_2025_v001\\00_Template\\Uptight', 'project_name': 'Uptight'}
         self.console.log("Asset created: %s" % entity)
-
+        """
         ## Create an asset in the USD folder.
         path = self.core.projects.getResolvedProjectStructurePath("usd_assets")
         self.console.log("Resolved path: %s" % path)
@@ -276,18 +273,23 @@ class Prism_Badger_Pipeline_Functions(object):
         else:
             self.console.log("Asset folder already exists: %s" % assetPath)
 
+        """
+
+
         # Check if the asset path contains the "Modules" folder
         utils = USDUtils()
+
+
         asset_path = entity["asset_path"]
         asset_path = asset_path.replace("\\", "/")  # Ensure the path is in the correct format
 
         # If the asset is a module
         if "Modules/" in asset_path:
             # Create the module USD file
-            utils.createUsdModule(entity, assetPath, self)
+            utils.createUsdModule(entity, self)
         else:
             # Create the asset USD file
-            utils.createUsdAsset(entity, assetPath, self)
+            utils.createUsdAsset(entity, self)
 
 
 
@@ -373,10 +375,6 @@ class Prism_Badger_Pipeline_Functions(object):
         helpAction.triggered.connect(self.onActionHelp)
         helpAction.setShortcut(QKeySequence("Ctrl+,"))
         origin.mainMenu.addAction(helpAction)
-
-
-
-
 
         origin.menubar.addMenu(origin.mainMenu)
 
