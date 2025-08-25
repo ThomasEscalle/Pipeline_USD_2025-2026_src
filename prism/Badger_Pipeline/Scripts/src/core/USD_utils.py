@@ -390,10 +390,6 @@ class USDUtils:
 
 
 
-
-
-
-
         # Bind materials via direct binding
         material = UsdShade.Material(material)
 
