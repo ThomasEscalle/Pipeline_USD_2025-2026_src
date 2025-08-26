@@ -2,8 +2,8 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 import os
-from .SettingsWidget import SettingsWidget
-
+from src.ui.SettingsWidget import SettingsWidget
+from src.ui.SelectProductsToImportWidget import SelectProductsToImportWidget
 
 
 class ProductImportDialog(QDialog):
@@ -41,69 +41,23 @@ class ProductImportDialog(QDialog):
         self.import_tab = QWidget()
         self.import_layout = QVBoxLayout(self.import_tab)
         
-        self.splitter = QSplitter(Qt.Horizontal, self.import_tab)
+        # Create the SelectProductsToImportWidget
+        self.select_products_widget = SelectProductsToImportWidget(core=self.core, pluggin_parent=self.pluggin_parent)
 
-        # LEFT
-        self.left_splitter = QSplitter(Qt.Vertical, self.splitter)
-
-        import EntityWidget
-        self.w_entities = EntityWidget.EntityWidget(core=self.core, refresh=True)
-        self.left_splitter.addWidget(self.w_entities)
-
-        self.w_entities.getPage("Assets").itemChanged.connect(self.onSelectedEntityChanged)
-        self.w_entities.getPage("Shots").itemChanged.connect(self.onSelectedEntityChanged)
-        
-        # Make sure that we can only select one item
-        self.w_entities.getPage("Assets").tw_tree.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.w_entities.getPage("Shots").tw_tree.setSelectionMode(QAbstractItemView.SingleSelection)
-
-        # Left Tree widget
-        self.available_tree = QTreeWidget(self.left_splitter)
-        self.available_tree.setHeaderLabels(["Product name" , "Format" , "File path"])
+        # Add the widget to the import tab layout
+        self.import_layout.addWidget(self.select_products_widget)
 
 
-        # RIGHT
-        self.right_container_widget = QWidget(self.splitter)
-        self.right_layout = QVBoxLayout(self.right_container_widget)
 
-
-        # Right Tree widget
-        self.selected_tree = QTreeWidget()
-        self.selected_tree.setHeaderLabels(["Product name" , "Format" , "File path"])
-        self.right_layout.addWidget(self.selected_tree)
-
-        # Right Button layout (left to right)
-        self.right_buttons_layout = QHBoxLayout()
-        
-        self.btn_add = QPushButton("")
-        self.right_buttons_layout.addWidget(self.btn_add)
-        self.btn_add.setIcon(self.pluggin_parent.getIcon("add_cross.png"))
-        self.btn_add.setToolTip("Add selected products to the right tree")
-        self.btn_add.clicked.connect(self.addItem)
-
-        self.btn_remove = QPushButton("")
-        self.right_buttons_layout.addWidget(self.btn_remove)
-        self.btn_remove.setIcon(self.pluggin_parent.getIcon("remove.png"))
-        self.btn_remove.setToolTip("Remove selected products from the right tree")
-        self.btn_remove.clicked.connect(self.removeItem)
-
-        self.btn_clear = QPushButton("")
-        self.right_buttons_layout.addWidget(self.btn_clear)
-        self.btn_clear.setIcon(self.pluggin_parent.getIcon("clear.png"))
-        self.btn_clear.setToolTip("Clear all products from the right tree")
-        self.btn_clear.clicked.connect(self.clearItems)
-
-        self.right_layout.addLayout(self.right_buttons_layout)
-
-        # Add the splitter to the import tab layout
-        self.import_layout.addWidget(self.splitter)
-        
         # Add tabs to the tab widget
         self.tab_widget.addTab(self.settings_tab, "Settings")
         self.tab_widget.addTab(self.import_tab, "Import Products")
 
-        # BOTTOM
-        # Button layout 
+
+
+
+
+        # Bottom buttons layout
         self.buttons_layout = QHBoxLayout()
 
         self.btn_import = QPushButton("Create")
@@ -128,8 +82,8 @@ class ProductImportDialog(QDialog):
         self.tab_widget.removeTab(self.tab_widget.indexOf(self.import_tab))
 
     def onCreate(self):
-        print("CREATE")
         self.accept()
+
 
     def setSettings(self, settings_config):
         """Set the settings configuration for the settings widget"""
@@ -147,153 +101,9 @@ class ProductImportDialog(QDialog):
         """Set specific settings values"""
         self.settings_widget.setSettingsFromDict(settings_dict)
 
-    def onSelectedEntityChanged(self, item=None):
-        if item:
-            entities = [self.w_entities.getCurrentPage().getDataFromItem(item)]
-            self.refreshAvailableTree(entities)
-
-        else:
-            self.refreshAvailableTree()
-
-    def refreshAvailableTree(self, entities=None):
-        # If there are no entities, clear the available tree
-        if not entities:
-            self.available_tree.clear()
-            return
-        
-        self.available_tree.clear()
-
-        for entity in entities:
-            if entity["type"] == "assetFolder":
-                continue  # Skip folders
-
-            # Get all the products from the entity
-            self.populateAvailableTreeFromEntity(entity)
-
-    def populateAvailableTreeFromEntity(self, entity):
-
-        # Get all the available products from the entity
-        products = self.core.products.getProductsFromEntity(entity)
-
-        for product in products:
-            treeWidgetItem = self.createItemFromProduct(product, self.available_tree)
-            self.available_tree.addTopLevelItem(treeWidgetItem)
-        
-    def createItemFromProduct(self, product , tree) :
-
-        pformat = ""
-        filepath = ""
-
-        if "path" in product:
-            data = self.core.products.getVersionsFromContext(product)
-
-            if not data:
-                print("No versions found for product:", product["product"])
-                return None
-            
-            latestVersion = self.core.products.getLatestVersionFromVersions(data)
-
-            if not latestVersion:
-                print("No latest version found for product:", product["product"])
-                return None
-            
-            filepath = latestVersion.get("path", "")
-            prefered_file = self.core.products.getPreferredFileFromVersion(latestVersion)
-            if prefered_file:
-                pformat = prefered_file.split(".")[-1]
-        
-        treeWidgetItem = QTreeWidgetItem(tree)
-        treeWidgetItem.setText(0, product["product"])
-        treeWidgetItem.setText(1, pformat)
-        treeWidgetItem.setText(2, filepath)
-
-        product_str = str(product)
-        treeWidgetItem.setData(0, Qt.UserRole, product_str)
-        treeWidgetItem.setToolTip(0, product_str)
-
-        # Set the icon according to if the product is a export or a publish
-        if("_Publish" in product["product"]):
-            treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("publish.png"))
-        else:
-            treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("other.png")) 
-
-
     def setDefaultSelectedProduct(self, products):
-        """ Fill the right container with the default selected products """
-        self.selected_tree.clear()
-        for product in products:
-            treeWidgetItem = QTreeWidgetItem(self.selected_tree)
-            treeWidgetItem.setText(0, product["name"])
-            treeWidgetItem.setWhatsThis(0, "folder")
-            if "folder" in product["type"]:
-                treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("folder.png"))
-            else:
-                treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("other.png"))
+        self.select_products_widget.setDefaultSelectedProduct(products)
 
-            if "settings" in product:
-                settings = product["settings"]
-                settings_str =  str(settings)
-                treeWidgetItem.setToolTip(0, settings_str)
-
-            # If there are child items
-            if "items" in product:
-                items = product["items"]
-                for item in items:
-                    treeWidgetItem_child = self.createItemFromProduct(item, treeWidgetItem)
-                    treeWidgetItem.addChild(treeWidgetItem_child)
-
-            self.selected_tree.addTopLevelItem(treeWidgetItem)
-
-
-
-    def addItem(self):
-        """ When the add button is pressed """
-        print("Add item pressed")
-        ## Get the selected items from both trees
-        left_selected_items = self.available_tree.selectedItems()
-        right_selected_items = self.selected_tree.selectedItems()
-
-        if not left_selected_items:
-            return
-        
-        if not right_selected_items:
-            return
-
-        # Take the first right selected item, and make sure it is a top-level item
-        right_selected_item = right_selected_items[0]
-        if right_selected_item.parent() is not None:
-            # Get the parent item
-            right_selected_item = right_selected_item.parent()
-
-        # Check if the right_selected_item is a folder
-        if right_selected_item.whatsThis(0) != "folder":
-            QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
-            return
-
-        # Check if the right_selected_item has settings
-        settings = right_selected_item.toolTip(0)
-        if settings:
-            # Check if the settings allow to pass
-            pass
-
-        # Add the item inside of the right selected item
-        for item in left_selected_items:
-            right_selected_item.addChild(item.clone())
-
-
-    def removeItem(self):
-        """ When the remove button is pressed, remove the selected item from the right tree, if it is not a folder """
-        print("Remove item pressed")
-        right_selected_items = self.selected_tree.selectedItems()
-        if not right_selected_items:
-            QMessageBox.warning(self, "No Selection", "Please select a product to remove.")
-            return
-
-        for item in right_selected_items:
-            if item.parent() is None:
-                QMessageBox.warning(self, "Invalid Selection", "Please select a child item to remove.")
-                return
-            item.parent().removeChild(item)
 
     def getResult(self):
         """ Get the result of the dialog """
@@ -319,9 +129,6 @@ class ProductImportDialog(QDialog):
 
         return result
 
-    def clearItems(self):
-        """ When the clear button is pressed """
-        print("Clear items pressed")
 
 
 def test_product_import_dialog(core , pluggin_parent):

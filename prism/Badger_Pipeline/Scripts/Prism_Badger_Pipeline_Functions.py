@@ -35,6 +35,7 @@ from src.core.MayaExportUsd import MayaExportUsd
 from src.core.PathHelper import getMayaPath, getHoudiniPath
 
 from src.ui.WidgetLinker import LinksWidget
+from src.ui.AssignVariantsDialog import AssignVariantsDialog
 
 from src.ui.Aniversaires import get_anniversaires_aujourd_hui
 from src.ui.Games_Snake import Snake
@@ -202,6 +203,12 @@ class Prism_Badger_Pipeline_Functions(object):
 
     # Open the variant connection dialog
     def openVariantsConnection(self, item):
+        widget = AssignVariantsDialog(core=self.core, pluggin_parent=self, parent=self.projectBrowser)
+        widget.setStyleSheet(self.projectBrowser.styleSheet())
+        widget.exec_()
+
+        """
+        return
         print("Open variants connection for asset: %s" % item["asset"])
 
         widget = LinksWidget(self.projectBrowser)
@@ -252,6 +259,7 @@ class Prism_Badger_Pipeline_Functions(object):
         else :
             print("Dialog cancelled, no connections made.")
 
+        """
 
 
     # This function is called when an asset was just created
@@ -423,10 +431,13 @@ class Prism_Badger_Pipeline_Functions(object):
 
     def onActionTest(self):
         # Données d'exemple
-        ## test_product_import_dialog(self.core, self)
+        test_product_import_dialog(self.core, self)
+
+        """
         path = getHoudiniPath()
         path = path.replace("\\", "/")  # Ensure the path is in the correct format
         print(path)
+        """
 
     def onActionSnakeGame(self):
         snakeGame = Snake()
