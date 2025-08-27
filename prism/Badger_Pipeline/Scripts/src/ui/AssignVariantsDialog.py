@@ -117,7 +117,7 @@ class AssignVariantsDialog(QDialog):
         # Dialog's accept button
         self.accept_button = QPushButton("OK")
         self.accept_button.setIcon(self.pluggin_parent.getIcon("check.png"))
-        self.accept_button.clicked.connect(self.accept)
+        self.accept_button.clicked.connect(self.onAcceptBtnPressed)
 
 
         # Dialog's cancel button
@@ -156,6 +156,7 @@ class AssignVariantsDialog(QDialog):
     # Setup from a given entity
     def setupFromEntity(self, entity):
         self.navigate(entity)
+        self.current_entity = entity
 
     # Create a new variant and append it to the end of the list
     def createVariant(self):
@@ -320,3 +321,31 @@ class AssignVariantsDialog(QDialog):
         else:
             # Remove the item
             right_item.parent().removeChild(right_item)
+
+    def getItemProductPath(self, product):
+        if product and product.whatsThis(0) == "product":
+            product_settings = product.toolTip(0)
+            product_settings = json.loads(product_settings)
+            path = product_settings.get("path", "")
+            path = path.replace("\\", "/")
+            return path
+        return ""
+
+    def getResult(self):
+        variants = []
+
+        for i in range(self.variant_tree.topLevelItemCount()):
+            item = self.variant_tree.topLevelItem(i)
+            variant = {
+                "geometry_low":  self.getItemProductPath(item.child(0).child(0))  if item.child(0).childCount() > 0 else "",
+                "geometry_high": self.getItemProductPath(item.child(1).child(0))  if item.child(1).childCount() > 0 else "",
+                "surfacing":     self.getItemProductPath(item.child(2).child(0))  if item.child(2).childCount() > 0 else ""
+            }
+            variants.append(variant)
+
+        result = {"variants": variants}
+        return result
+
+    def onAcceptBtnPressed(self) :
+        print(json.dumps(self.getResult(), indent=4))
+        self.accept()

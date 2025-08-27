@@ -203,68 +203,10 @@ class Prism_Badger_Pipeline_Functions(object):
 
     # Open the variant connection dialog
     def openVariantsConnection(self, item):
-
         widget = AssignVariantsDialog(core=self.core, pluggin_parent=self, parent=self.projectBrowser)
         widget.setStyleSheet(self.projectBrowser.styleSheet())
-
         widget.setupFromEntity(item)
-
-
         widget.exec_()
-
-        """
-        return
-        print("Open variants connection for asset: %s" % item["asset"])
-
-        widget = LinksWidget(self.projectBrowser)
-        widget.setWindowTitle("Variants Connection for %s" % item["asset"])
-        widget.resize(600, 400)
-
-        #Set the stylesheet of the widget to the current stylesheet of the project browser
-        widget.setStyleSheet(self.projectBrowser.styleSheet())
-
-        # @TODO : Build the widget with the already existing connections
-        widget.add_column('left', 'Variations', [
-            ("g1", "Variation 01"),
-            ("g2", "Variation 02"),
-            ("g3", "Variation 03"),
-            ("g4", "Variation 04"),
-        ])
-        widget.add_column('right', 'Materiaux', [
-            ("t1", "Mat 01"),
-            ("t2", "Mat 02"),
-            ("t3", "Mat 03"),
-            ("t4", "Mat 04"),
-        ])
-        widget.add_column('right', 'Geometries', [
-            ("g1", "Geo 01"),
-            ("g2", "Geo 02"),
-            ("g3", "Geo 03"),
-            ("g4", "Geo 04"),
-        ])
-        # Exemple de pré-remplissage de connexions
-        widget.add_connections([
-            {
-                "from": {"column": "Variations", "slot_id": "g1"},
-                "to":   {"column": "Materiaux", "slot_id": "t1"}
-            },
-            {
-                "from": {"column": "Variations", "slot_id": "g1"},
-                "to":   {"column": "Geometries", "slot_id": "g1"}
-            }
-        ])
-        result = widget.exec_()
-        if result == QDialog.Accepted:
-            # Get the connections
-            connections = widget.get_result_json()
-
-            print("Connections: %s" % connections)
-
-            # @TODO : Save the connections to a file or do something with them
-        else :
-            print("Dialog cancelled, no connections made.")
-
-        """
 
 
     # This function is called when an asset was just created
