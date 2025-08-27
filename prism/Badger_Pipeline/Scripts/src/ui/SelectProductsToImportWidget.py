@@ -1,9 +1,52 @@
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
-import os
 
 from src.ui.SelectProductsWidget import SelectProductWidget
+import os
+
+
+
+
+class SelectedTreeWidget(QTreeWidget):
+    """
+    Custom QTreeWidget that accepts drops.
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+        self.pparent = parent
+
+    def dropEvent(self, event):
+        if self.is_drop_accepted(event):
+            super().dropEvent(event)
+        else:
+            event.ignore()
+
+    def is_drop_accepted(self, event):
+        # Get the item
+        item = self.itemAt(event.pos())
+        if item:
+
+            # If the item is a group
+            if item.whatsThis(0) == "folder":
+                self.pparent.addProductToSelectedTree([event.source().currentItem().clone()], item)
+
+                return False  # Return false because we manualy copied the item
+            else:
+                # Try to get the parent of the item
+                item = item.parent()
+                if item and item.whatsThis(0) == "folder":
+                    # Manualy Copy the pasted item in the folder
+                    # Otherwise the item will be placed into the child and not the folder
+                    self.pparent.addProductToSelectedTree([event.source().currentItem().clone()], item)
+
+                    return False  # Return false because we manualy copied the item
+                
+        return False
+    
 
 
 class SelectProductsToImportWidget(QWidget):
@@ -42,7 +85,7 @@ class SelectProductsToImportWidget(QWidget):
         self.vertical_layout = QVBoxLayout(self.right_container_widget)
 
         # Tree widget
-        self.selected_tree = QTreeWidget()
+        self.selected_tree = SelectedTreeWidget(parent =self)
         self.selected_tree.setHeaderLabels(["Product name", "Format"])
         self.vertical_layout.addWidget(self.selected_tree)
 
@@ -72,11 +115,13 @@ class SelectProductsToImportWidget(QWidget):
         self.main_layout.addWidget(self.splitter)
         self.setLayout(self.main_layout)
 
+
     # Get the result of the selection
     def getResult(self):
         return {}
 
 
+    # When you double-click an item in the left tree, add it to the right tree
     def onLeftItemDoubleClicked(self, item):
 
         right_item = self.selected_tree.currentItem()
@@ -96,10 +141,6 @@ class SelectProductsToImportWidget(QWidget):
         """ When an item in the left tree is double clicked, add it to the right tree """
         self.addProductToSelectedTree([item], right_item)
 
-    # Initialise the widgets with the given settings
-    def init(self, settings):
-        pass
-
 
     # Add the selected product to the right tree widget
     def onBtnAddItemClicked(self):
@@ -109,7 +150,12 @@ class SelectProductsToImportWidget(QWidget):
         left_selected_items = self.select_product_widget.getSelectedItems()
         right_selected_items = self.selected_tree.selectedItems()
 
-        if not left_selected_items or not right_selected_items:
+        if not left_selected_items:
+            QMessageBox.warning(self, "Invalid Selection", "Please select items to add.")
+            return
+
+        if not right_selected_items:
+            QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
             return
 
         # Take the first right selected item, and make sure it is a top-level item
@@ -122,7 +168,6 @@ class SelectProductsToImportWidget(QWidget):
         if right_selected_item.whatsThis(0) != "folder":
             QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
             return
-
 
         # Add the product to the selected tree
         self.addProductToSelectedTree(left_selected_items, right_selected_item)
@@ -143,8 +188,6 @@ class SelectProductsToImportWidget(QWidget):
         for item in left_products:
             right_parent.addChild(item.clone())
 
-
-
     # Remove the selected product from the right tree widget
     def onBtnRemoveItemClicked(self):
         """ When the remove button is pressed, remove the selected item from the right tree, if it is not a folder """
@@ -161,12 +204,9 @@ class SelectProductsToImportWidget(QWidget):
             item.parent().removeChild(item)
 
 
-    # Clear all products from the right tree widget (not the folders)
-    def onBtnClearItemsClicked(self):
-        print("CLEAR")
-        # todo
 
 
+    # Fill the right container with the default selected products (initialisation)
     def setDefaultSelectedProduct(self, products):
         """ Fill the right container with the default selected products """
         self.selected_tree.clear()

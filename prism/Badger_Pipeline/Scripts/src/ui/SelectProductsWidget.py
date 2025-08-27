@@ -10,9 +10,12 @@ import EntityWidget
 from qtpy.QtCore import Signal
 
 class SelectProductWidget(QWidget):
+
     # Signaux personnalisés
     OnItemClicked = Signal(QTreeWidgetItem, int)
     OnItemDoubleClicked = Signal(QTreeWidgetItem, int)
+
+    
     """
     Widget that allow the user to select a product in the pipeline
     """
@@ -63,6 +66,7 @@ class SelectProductWidget(QWidget):
         layout.addWidget(self.splitter)
         self.setLayout(layout)
 
+
     # When the selected entity changes
     # Pupulate the Tree 
     def onSelectedEntityChanged(self, item=None):
@@ -101,6 +105,7 @@ class SelectProductWidget(QWidget):
             treeWidgetItem = self.createItemFromProduct(product, self.available_tree)
             self.available_tree.addTopLevelItem(treeWidgetItem)
         
+
     # Create an item that corresponds to the given product. 
     # Add it to the given tree
     def createItemFromProduct(self, product , tree) :
@@ -141,5 +146,7 @@ class SelectProductWidget(QWidget):
         else:
             treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("other.png")) 
 
+
+    # Get the list of select TreeWidgetItem
     def getSelectedItems(self):
-        return 
+        return self.available_tree.selectedItems()

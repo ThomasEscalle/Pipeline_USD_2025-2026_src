@@ -6,8 +6,58 @@ from src.ui.SelectProductsWidget import SelectProductWidget
 
 
 
+class VariantTreeWidget(QTreeWidget):
+    """
+    Custom QTreeWidget that accepts drops.
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+        self.pparent = parent
+
+    def dropEvent(self, event):
+        if self.is_drop_accepted(event):
+            super().dropEvent(event)
+        else:
+            event.ignore()
+
+    def is_drop_accepted(self, event):
+        # Get the item
+        item = self.itemAt(event.pos())
+
+        if item:
+            
+            # If the item is a group
+            if item.whatsThis(0) == "folder":
+                self.pparent.addProductToVariantTree([event.source().currentItem()], item)
+
+                return False  # Return false because we manualy copied the item
+            else:
+                # Try to get the parent of the item
+                item = item.parent()
+                if item and item.whatsThis(0) == "folder":
+                    # Manualy Copy the pasted item in the folder
+                    # Otherwise the item will be placed into the child and not the folder
+                    self.pparent.addProductToVariantTree([event.source().currentItem()], item)
+
+                    return False  # Return false because we manualy copied the item
+                
+        return False
+
+
+
 class AssignVariantsDialog(QDialog):
     
+    """
+    This dialog is used to asign products to variants.
+    One variant is composed of :
+        - One Geometry Low 
+        - One Geometry High
+        - One Surfacing
+    
+    """
 
     def __init__(self, core, pluggin_parent, parent=None):
         super(AssignVariantsDialog, self).__init__(parent)
@@ -26,6 +76,7 @@ class AssignVariantsDialog(QDialog):
 
         # Left : Create the product to import widget at the left of the splitter
         self.product_import_widget = SelectProductWidget(self.core, self.pluggin_parent)
+        self.product_import_widget.OnItemDoubleClicked.connect(self.onLeftItemDoubleClicked)
         self.splitter.addWidget(self.product_import_widget)
 
 
@@ -34,10 +85,9 @@ class AssignVariantsDialog(QDialog):
         self.vertical_layout = QVBoxLayout(self.right_container_widget)
 
         # Tree widget
-        self.variant_tree = QTreeWidget()
+        self.variant_tree = VariantTreeWidget(parent = self)
         self.variant_tree.setHeaderLabels(["Variant name", "Format"])
         self.vertical_layout.addWidget(self.variant_tree)
-
 
 
         # Buttons layout (horizontal)
@@ -47,12 +97,14 @@ class AssignVariantsDialog(QDialog):
         self.btn_add = QPushButton("")
         self.btn_add.setIcon(self.pluggin_parent.getIcon("arrow_right.png"))
         self.btn_add.setToolTip("Add selected products to the right tree")
+        self.btn_add.clicked.connect(self.onAddItemClicked)
         self.right_buttons_layout.addWidget(self.btn_add)
 
         # Remove an item button
         self.btn_remove = QPushButton("")
         self.btn_remove.setIcon(self.pluggin_parent.getIcon("remove.png"))
         self.btn_remove.setToolTip("Remove selected products from the right tree")
+        self.btn_remove.clicked.connect(self.onRemoveButtonClicked)
         self.right_buttons_layout.addWidget(self.btn_remove)
 
 
@@ -63,20 +115,30 @@ class AssignVariantsDialog(QDialog):
         self.btn_create_variant.clicked.connect(self.createVariant)
         self.right_buttons_layout.addWidget(self.btn_create_variant)
 
+
+
         self.vertical_layout.addLayout(self.right_buttons_layout)
-
         self.splitter.addWidget(self.right_container_widget)
-
         self.main_layout.addWidget(self.splitter)
 
         # Dialog buttons (Accept/Cancel) at the bottom, using custom QPushButton
         self.dialog_buttons_layout = QHBoxLayout()
 
+
+
+
+        # Dialog's accept button
         self.accept_button = QPushButton("OK")
+        self.accept_button.setIcon(self.pluggin_parent.getIcon("check.png"))
         self.accept_button.clicked.connect(self.accept)
 
+
+        # Dialog's cancel button
         self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setIcon(self.pluggin_parent.getIcon("cancel.png"))
         self.cancel_button.clicked.connect(self.reject)
+
+
 
         self.dialog_buttons_layout.addStretch()
         self.dialog_buttons_layout.addWidget(self.accept_button)
@@ -85,15 +147,82 @@ class AssignVariantsDialog(QDialog):
 
         self.setLayout(self.main_layout)
 
+
+        # ACTIONS :
+
+        # Add action : add a variant when click "+"
+        self.create_variant_action = QAction(self)
+        self.create_variant_action.setIcon(self.pluggin_parent.getIcon("add_cross.png"))
+        self.create_variant_action.setToolTip("Create a new variant")
+        self.create_variant_action.setShortcut(QKeySequence("+"))
+        self.create_variant_action.triggered.connect(self.createVariant)
+        self.addAction(self.create_variant_action)
+
+        # Remove action : remove the selected item when click suppr
+        self.remove_variant_action = QAction(self)
+        self.remove_variant_action.setIcon(self.pluggin_parent.getIcon("remove.png"))
+        self.remove_variant_action.setToolTip("Remove the selected variant")
+        self.remove_variant_action.setShortcut(QKeySequence("Delete"))
+        self.remove_variant_action.triggered.connect(self.onRemoveButtonClicked)
+        self.addAction(self.remove_variant_action)
+
+    # Create a new variant and append it to the end of the list
     def createVariant(self):
         # Add a variant to the variant tree.
         # It consist of a treeWidgetItem that is named by it's index in the list
         item = QTreeWidgetItem(self.variant_tree)
+        item.setWhatsThis(0,"folder")
         item.setIcon(0, self.pluggin_parent.getIcon("folder.png"))
         self.variant_tree.addTopLevelItem(item)
 
+        # Add three 'subfolder' : Modeling Low, Modeling High and Surfacing
+        mod_low_item = QTreeWidgetItem(item)
+        mod_low_item.setText(0, "Modeling Low")
+        mod_low_item.setWhatsThis(0,"Modeling_Low_grp")
+        mod_low_item.setIcon(0, self.pluggin_parent.getIcon("Modeling Low.png"))
+        item.addChild(mod_low_item)
+
+        mod_high_item = QTreeWidgetItem(item)
+        mod_high_item.setText(0, "Modeling High")
+        mod_high_item.setWhatsThis(0,"Modeling_High_grp")
+        mod_high_item.setIcon(0, self.pluggin_parent.getIcon("Modeling High.png"))
+        item.addChild(mod_high_item)
+
+        surfacing_item = QTreeWidgetItem(item)
+        surfacing_item.setText(0, "Surfacing")
+        surfacing_item.setWhatsThis(0,"Surfacing_grp")
+        surfacing_item.setIcon(0, self.pluggin_parent.getIcon("Surfacing.png"))
+        item.addChild(surfacing_item)
+
         self.updateVariantNames()
 
+    
+    # When you double-click an item in the left tree, add it to the right tree
+    def onLeftItemDoubleClicked(self, item):
+
+        right_item = self.variant_tree.currentItem()
+
+        if not right_item:
+            return
+        
+        # ignore if the item is a group
+        if "_grp" in right_item.whatsThis(0):
+            return
+
+        if right_item.parent() is not None:
+            # Get the parent item
+            right_item = right_item.parent()
+
+        # Check if the right_item is a folder
+        if right_item.whatsThis(0) != "folder":
+            QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
+            return
+
+        """ When an item in the left tree is double clicked, add it to the right tree """
+        self.addProductToVariantTree([item], right_item)
+
+
+    # Update the variant names in the tree.
     def updateVariantNames(self):
         # Update the variant names in the tree.
         # This rename the variants (top level item) of the tree widget to their index.
@@ -105,3 +234,67 @@ class AssignVariantsDialog(QDialog):
             # If there is only one item, sets the name to "default"
             if self.variant_tree.topLevelItemCount() == 1:
                 item.setText(0, "default")
+
+
+
+    # Add a product from the left to the right (selectProducts to right_selected_item)
+    def addProductToVariantTree(self, left_products, right_parent):
+
+        # Check if the right_selected_item has settings
+        settings = right_parent.toolTip(0)
+        if settings:
+            # Check if the settings allow to pass (filters)
+            pass
+
+        
+        # Add the item inside of the right selected item
+        for item in left_products:
+            right_parent.addChild(item.clone())
+
+
+    # Add the selected product to the right tree widget
+    def onAddItemClicked(self):
+        """ When the add button is pressed """
+
+        ## Get the selected items from both trees
+        left_selected_items = self.product_import_widget.getSelectedItems()
+        right_selected_items = self.variant_tree.selectedItems()
+
+        if not left_selected_items:
+            QMessageBox.warning(self, "Invalid Selection", "Please select items to add.")
+            return
+
+        if not right_selected_items:
+            QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
+            return
+
+        # Take the first right selected item, and make sure it is a top-level item
+        right_selected_item = right_selected_items[0]
+        if right_selected_item.parent() is not None:
+            # Get the parent item
+            right_selected_item = right_selected_item.parent()
+
+        # Check if the right_selected_item is a folder
+        if right_selected_item.whatsThis(0) != "folder":
+            QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
+            return
+
+        # Add the product to the selected tree
+        self.addProductToVariantTree(left_selected_items, right_selected_item)
+        
+
+    # Remove the selected item in the right tree
+    def onRemoveButtonClicked(self):
+        right_item = self.variant_tree.currentItem()
+
+        if not right_item:
+            return
+
+        if right_item.parent() is None:
+            # Top level item
+            index = self.variant_tree.indexOfTopLevelItem(right_item)
+            self.variant_tree.takeTopLevelItem(index)
+            self.updateVariantNames()
+        else:
+            # Remove the item
+            right_item.parent().removeChild(right_item)
