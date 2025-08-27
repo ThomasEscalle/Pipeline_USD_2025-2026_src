@@ -203,8 +203,13 @@ class Prism_Badger_Pipeline_Functions(object):
 
     # Open the variant connection dialog
     def openVariantsConnection(self, item):
+
         widget = AssignVariantsDialog(core=self.core, pluggin_parent=self, parent=self.projectBrowser)
         widget.setStyleSheet(self.projectBrowser.styleSheet())
+
+        widget.setupFromEntity(item)
+
+
         widget.exec_()
 
         """

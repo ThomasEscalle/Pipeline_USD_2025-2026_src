@@ -2,7 +2,7 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 import os
-
+import json
 
 import EntityWidget
 
@@ -46,7 +46,7 @@ class SelectProductWidget(QWidget):
 
         # Left Tree widget
         self.available_tree = QTreeWidget(self.splitter)
-        self.available_tree.setHeaderLabels(["Product name" , "Format"])
+        self.available_tree.setHeaderLabels(["Product name" , "Format" , "Asset"])
 
         # Enable drag for available_tree
         self.available_tree.setDragEnabled(True)
@@ -66,6 +66,8 @@ class SelectProductWidget(QWidget):
         layout.addWidget(self.splitter)
         self.setLayout(layout)
 
+    def navigate(self, entity):
+        self.w_entities.navigate(entity)
 
     # When the selected entity changes
     # Pupulate the Tree 
@@ -104,7 +106,8 @@ class SelectProductWidget(QWidget):
         for product in products:
             treeWidgetItem = self.createItemFromProduct(product, self.available_tree)
             self.available_tree.addTopLevelItem(treeWidgetItem)
-        
+    
+
 
     # Create an item that corresponds to the given product. 
     # Add it to the given tree
@@ -135,8 +138,10 @@ class SelectProductWidget(QWidget):
         treeWidgetItem.setText(0, product["product"])
         treeWidgetItem.setText(1, pformat)
         treeWidgetItem.setText(2, filepath)
+        treeWidgetItem.setWhatsThis(0, "product")
 
-        product_str = str(product)
+        # Convert the product to json str
+        product_str = json.dumps(product)
         treeWidgetItem.setData(0, Qt.UserRole, product_str)
         treeWidgetItem.setToolTip(0, product_str)
 

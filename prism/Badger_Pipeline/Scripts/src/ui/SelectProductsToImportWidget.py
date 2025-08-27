@@ -2,8 +2,10 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 
+
 from src.ui.SelectProductsWidget import SelectProductWidget
 import os
+import json
 
 
 
@@ -19,12 +21,14 @@ class SelectedTreeWidget(QTreeWidget):
         self.setDropIndicatorShown(True)
         self.pparent = parent
 
+    # Handle the drop event
     def dropEvent(self, event):
         if self.is_drop_accepted(event):
             super().dropEvent(event)
         else:
             event.ignore()
 
+    # When an item is dropped
     def is_drop_accepted(self, event):
         # Get the item
         item = self.itemAt(event.pos())
@@ -115,11 +119,32 @@ class SelectProductsToImportWidget(QWidget):
         self.main_layout.addWidget(self.splitter)
         self.setLayout(self.main_layout)
 
+    def navigate(self, entity):
+        self.select_product_widget.navigate(entity)
 
     # Get the result of the selection
     def getResult(self):
-        return {}
+        result = {}
 
+        # Iterate through the folders in the right tree
+        for i in range(self.selected_tree.topLevelItemCount()):
+            folder_item = self.selected_tree.topLevelItem(i)
+            folder_name = folder_item.text(0)
+            folder_settings = folder_item.toolTip(0)
+            folder_items = []
+
+            # Iterate through the child items
+            for j in range(folder_item.childCount()):
+                child_item = folder_item.child(j)
+                child_name = child_item.text(0)
+                child_data = child_item.toolTip(0)
+                child_data = eval(child_data)
+
+                folder_items.append(child_data)
+
+            result[folder_name] = folder_items
+
+        return result
 
     # When you double-click an item in the left tree, add it to the right tree
     def onLeftItemDoubleClicked(self, item):
@@ -172,7 +197,9 @@ class SelectProductsToImportWidget(QWidget):
         # Add the product to the selected tree
         self.addProductToSelectedTree(left_selected_items, right_selected_item)
 
-
+    def remove_all_children(self,item):
+        for child in item.takeChildren():
+            del child  # Explicitly delete the child to free memory
 
     # Add a product from the left to the right (selectProducts to right_selected_item
     def addProductToSelectedTree(self, left_products, right_parent):
@@ -180,10 +207,19 @@ class SelectProductsToImportWidget(QWidget):
         # Check if the right_selected_item has settings
         settings = right_parent.toolTip(0)
         if settings:
-            # Check if the settings allow to pass (filters)
-            pass
+            print(settings)
+            # Parse the settings from json
+            settings = json.loads(settings)
 
-        
+            # if the settings where successfully parsed
+            if settings:
+
+                # If there is the settings "select_only_one_file" and if it is set to True,
+                # We clear the right_parent childrens
+                if settings.get("select_only_one_file", False):
+                    self.remove_all_children(right_parent)
+                
+
         # Add the item inside of the right selected item
         for item in left_products:
             right_parent.addChild(item.clone())
@@ -222,8 +258,14 @@ class SelectProductsToImportWidget(QWidget):
 
             if "settings" in product:
                 settings = product["settings"]
-                settings_str =  str(settings)
+                settings_str =  json.dumps(settings)
                 treeWidgetItem.setToolTip(0, settings_str)
+
+                if "select_only_one_file" in settings and settings["select_only_one_file"]:
+                    treeWidgetItem.setText(1,"(Single file)")
+                if "accepted_files" in settings:
+                    exts = settings["accepted_files"]
+                    treeWidgetItem.setText(1, treeWidgetItem.text(1) + " (." + ", .".join(exts) + ")")
 
             # If there are child items
             if "items" in product:

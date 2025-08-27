@@ -2,8 +2,8 @@ from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 import os
+import json
 from src.ui.SelectProductsWidget import SelectProductWidget
-
 
 
 class VariantTreeWidget(QTreeWidget):
@@ -29,20 +29,7 @@ class VariantTreeWidget(QTreeWidget):
 
         if item:
             
-            # If the item is a group
-            if item.whatsThis(0) == "folder":
-                self.pparent.addProductToVariantTree([event.source().currentItem()], item)
-
-                return False  # Return false because we manualy copied the item
-            else:
-                # Try to get the parent of the item
-                item = item.parent()
-                if item and item.whatsThis(0) == "folder":
-                    # Manualy Copy the pasted item in the folder
-                    # Otherwise the item will be placed into the child and not the folder
-                    self.pparent.addProductToVariantTree([event.source().currentItem()], item)
-
-                    return False  # Return false because we manualy copied the item
+            self.pparent.addProductToVariantTree([event.source().currentItem()], item)
                 
         return False
 
@@ -166,6 +153,10 @@ class AssignVariantsDialog(QDialog):
         self.remove_variant_action.triggered.connect(self.onRemoveButtonClicked)
         self.addAction(self.remove_variant_action)
 
+    # Setup from a given entity
+    def setupFromEntity(self, entity):
+        self.navigate(entity)
+
     # Create a new variant and append it to the end of the list
     def createVariant(self):
         # Add a variant to the variant tree.
@@ -209,15 +200,6 @@ class AssignVariantsDialog(QDialog):
         if "_grp" in right_item.whatsThis(0):
             return
 
-        if right_item.parent() is not None:
-            # Get the parent item
-            right_item = right_item.parent()
-
-        # Check if the right_item is a folder
-        if right_item.whatsThis(0) != "folder":
-            QMessageBox.warning(self, "Invalid Selection", "Please select a folder to add items to.")
-            return
-
         """ When an item in the left tree is double clicked, add it to the right tree """
         self.addProductToVariantTree([item], right_item)
 
@@ -235,21 +217,61 @@ class AssignVariantsDialog(QDialog):
             if self.variant_tree.topLevelItemCount() == 1:
                 item.setText(0, "default")
 
+    def remove_all_children(self,item):
+        for child in item.takeChildren():
+            del child  # Explicitly delete the child to free memory
 
+    def navigate(self, entity):
+        self.product_import_widget.navigate(entity)
 
     # Add a product from the left to the right (selectProducts to right_selected_item)
     def addProductToVariantTree(self, left_products, right_parent):
-
-        # Check if the right_selected_item has settings
-        settings = right_parent.toolTip(0)
-        if settings:
-            # Check if the settings allow to pass (filters)
-            pass
-
+        
         
         # Add the item inside of the right selected item
         for item in left_products:
-            right_parent.addChild(item.clone())
+
+
+            # If the right parent is type "product"
+            if right_parent.whatsThis(0) == "product":
+                right_parent = right_parent.parent()
+
+            # If the right_parent is a top_level_item, we need to find the correct parent
+            if right_parent.parent() is None:
+                left_item_settings = item.toolTip(0)
+                left_item_settings = json.loads(left_item_settings)
+
+                path = left_item_settings.get("path", "")
+                path = path.lower()
+                if(path == ""):
+                    QMessageBox.warning(self, "Invalid Product", f"The product '{item.text(0)}' does not have a path.")
+                    continue # Continue if path is empty
+
+                if("modl" in path):
+                    # Add the item to the modeling low group
+                    right_parent = right_parent.child(0) # Modeling Low
+                    self.remove_all_children(right_parent)
+                    right_parent.addChild(item.clone())
+                    continue
+                elif("modh" in path):
+                    # Add the item to the modeling high group
+                    right_parent = right_parent.child(1) # Modeling High
+                    self.remove_all_children(right_parent)
+                    right_parent.addChild(item.clone())
+                    continue
+                elif("surf" in path):
+                    # Add the item to the surfacing group
+                    right_parent = right_parent.child(2) # Surfacing
+                    self.remove_all_children(right_parent)
+                    right_parent.addChild(item.clone())
+                    continue
+                else:
+                    QMessageBox.warning(self, "Invalid Product", f"The product '{item.text(0)}' does not have a recognized path. It should contain 'modl', 'modh' or 'surf' in its path.")
+                    continue # Continue if path is not recognized
+
+            else :
+                self.remove_all_children(right_parent)
+                right_parent.addChild(item.clone())
 
 
     # Add the selected product to the right tree widget

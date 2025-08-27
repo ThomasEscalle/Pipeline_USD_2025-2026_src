@@ -107,26 +107,7 @@ class ProductImportDialog(QDialog):
 
     def getResult(self):
         """ Get the result of the dialog """
-        result = {}
-
-        # Iterate through the folders in the right tree
-        for i in range(self.selected_tree.topLevelItemCount()):
-            folder_item = self.selected_tree.topLevelItem(i)
-            folder_name = folder_item.text(0)
-            folder_settings = folder_item.toolTip(0)
-            folder_items = []
-
-            # Iterate through the child items
-            for j in range(folder_item.childCount()):
-                child_item = folder_item.child(j)
-                child_name = child_item.text(0)
-                child_data = child_item.toolTip(0)
-                child_data = eval(child_data)
-
-                folder_items.append(child_data)
-
-            result[folder_name] = folder_items
-
+        result = self.select_products_widget.getResult()
         return result
 
 
@@ -154,6 +135,12 @@ def test_product_import_dialog(core , pluggin_parent):
         {
             "type" : "folder",
             "name" : "Rigs",
+            "settings" : {
+                "accepted_files" : [
+                    "ma",
+                    "mb"
+                ]
+            },
             "items" : [
                 {
                     "type" : "asset",
@@ -231,5 +218,8 @@ def test_product_import_dialog(core , pluggin_parent):
         
         print("\nSettings as JSON:")
         print(dialog.getSettingsAsJson())
+
+        print("RESULTS" )
+        print(dialog.getResult())
     else:
         print("Dialog cancelled")
