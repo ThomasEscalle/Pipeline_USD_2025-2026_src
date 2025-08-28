@@ -336,15 +336,30 @@ class AssignVariantsDialog(QDialog):
 
         for i in range(self.variant_tree.topLevelItemCount()):
             item = self.variant_tree.topLevelItem(i)
+
+            geometry_low_path = self.getItemProductPath(item.child(0).child(0))  if item.child(0).childCount() > 0 else ""
+            geometry_high_path = self.getItemProductPath(item.child(1).child(0))  if item.child(1).childCount() > 0 else ""
+            surfacing_path = self.getItemProductPath(item.child(2).child(0))  if item.child(2).childCount() > 0 else ""
+
+
+
             variant = {
-                "geometry_low":  self.getItemProductPath(item.child(0).child(0))  if item.child(0).childCount() > 0 else "",
-                "geometry_high": self.getItemProductPath(item.child(1).child(0))  if item.child(1).childCount() > 0 else "",
-                "surfacing":     self.getItemProductPath(item.child(2).child(0))  if item.child(2).childCount() > 0 else ""
+                "geometry_low":  geometry_low_path,
+                "geometry_high": geometry_high_path,
+                "surfacing":     surfacing_path
             }
             variants.append(variant)
 
         result = {"variants": variants}
         return result
+    
+
+    def saveResult(self):
+
+        result = self.getResult()
+        pass
+
+
 
     def onAcceptBtnPressed(self) :
         print(json.dumps(self.getResult(), indent=4))

@@ -83,14 +83,17 @@ class USDUtils:
 
 
         # Create the geo.usda
-        geo_asset_path = self.createAssetGeo(entity, usd_asset, parent, master_path_low, master_path_high, subdirectory = "default")
+        geo_asset_path = self.createAssetGeo(entity, usd_asset, parent, master_path_low["usd_file"], master_path_high["usd_file"], subdirectory = "default")
 
         # Create the mtl.usda
-        mtl_asset_path = self.createAssetMaterial(entity, usd_asset, parent, master_path_mtl, subdirectory = "default")
+        mtl_asset_path = self.createAssetMaterial(entity, usd_asset, parent, master_path_mtl["usd_file"], subdirectory = "default")
 
 
         # Create the asset.usda
         self.createAssetRoot(entity, usd_asset, parent)
+
+        # Create the usd_info.json
+        self.createAssetJsonDefinition([{"geometry_low" : master_path_low["product"] , "geometry_high" : master_path_high["product"], "surfacing" : master_path_mtl["product"]}], os.path.join(usd_asset, "usd_info.json")  )
 
         # Create the payload.usda
         payload_variants = [
@@ -343,11 +346,11 @@ class USDUtils:
         except ImportError as e:
             parent.console.log("Error importing pxr module: %s" % e)
             parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
-            return ""
+            return {"product": "", "usd_file": ""}
         
 
         # Create the product in prism
-        parent.core.products.createProduct(entity, "ModL_Publish", "global")
+        product_path = parent.core.products.createProduct(entity, "ModL_Publish", "global")
 
         temp_geo_path = os.path.join(assetPath, "geo_low.usda")
 
@@ -373,18 +376,18 @@ class USDUtils:
         if os.path.exists(temp_geo_path):
             os.remove(temp_geo_path)
 
-        return master_path_low
-    
+        return {"usd_file" : master_path_low , "product": product_path}
+
     def createAssetModelingHigh(self, entity, assetPath, parent):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
             parent.console.log("Error importing pxr module: %s" % e)
             parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
-            return ""
+            return {"product": "", "usd_file": ""}
 
         # Create the product in prism
-        parent.core.products.createProduct(entity, "ModH_Publish", "global")
+        product_path = parent.core.products.createProduct(entity, "ModH_Publish", "global")
 
         # Create the high-resolution geometry
         temp_geo_path = os.path.join(assetPath, "geo_high.usda")
@@ -411,7 +414,7 @@ class USDUtils:
         if os.path.exists(temp_geo_path):
             os.remove(temp_geo_path)
 
-        return master_path_high
+        return {"usd_file" : master_path_high , "product": product_path}
 
     def createAssetSurfacing(self, entity, assetPath, parent):
         try:
@@ -419,10 +422,10 @@ class USDUtils:
         except ImportError as e:
             parent.console.log("Error importing pxr module: %s" % e)
             parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
-            return ""
+            return {"product": "", "usd_file": ""}
         
         # Create the product in Prism
-        parent.core.products.createProduct(entity, "Surf_Publish", "global")
+        product_path = parent.core.products.createProduct(entity, "Surf_Publish", "global")
 
 
 
@@ -487,4 +490,43 @@ class USDUtils:
         if os.path.exists(mtl_temp_path):
             os.remove(mtl_temp_path)
 
-        return master_path_mtl
+        return {"usd_file": master_path_mtl, "product": product_path}
+
+
+    def createAssetJsonDefinition(self,assetPaths, savePath):
+
+        variants = []
+
+        if not assetPaths:
+            variants = []
+        else:
+            for item in assetPaths:
+                geometry_low = item.get("geometry_low")
+                geometry_high = item.get("geometry_high")
+                surfacing = item.get("surfacing")
+
+                # Get the relative path from the save path to the geometry low
+                relative_low = os.path.relpath(geometry_low, os.path.dirname(savePath))
+                relative_high = os.path.relpath(geometry_high, os.path.dirname(savePath))
+                relative_mtl = os.path.relpath(surfacing, os.path.dirname(savePath))
+
+                relative_low = relative_low.replace("\\", "/")
+                relative_high = relative_high.replace("\\", "/")
+                relative_mtl = relative_mtl.replace("\\", "/")
+
+                variants.append({
+                    "geometry_low": relative_low if relative_low else geometry_low,
+                    "geometry_high": relative_high if relative_high else geometry_high,
+                    "surfacing": relative_mtl if relative_mtl else surfacing
+                })
+        
+        result = {"variants" : variants}
+
+        # Save into json
+        # 1. Check if the containing folder exists and create it if necessary
+        os.makedirs(os.path.dirname(savePath), exist_ok=True)
+        # 2. Write the JSON data to the specified file
+        with open(savePath, 'w') as json_file:
+            json.dump(result, json_file, indent=4)
+
+        return result

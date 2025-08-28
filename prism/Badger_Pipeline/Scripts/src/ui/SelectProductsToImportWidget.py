@@ -203,25 +203,33 @@ class SelectProductsToImportWidget(QWidget):
 
     # Add a product from the left to the right (selectProducts to right_selected_item
     def addProductToSelectedTree(self, left_products, right_parent):
-
         # Check if the right_selected_item has settings
         settings = right_parent.toolTip(0)
-        if settings:
-            print(settings)
-            # Parse the settings from json
-            settings = json.loads(settings)
-
-            # if the settings where successfully parsed
-            if settings:
-
-                # If there is the settings "select_only_one_file" and if it is set to True,
-                # We clear the right_parent childrens
-                if settings.get("select_only_one_file", False):
-                    self.remove_all_children(right_parent)
-                
 
         # Add the item inside of the right selected item
         for item in left_products:
+            if settings:
+                # Parse the settings from json
+                settings = json.loads(settings)
+
+                # if the settings where successfully parsed
+                if settings:
+
+                    # If there is the settings "select_only_one_file" and if it is set to True,
+                    # We clear the right_parent childrens
+                    if settings.get("select_only_one_file", False):
+                        self.remove_all_children(right_parent)
+
+
+                    # If there is the setting "accepted_files", we check if the left_product 's extension
+                    # match one of the accepted extensions
+                    if "accepted_files" in settings:
+                        accepted_files = settings["accepted_files"]
+                        left_extension = item.text(1)
+                        if left_extension not in accepted_files:
+                            QMessageBox.warning(self, "Invalid File Type", f"The file type '{left_extension}' is not accepted.")
+                            return
+
             right_parent.addChild(item.clone())
 
     # Remove the selected product from the right tree widget
@@ -255,7 +263,7 @@ class SelectProductsToImportWidget(QWidget):
                 treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("folder.png"))
             else:
                 treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("other.png"))
-
+                
             if "settings" in product:
                 settings = product["settings"]
                 settings_str =  json.dumps(settings)
@@ -266,6 +274,9 @@ class SelectProductsToImportWidget(QWidget):
                 if "accepted_files" in settings:
                     exts = settings["accepted_files"]
                     treeWidgetItem.setText(1, treeWidgetItem.text(1) + " (." + ", .".join(exts) + ")")
+
+                if "required" in settings and settings["required"]:
+                    treeWidgetItem.setText(0, treeWidgetItem.text(0) + " *")
 
             # If there are child items
             if "items" in product:

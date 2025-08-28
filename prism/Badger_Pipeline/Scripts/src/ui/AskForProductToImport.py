@@ -136,6 +136,7 @@ def test_product_import_dialog(core , pluggin_parent):
             "type" : "folder",
             "name" : "Rigs",
             "settings" : {
+                "required" : True,
                 "accepted_files" : [
                     "ma",
                     "mb"
