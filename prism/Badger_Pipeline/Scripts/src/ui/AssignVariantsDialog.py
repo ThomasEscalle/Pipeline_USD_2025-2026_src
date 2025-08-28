@@ -3,8 +3,9 @@ from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 import os
 import json
-from src.ui.SelectProductsWidget import SelectProductWidget
 
+from src.ui.SelectProductsWidget import SelectProductWidget
+from src.core.USD_utils import USDUtils
 
 class VariantTreeWidget(QTreeWidget):
     """
@@ -15,6 +16,7 @@ class VariantTreeWidget(QTreeWidget):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
+        self.current_entity = None
         self.pparent = parent
 
     def dropEvent(self, event):
@@ -73,7 +75,7 @@ class AssignVariantsDialog(QDialog):
 
         # Tree widget
         self.variant_tree = VariantTreeWidget(parent = self)
-        self.variant_tree.setHeaderLabels(["Variant name", "Format"])
+        self.variant_tree.setHeaderLabels(["Variant name", "Format" , "Asset"])
         self.vertical_layout.addWidget(self.variant_tree)
 
 
@@ -158,6 +160,18 @@ class AssignVariantsDialog(QDialog):
         self.navigate(entity)
         self.current_entity = entity
 
+
+        # Find the "USD_Asset folder path"
+        products = self.core.products.getProductsFromEntity(self.current_entity)
+        for product in products:
+            if product.get("product", "" ) == "USD_Asset":
+                json_path = product.get("path", "")
+                json_path = os.path.join(json_path, "usd_info.json")
+
+                if self.openFromJson(json_path):
+                    return
+                
+
     # Create a new variant and append it to the end of the list
     def createVariant(self):
         # Add a variant to the variant tree.
@@ -187,6 +201,8 @@ class AssignVariantsDialog(QDialog):
         item.addChild(surfacing_item)
 
         self.updateVariantNames()
+
+        return { "item" : item, "mod_low_item" : mod_low_item, "mod_high_item" : mod_high_item, "surfacing_item" : surfacing_item }
 
     
     # When you double-click an item in the left tree, add it to the right tree
@@ -322,6 +338,7 @@ class AssignVariantsDialog(QDialog):
             # Remove the item
             right_item.parent().removeChild(right_item)
 
+    # Get the product path from the item
     def getItemProductPath(self, product):
         if product and product.whatsThis(0) == "product":
             product_settings = product.toolTip(0)
@@ -331,36 +348,145 @@ class AssignVariantsDialog(QDialog):
             return path
         return ""
 
-    def getResult(self):
+    # Get the result as a json object
+    def getResult(self, jsonpath= ""):
         variants = []
 
         for i in range(self.variant_tree.topLevelItemCount()):
             item = self.variant_tree.topLevelItem(i)
 
-            geometry_low_path = self.getItemProductPath(item.child(0).child(0))  if item.child(0).childCount() > 0 else ""
-            geometry_high_path = self.getItemProductPath(item.child(1).child(0))  if item.child(1).childCount() > 0 else ""
-            surfacing_path = self.getItemProductPath(item.child(2).child(0))  if item.child(2).childCount() > 0 else ""
+            geometry_low_data = item.child(0).child(0).toolTip(0) if item.child(0).childCount() > 0 else ""
+            geometry_high_data = item.child(1).child(0).toolTip(0) if item.child(1).childCount() > 0 else ""
+            surfacing_data = item.child(2).child(0).toolTip(0) if item.child(2).childCount() > 0 else ""
 
 
+            # Convert from json string to python 
+            geometry_low_data = json.loads(geometry_low_data) if geometry_low_data != "" else {}
+            geometry_high_data = json.loads(geometry_high_data) if geometry_high_data != "" else {}
+            surfacing_data = json.loads(surfacing_data) if surfacing_data != "" else {}
 
             variant = {
-                "geometry_low":  geometry_low_path,
-                "geometry_high": geometry_high_path,
-                "surfacing":     surfacing_path
+                "geometry_low":  geometry_low_data,
+                "geometry_high": geometry_high_data,
+                "surfacing":     surfacing_data
             }
             variants.append(variant)
 
-        result = {"variants": variants}
+        result = {"variants": variants , "entity" : self.current_entity}
         return result
     
-
+    # Save the result
     def saveResult(self):
 
-        result = self.getResult()
-        pass
+        # result = self.getResult()
+        print("saving results")
+        print(self.current_entity)
 
+        products = self.core.products.getProductsFromEntity(self.current_entity)
+        for product in products:
+            if product.get("product", "" ) == "USD_Asset":
+                product_path = product.get("path", "")
+                
+                if product_path == "":
+                    continue
 
+                json_path = os.path.join(product_path, "usd_info.json")
+                with open(json_path, "w") as json_file:
+                    json.dump(self.getResult(product_path), json_file, indent=4)
+                return json_path
 
+        return ""
+    
+    # Check if the result is valid and if it is ready to be exported.
+    # If not, it sends a QMessageBox to show a feedback
+    def isValid(self):
+
+        # Check if there is an entity  (self.current_entity exists)
+        if not self.current_entity:
+            QMessageBox.warning(self, "Invalid Selection", "Please select an entity.")
+            return False
+
+        # Check that there is at least one top-level variant
+        if self.variant_tree.topLevelItemCount() == 0:
+            QMessageBox.warning(self, "Invalid Selection", "Please add at least one variant.")
+            return False
+
+        # Iterate over all the items
+        for i in range(self.variant_tree.topLevelItemCount()):
+            item = self.variant_tree.topLevelItem(i)
+
+            # Check if the item has exactly 3 children (for the 3 variant types)
+            if item.childCount() != 3:
+                QMessageBox.warning(self, "Invalid Selection", "Each variant must have exactly 3 children.")
+                return False
+
+            # Check that every children has one or more subchildrens
+            if item.child(0).childCount() == 0:
+                QMessageBox.warning(self, "Invalid Selection", "Each variant must have at least 1 geometry low child.")
+                return False
+            if item.child(1).childCount() == 0:
+                QMessageBox.warning(self, "Invalid Selection", "Each variant must have at least 1 geometry high child.")
+                return False
+            if item.child(2).childCount() == 0:
+                QMessageBox.warning(self, "Invalid Selection", "Each variant must have at least 1 surfacing child.")
+                return False
+
+        return True
+
+    # When the accept button is pressed
     def onAcceptBtnPressed(self) :
-        print(json.dumps(self.getResult(), indent=4))
-        self.accept()
+        # Check if the result is valid
+        if not self.isValid():
+            return
+
+        save_path = self.saveResult()
+
+        # Save the results to json
+        if save_path != "":
+
+            utils = USDUtils()
+            utils.refreshUsdAssetFromJsonPath(save_path, self.core)
+
+            self.accept()
+        else:
+            QMessageBox.warning(self, "Save Error", "Failed to save the results.")
+
+    # Open the dialog from a usd_info.json file
+    def openFromJson(self, json_path):
+        # Check if the file exists
+        if not os.path.exists(json_path):
+            QMessageBox.warning(self, "File Not Found", f"JSON file not found: {json_path}")
+            return False
+        
+        # Load the json data
+        json_data = None
+        with open(json_path, "r") as json_file:
+            try:
+                json_data = json.load(json_file)
+            except json.JSONDecodeError:
+                QMessageBox.warning(self, "JSON Error", f"Failed to parse JSON file: {json_path}")
+                return False
+
+        variants_array = json_data.get("variants", [])
+        for variant in variants_array:
+            self.addVariantFromJson(variant, json_path)
+
+        return True
+    
+    def addVariantFromJson(self, variant, json_path):
+        variant_data = self.createVariant()
+
+        json_folder_path = os.path.dirname(json_path)
+
+        # Fill the variant with the products
+        geometry_low_product = variant.get("geometry_low", {})
+        item = self.product_import_widget.createItemFromProduct(geometry_low_product)
+        variant_data["mod_low_item"].addChild(item) if item else None
+
+        geometry_high_product = variant.get("geometry_high", {})
+        item = self.product_import_widget.createItemFromProduct(geometry_high_product)
+        variant_data["mod_high_item"].addChild(item) if item else None
+
+        surfacing_product = variant.get("surfacing", {})
+        item = self.product_import_widget.createItemFromProduct(surfacing_product)
+        variant_data["surfacing_item"].addChild(item) if item else None

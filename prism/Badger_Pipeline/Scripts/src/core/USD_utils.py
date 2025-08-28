@@ -1,6 +1,10 @@
 from src.core.USD_FileTemplate import USDFileTemplate
+
+from qtpy.QtWidgets import *
+
 import os
 import json
+import shutil
 
 
 class USDUtils:
@@ -70,45 +74,40 @@ class USDUtils:
 
         
         # Create a publish for the modeling low geo
-        master_path_low = self.createAssetModelingLow(entity, usd_asset, parent)
+        master_path_low = self.createAssetModelingLow(entity, usd_asset, parent.core)
 
         # Create a publish for the modeling high geo
-        master_path_high = self.createAssetModelingHigh(entity, usd_asset, parent)
+        master_path_high = self.createAssetModelingHigh(entity, usd_asset, parent.core)
 
         # Create a publish for the surfacing
-        master_path_mtl = self.createAssetSurfacing(entity, usd_asset, parent)
+        master_path_mtl = self.createAssetSurfacing(entity, usd_asset, parent.core)
 
 
 
 
 
         # Create the geo.usda
-        geo_asset_path = self.createAssetGeo(entity, usd_asset, parent, master_path_low["usd_file"], master_path_high["usd_file"], subdirectory = "default")
+        geo_asset_path = self.createAssetGeo(entity, usd_asset, parent.core, master_path_low["usd_file"], master_path_high["usd_file"], subdirectory = "variant_0")
 
         # Create the mtl.usda
-        mtl_asset_path = self.createAssetMaterial(entity, usd_asset, parent, master_path_mtl["usd_file"], subdirectory = "default")
+        mtl_asset_path = self.createAssetMaterial(entity, usd_asset, parent.core, master_path_mtl["usd_file"], subdirectory = "variant_0")
 
 
         # Create the asset.usda
         self.createAssetRoot(entity, usd_asset, parent)
 
         # Create the usd_info.json
-        self.createAssetJsonDefinition([{"geometry_low" : master_path_low["product"] , "geometry_high" : master_path_high["product"], "surfacing" : master_path_mtl["product"]}], os.path.join(usd_asset, "usd_info.json")  )
+        self.createDefaultAssetJsonDefinition(entity, os.path.join(usd_asset, "usd_info.json") , parent)
 
         # Create the payload.usda
         payload_variants = [
             {
-                "name": "variant_00",
-                "geo": geo_asset_path,
-                "mtl": mtl_asset_path
-            },
-            {
-                "name": "variant_01",
+                "name": "variant_0",
                 "geo": geo_asset_path,
                 "mtl": mtl_asset_path
             }
         ]
-        self.createAssetPayload(entity, usd_asset, parent , payload_variants)
+        self.createAssetPayload(entity, usd_asset, parent.core , payload_variants)
 
         pass
 
@@ -154,12 +153,10 @@ class USDUtils:
         stage.GetRootLayer().Save()
 
     # Creates a payload file (payload.usda)
-    def createAssetPayload(self, entity, assetPath, parent , items = []):
+    def createAssetPayload(self, entity, assetPath, core , items = []):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
-            parent.console.log("Error importing pxr module: %s" % e)
-            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return
         
         # Create the USD Stage
@@ -225,12 +222,10 @@ class USDUtils:
         stage.SetDefaultPrim(prim)
         stage.GetRootLayer().Save()
 
-    def createAssetGeo(self, entity, assetPath, parent , geo_low_path, geo_high_path, subdirectory = ""):
+    def createAssetGeo(self, entity, assetPath, core , geo_low_path, geo_high_path, subdirectory = ""):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
-            parent.console.log("Error importing pxr module: %s" % e)
-            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return
         
         directory = os.path.join(assetPath, subdirectory)
@@ -304,12 +299,10 @@ class USDUtils:
         return os.path.join(directory, "geo.usda")
 
     # Create the asset material
-    def createAssetMaterial(self, entity, assetPath, parent, mtl_path , subdirectory = ""):
+    def createAssetMaterial(self, entity, assetPath, core, mtl_path , subdirectory = ""):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
-            parent.console.log("Error importing pxr module: %s" % e)
-            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return
 
         # Create a mtl.usda
@@ -340,17 +333,15 @@ class USDUtils:
         # Return the path of the created usd file
         return os.path.join(directory, "mtl.usda")
 
-    def createAssetModelingLow(self, entity, assetPath, parent, subdirectory = ""):
+    def createAssetModelingLow(self, entity, assetPath, core, subdirectory = ""):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
-            parent.console.log("Error importing pxr module: %s" % e)
-            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return {"product": "", "usd_file": ""}
         
 
         # Create the product in prism
-        product_path = parent.core.products.createProduct(entity, "ModL_Publish", "global")
+        product_path = core.products.createProduct(entity, "ModL_Publish", "global")
 
         temp_geo_path = os.path.join(assetPath, "geo_low.usda")
 
@@ -369,8 +360,8 @@ class USDUtils:
         stage.GetRootLayer().Save()
 
 
-        result = parent.core.products.ingestProductVersion([temp_geo_path], entity ,"ModL_Publish")
-        master_path_low = parent.core.products.updateMasterVersion(result["createdFiles"][0])
+        result = core.products.ingestProductVersion([temp_geo_path], entity ,"ModL_Publish")
+        master_path_low = core.products.updateMasterVersion(result["createdFiles"][0])
 
         # Delete the temporary geo file
         if os.path.exists(temp_geo_path):
@@ -378,16 +369,14 @@ class USDUtils:
 
         return {"usd_file" : master_path_low , "product": product_path}
 
-    def createAssetModelingHigh(self, entity, assetPath, parent):
+    def createAssetModelingHigh(self, entity, assetPath, core):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
-            parent.console.log("Error importing pxr module: %s" % e)
-            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return {"product": "", "usd_file": ""}
 
         # Create the product in prism
-        product_path = parent.core.products.createProduct(entity, "ModH_Publish", "global")
+        product_path = core.products.createProduct(entity, "ModH_Publish", "global")
 
         # Create the high-resolution geometry
         temp_geo_path = os.path.join(assetPath, "geo_high.usda")
@@ -407,8 +396,8 @@ class USDUtils:
         stage.GetRootLayer().Save()
 
 
-        result = parent.core.products.ingestProductVersion([temp_geo_path], entity ,"ModH_Publish")
-        master_path_high = parent.core.products.updateMasterVersion(result["createdFiles"][0])
+        result = core.products.ingestProductVersion([temp_geo_path], entity ,"ModH_Publish")
+        master_path_high = core.products.updateMasterVersion(result["createdFiles"][0])
 
         # Delete the temporary geo file
         if os.path.exists(temp_geo_path):
@@ -416,16 +405,14 @@ class USDUtils:
 
         return {"usd_file" : master_path_high , "product": product_path}
 
-    def createAssetSurfacing(self, entity, assetPath, parent):
+    def createAssetSurfacing(self, entity, assetPath, core):
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf, UsdShade
         except ImportError as e:
-            parent.console.log("Error importing pxr module: %s" % e)
-            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return {"product": "", "usd_file": ""}
         
         # Create the product in Prism
-        product_path = parent.core.products.createProduct(entity, "Surf_Publish", "global")
+        product_path = core.products.createProduct(entity, "Surf_Publish", "global")
 
 
 
@@ -483,8 +470,8 @@ class USDUtils:
         stage.GetRootLayer().Save()
 
 
-        result = parent.core.products.ingestProductVersion([mtl_temp_path], entity, "Surf_Publish")
-        master_path_mtl = parent.core.products.updateMasterVersion(result["createdFiles"][0])
+        result = core.products.ingestProductVersion([mtl_temp_path], entity, "Surf_Publish")
+        master_path_mtl = core.products.updateMasterVersion(result["createdFiles"][0])
 
         # Delete the temporary mtl.usda file
         if os.path.exists(mtl_temp_path):
@@ -493,34 +480,35 @@ class USDUtils:
         return {"usd_file": master_path_mtl, "product": product_path}
 
 
-    def createAssetJsonDefinition(self,assetPaths, savePath):
+    def createDefaultAssetJsonDefinition(self,entity, savePath , parent):
+        
+        products = parent.core.products.getProductsFromEntity(entity)
+
 
         variants = []
 
-        if not assetPaths:
-            variants = []
-        else:
-            for item in assetPaths:
-                geometry_low = item.get("geometry_low")
-                geometry_high = item.get("geometry_high")
-                surfacing = item.get("surfacing")
 
-                # Get the relative path from the save path to the geometry low
-                relative_low = os.path.relpath(geometry_low, os.path.dirname(savePath))
-                relative_high = os.path.relpath(geometry_high, os.path.dirname(savePath))
-                relative_mtl = os.path.relpath(surfacing, os.path.dirname(savePath))
+        geometry_low = None
+        geometry_high = None
+        surfacing = None
 
-                relative_low = relative_low.replace("\\", "/")
-                relative_high = relative_high.replace("\\", "/")
-                relative_mtl = relative_mtl.replace("\\", "/")
-
-                variants.append({
-                    "geometry_low": relative_low if relative_low else geometry_low,
-                    "geometry_high": relative_high if relative_high else geometry_high,
-                    "surfacing": relative_mtl if relative_mtl else surfacing
-                })
+        i = 0
+        # Search for the right product
+        for product in products:
+            if product["product"] == "ModL_Publish":
+                geometry_low = product
+            elif product["product"] == "ModH_Publish":
+                geometry_high = product
+            elif product["product"] == "Surf_Publish":
+                surfacing = product
         
-        result = {"variants" : variants}
+        variants.append({
+            "geometry_low": geometry_low ,
+            "geometry_high": geometry_high ,
+            "surfacing": surfacing
+        })
+        
+        result = {"variants" : variants , "entity": entity}
 
         # Save into json
         # 1. Check if the containing folder exists and create it if necessary
@@ -530,3 +518,92 @@ class USDUtils:
             json.dump(result, json_file, indent=4)
 
         return result
+    
+    def refreshUsdAssetFromJsonPath(self, jsonPath, core):
+
+        json_file_parent_dir = os.path.dirname(jsonPath)
+
+        data = None
+        # Open the JSON file and load its content
+        with open(jsonPath, 'r') as json_file:
+            data = json.load(json_file)
+        if not data:
+            print("Error: Could not load JSON data from file: " + jsonPath)
+            return
+        
+        # Get the variants
+        variants = data.get("variants", [])
+        if not variants:
+            print("Error: No variants found in JSON data.")
+            return
+
+        # Get the entity
+        entity = data.get("entity", None)
+        if not entity:
+            print("Error: No entity found in JSON data.")
+            return
+
+
+        # Cleaning phase.
+
+        # Delete the payload.usda from the json_file_parent_dir
+        payload_usda_path = os.path.join(json_file_parent_dir, "payload.usda")
+        if os.path.exists(payload_usda_path):
+            os.remove(payload_usda_path)
+        # Delete all the subdirectories in the json_file_parent_dir
+        for item in os.listdir(json_file_parent_dir):
+            item_path = os.path.join(json_file_parent_dir, item)
+            if os.path.isdir(item_path):
+                # Delete the directory and its content
+                shutil.rmtree(item_path)
+
+        index = 0
+        payload_variants = []
+        for variant in variants:
+            
+            geo_low = variant.get("geometry_low", None)
+            geo_high = variant.get("geometry_high", None)
+            surfacing = variant.get("surfacing", None)
+
+            # Check if we were able to find all of the variants
+            if not geo_low or not geo_high or not surfacing:
+                print("Error: Missing variant data.")
+                continue
+            
+
+            # Get the prefered file for each component
+            geo_low_versions = core.products.getVersionsFromContext(geo_low)
+            latest_geo_low_versions = core.products.getLatestVersionFromVersions(geo_low_versions)
+            file_geo_low = core.products.getPreferredFileFromVersion(latest_geo_low_versions) if latest_geo_low_versions else ""
+
+            geo_high_versions = core.products.getVersionsFromContext(geo_high)
+            latest_geo_high_versions = core.products.getLatestVersionFromVersions(geo_high_versions)
+            file_geo_high = core.products.getPreferredFileFromVersion(latest_geo_high_versions) if latest_geo_high_versions else ""
+
+            surfacing_versions = core.products.getVersionsFromContext(surfacing)
+            latest_surfacing_versions = core.products.getLatestVersionFromVersions(surfacing_versions)
+            file_surfacing = core.products.getPreferredFileFromVersion(latest_surfacing_versions) if latest_surfacing_versions else ""
+
+
+            subdirectory_name = f"variant_{index}"
+
+            # Create the geo.usda
+            geo_asset_path = self.createAssetGeo(entity, json_file_parent_dir, core, file_geo_low, file_geo_high, subdirectory = subdirectory_name)
+
+            # Create the mtl.usda
+            mtl_asset_path = self.createAssetMaterial(entity, json_file_parent_dir, core, file_surfacing, subdirectory = subdirectory_name)
+    
+            payload_variants.append(
+                {
+                    "name": subdirectory_name,
+                    "geo": geo_asset_path,
+                    "mtl": mtl_asset_path
+                }
+            )
+
+            index += 1
+
+
+        self.createAssetPayload(entity, json_file_parent_dir, core , payload_variants)
+
+        pass

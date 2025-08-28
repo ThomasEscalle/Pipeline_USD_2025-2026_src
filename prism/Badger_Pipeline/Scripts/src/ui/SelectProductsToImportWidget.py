@@ -122,6 +122,7 @@ class SelectProductsToImportWidget(QWidget):
     def navigate(self, entity):
         self.select_product_widget.navigate(entity)
 
+
     # Get the result of the selection
     def getResult(self):
         result = {}

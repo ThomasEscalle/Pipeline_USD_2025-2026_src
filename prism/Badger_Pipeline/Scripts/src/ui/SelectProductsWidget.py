@@ -9,6 +9,8 @@ import EntityWidget
 
 from qtpy.QtCore import Signal
 
+
+
 class SelectProductWidget(QWidget):
 
     # Signaux personnalisés
@@ -111,7 +113,7 @@ class SelectProductWidget(QWidget):
 
     # Create an item that corresponds to the given product. 
     # Add it to the given tree
-    def createItemFromProduct(self, product , tree) :
+    def createItemFromProduct(self, product , tree = None) :
         
         pformat = ""
         filepath = ""
@@ -134,10 +136,15 @@ class SelectProductWidget(QWidget):
             if prefered_file:
                 pformat = prefered_file.split(".")[-1]
         
-        treeWidgetItem = QTreeWidgetItem(tree)
+
+        treeWidgetItem = None
+        if tree:
+            treeWidgetItem = QTreeWidgetItem(tree)
+        else:
+            treeWidgetItem = QTreeWidgetItem()
         treeWidgetItem.setText(0, product["product"])
         treeWidgetItem.setText(1, pformat)
-        treeWidgetItem.setText(2, filepath)
+        treeWidgetItem.setText(2, product["asset"])
         treeWidgetItem.setWhatsThis(0, "product")
 
         # Convert the product to json str
@@ -150,6 +157,8 @@ class SelectProductWidget(QWidget):
             treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("publish.png"))
         else:
             treeWidgetItem.setIcon(0, self.pluggin_parent.getIcon("other.png")) 
+        
+        return treeWidgetItem
 
 
     # Get the list of select TreeWidgetItem
