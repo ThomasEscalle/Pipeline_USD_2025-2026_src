@@ -1,23 +1,29 @@
 ### Command : ./pyside2-uic.exe -o S:/3D/ScriptsMaya/SaveAs/generatedUi.py S:/3D/ScriptsMaya/SaveAs/save_as.ui
 
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 
 import sys
 import os
-from PySide2 import QtWidgets, QtCore, QtGui
+
 import maya.OpenMayaUI as omui
 import shiboken2
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import maya.cmds as cmds
 from maya.OpenMayaUI import MQtUtil
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+
 
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
     return shiboken2.wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
+
+
+
+
+
 
 
 # A dialog to ask the user for the variation name
@@ -119,10 +125,6 @@ def publishRLO(state, pcore):
     for cam in shot_cameras:
         print("Camera found: ", cam)
 
-    
-
-
-
     pass
 
 
@@ -131,11 +133,11 @@ def publishRLO(state, pcore):
 
 
 
-class WINDOW(MayaQWidgetDockableMixin, QtWidgets.QDialog):
+class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     
     def __init__(self, parent=maya_main_window()):
-        super(WINDOW, self).__init__(parent)
-        self.setWindowTitle("Badget Pipeline")
+        super(SaveAsWindow, self).__init__(parent)
+        self.setWindowTitle("Badger Pipeline")
         self.setMinimumWidth(400)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
@@ -510,7 +512,7 @@ if __name__ == "__main__":
         window.deleteLater()
     except:
         pass
-    window = WINDOW()
+    window = SaveAsWindow()
     window.run()
 
 

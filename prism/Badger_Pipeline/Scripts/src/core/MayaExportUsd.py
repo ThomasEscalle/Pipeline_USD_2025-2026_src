@@ -84,8 +84,7 @@ class MayaExportUsd:
 
     def preExport(self, **kwargs):
         
-        # Import cmds
-        import maya.cmds as cmds
+
 
         #kwargs = {
         #       "state": self,
@@ -105,6 +104,11 @@ class MayaExportUsd:
 
         # create the "Setting1" widgets only in Maya
         if self.core.appPlugin.pluginName == "Maya":
+
+            # Import cmds
+            import maya.cmds as cmds
+
+            
             # this function will be executed before the export started
             print("Pre Export called")
 

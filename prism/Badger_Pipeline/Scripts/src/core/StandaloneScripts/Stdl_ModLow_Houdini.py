@@ -98,6 +98,7 @@ for i in range(numberOfGroupsInt):
     out_null.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
 
 
+    indexWithLeadingZeros = str(i + 1).zfill(3)
 
     # Create a prism::FileCache::1.0 
     file_cache = geo_node.createNode("prism::Filecache::1.0", "ModL_FileCache_Publish")
@@ -105,7 +106,7 @@ for i in range(numberOfGroupsInt):
     file_cache.setPosition(out_null.position() + hou.Vector2(0, -2))
     file_cache.parm("task").set("ModL_Publish")
     if numberOfGroupsInt > 1:
-        file_cache.parm("task").set("ModL_Publish_var{}".format(i + 1))
+        file_cache.parm("task").set("ModL_Publish_var{}".format(indexWithLeadingZeros))
     file_cache.parm("framerange").set(0)
     file_cache.parm("format").set(".usdc")
 
@@ -115,7 +116,7 @@ for i in range(numberOfGroupsInt):
     file_cache_export.setPosition(out_null.position() + hou.Vector2(5, -2))
     file_cache_export.parm("task").set("ModL_Export_" + task_name)
     if numberOfGroupsInt > 1:
-        file_cache_export.parm("task").set("ModL_Export_" + task_name +"_var{}".format(i + 1))
+        file_cache_export.parm("task").set("ModL_Export_" + task_name +"_var{}".format(indexWithLeadingZeros))
     file_cache_export.parm("framerange").set(0)
     file_cache_export.parm("format").set(".usdc")
 

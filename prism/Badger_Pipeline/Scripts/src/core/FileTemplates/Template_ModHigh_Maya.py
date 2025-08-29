@@ -29,7 +29,7 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
         # Ici on recuperer tous products qui sont des ".abc" , et dont le nom contiens "ModL" et Publish, 
         # Depuis l'entitée "Current".
         ImportReference = True
-        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), ".abc", origin, ["ModL", "Publish"])
+        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), ".usd", origin, ["ModL", "Publish"])
 
         
         # Demande a l'utilisateur quel produits a importer
@@ -41,7 +41,7 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
                 "settings" : {
                     "accepted_files" : [
                         "abc",
-                        "usd",
+                        "usd", "usda", "usdc",
                         "obj"
                     ]
                 },
@@ -98,6 +98,7 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
         dialog.setWindowTitle("Import Products")
         result = dialog.exec_()
 
+
         # On annule si jamais l'utilisateur a demandé annulé sur le dialogue.
         if result != QDialog.Accepted:
             return
@@ -108,6 +109,9 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
 
         # On recuper les fichiers correspondant a la liste de products
         referencePaths = self.getPreferedFilePathsFromProductList(itemModelLow, origin)
+        print("REFERENCE PATHS : ")
+        print(referencePaths)
+        
         referencePathsStr = str(referencePaths)
 
         # Si il n'y a pas de references attachés, on met le ImportReference a false pour
