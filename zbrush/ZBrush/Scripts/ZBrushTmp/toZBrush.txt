@@ -1,0 +1,3 @@
+[FileNameSetNext, "C:/Mathieu/3D4/prsim_test/Test/03_Production/Assets/CHAR/Ruby/Ruby/Scenefiles/mod/sculpt/Ruby_sculpt_v0004.zpr"]
+[RoutineDef, command,[IPress, File:Open]]
+[RoutineCall,command]

@@ -1,0 +1,23 @@
+//penser à rendre les chemins hard relatif pour l'install
+
+[ISubPalette, Zplugin:Prism]
+
+[IButton, Zplugin:Prism:Floating Window, "Open the Prism Tools panel as a floating window",   
+	[VarSet,fullFilePath,"C:/Mathieu/3D4/Pipe/plugin_zbrush/ZBrush/Scripts/Prism_ZBrush_MenuTools.py"]
+	[VarSet, cmd, [StrMerge, start, " ", [StrFromAsc, 34], [StrFromAsc, 34], "  ", [StrFromAsc, 34], "C:/Program Files/Prism2/Python311/pythonw.exe", [StrFromAsc, 34], " ", [StrFromAsc, 34], fullFilePath, [StrFromAsc, 34]]]
+	[VarSet, cmd, [StrMerge, cmd, " Tools ", [StrFromAsc, 34], "C:/Program Files/Prism2", [StrFromAsc, 34]]]
+	[ShellExecute, cmd], 0, 120
+]
+
+[IButton, Zplugin:Prism:GetCommands, ,   
+    [VarDef,filename,""]
+    [VarSet,filename,"C:/Mathieu/3D4/Pipe/plugin_zbrush/ZBrush/Scripts/ZBrushTmp/toZBrush.txt"]
+    [FileNameSetNext,filename]
+    [IPress,Zscript:LoadScript]
+	, 0
+	, 0.01
+	,,, 0.01
+]
+
+
+
