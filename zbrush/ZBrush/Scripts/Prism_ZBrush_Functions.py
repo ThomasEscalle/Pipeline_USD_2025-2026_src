@@ -84,7 +84,7 @@ class Prism_ZBrush_Functions(object):
     @err_catcher(name=__name__)
     def getCurrentFileName(self, origin, path=True):
         # get current scene file name
-        path = "C:/Mathieu/3D4/Pipe/plugin_zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
+        path = "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
         if not os.path.exists(path):
             return ""
         with open(path, "r", encoding="utf-8") as f:
@@ -106,7 +106,6 @@ class Prism_ZBrush_Functions(object):
         self.activate_zbrush()
 
         self.exportThumbnail(origin, filepath)
-
 
     @err_catcher(name=__name__)
     def getImportPaths(self, origin):
@@ -337,6 +336,7 @@ class Prism_ZBrush_Functions(object):
         command = "[RoutineDef, command, [FileNameSetNext, " + thumbnailPath + "]\n[IPress, \"Document:Export\"]]\n[RoutineCall,command]"
         self.send_command_to_zbrush(command)
         self.activate_zbrush()
+        #newThumbnailPath = os.path.splitext(thumbnailPath)[0] + ".jpg"     #if I find a way to convert png to jpg
 
     def Tools(self):
         if hasattr(self, "tools_window") and self.tools_window is not None:
@@ -394,7 +394,7 @@ class Prism_ZBrush_Functions(object):
 
     def SaveVersion(self):
         print("Saving version...")
-        with open("C:/Mathieu/3D4/Pipe/plugin_zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
+        with open("C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
             oldFilePath = f.read().strip()
         if oldFilePath is None or oldFilePath == "":
             command = "[RoutineDef,command,[Note, \"Please use Project Browser to create a new file before using 'Save Version' in Prism.\", 5]]\n[RoutineCall,command]"
@@ -535,7 +535,7 @@ class Prism_ZBrush_Functions(object):
     @err_catcher(name=__name__)
     def saveCurrentFileName(self, filename):
         currentFileName = filename.replace("\\", "/")
-        path = "C:/Mathieu/3D4/Pipe/plugin_zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
+        path = "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
         with open(path, "w", encoding="utf-8") as f:
@@ -585,7 +585,7 @@ class ExportWindowUI(QDialog):
 
         self.version_combo = QComboBox()
         #read the json file of the current scene to get the next available version
-        with open("C:/Mathieu/3D4/Pipe/plugin_zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
+        with open("C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
             currentFileName = f.read().strip()
         jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
         with open(jsonPath, "r") as f:
@@ -681,7 +681,7 @@ class ExportWindow(ExportWindowUI):
             ext = self.format_combo.currentText()
 
             #read the json file of the current scene
-            with open("C:/Mathieu/3D4/Pipe/plugin_zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
+            with open("C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
                 currentFileName = f.read().strip()
             jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
             with open(jsonPath, "r") as f:
