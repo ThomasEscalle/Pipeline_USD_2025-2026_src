@@ -3,7 +3,7 @@
 from src.core.FileTemplateBase import FileTemplateBase
 from src.core.StandaloneScriptMaya import StandaloneScriptMaya
 import os
-
+from src.ui.AskForProductToImport import ProductImportDialog, QDialog
 try:
     from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QDialogButtonBox, QMessageBox
 except:
@@ -19,29 +19,146 @@ class FileTemplateRigHighMaya(FileTemplateBase):
         self.template_software = "Maya"
 
     def construct(self, parent, path, origin):
+
+        # Crées le chemin ou maya vas enregistrer son fichier.
+        # A la fin, on copiras le fichier crée dans Prism sous une nouvelle version.
         filepath = os.path.dirname(__file__)
         outputMayaFilePath = os.path.join(filepath, "output.ma")
         outputMayaFilePath = outputMayaFilePath.replace("\\", "/")
 
+        # Ici on recuperer tous products qui sont des ".usd" , et dont le nom contiens "ModH" et Publish, 
+        # Depuis l'entitée "Current".
         ImportReference = True
-        ReferenceFile = self.getMasterPathFromEntity(origin.getCurrentEntity(), ".abc", origin, ["ModH", "Publish"])
-        if ReferenceFile == "":
-            ImportReference = False
-            ReferenceFile = ""
-            QMessageBox.warning(parent, "Reference Not Found", "No reference file found for Modeling High. Proceeding without reference.")
+        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc", ".abc" , ".obj"], origin, ["ModH", "Publish"])
 
+        
+        # Demande a l'utilisateur quel produits a importer
+        dialog = ProductImportDialog( origin.core, parent, None)
+        default_selected = [
+            {
+                "type" : "folder",
+                "name" : "Model High",
+                "settings" : {
+                    "accepted_files" : [
+                        "abc",
+                        "usd", "usda", "usdc",
+                        "obj"
+                    ],
+                    "select_only_one_file": True
+                },
+                "items" : ReferenceFiles
+            }
+        ]
+
+        settings = [
+            
+            {
+                "setting_name": "import_title",
+                "type": "title",
+                "default_value": "Globals"
+            },
+            {
+                "setting_name": "Create rigging groups",
+                "type": "checkbox",
+                "default_value": True
+            },
+            {
+                "setting_name": "import_title",
+                "type": "title",
+                "default_value": "ModHigh Import Settings"
+            },
+            {
+                "setting_name": "Create References",
+                "type": "checkbox",
+                "default_value": True
+            },
+            {
+                "setting_name": "Import with namespace",
+                "type": "checkbox",
+                "default_value": False
+            },
+            {
+                "setting_name": "Import Namespace",
+                "type": "lineedit",
+                "default_value": "MOD_HIGH"
+            },
+            {
+                "setting_name": "Import Method",
+                "type": "combobox",
+                "default_value": "Reference",
+                "options": ["Reference", "Import"]
+            },
+        ]
+
+        # Set the default selected product
+        dialog.setDefaultSelectedProduct(default_selected)
+        
+        # Set the settings configuration
+        dialog.setSettings(settings)
+
+        dialog.setWindowTitle("Import Products")
+        result = dialog.exec_()
+
+        # On annule si jamais l'utilisateur a demandé annulé sur le dialogue.
+        if result != QDialog.Accepted:
+            return
+
+                
+        # On recupere les items a importer.
+        items = dialog.getResult()
+        itemModelHigh = items["Model High"]
+
+
+        # On recuper les fichiers correspondant a la liste de products
+        referencePaths = self.getPreferedFilePathsFromProductList(itemModelHigh, origin)
+        # Si il y a plus d'un fichier, on ne prend que le premier.
+        if len(referencePaths) > 1:
+            referencePaths = referencePaths[0:1]
+        referencePathsStr = str(referencePaths)
+        
+        # Si il n'y a pas de references attachés, on met le ImportReference a false pour
+        # Eviter que maya n'essaye d'importer des references.
+        if ReferenceFiles is None or len(ReferenceFiles) == 0:
+            ImportReference = False
+            ReferenceFiles = []
+        else:
+            ImportReference = True
+
+
+        
+        # Get the result settings
+        resultSettings = dialog.getSettings()
+        importMethod = resultSettings["Import Method"]
+        doImportNamespace = resultSettings["Import with namespace"]
+        importNamespace = resultSettings["Import Namespace"]
+        createRiggingGroups = resultSettings["Create rigging groups"]
+
+        if ImportReference:
+            if resultSettings["Create References"] is False:
+                ImportReference = False
+
+        
+        # Get the asset type
         assetType = origin.getCurrentEntity()["asset_path"].split("\\")[0]
         assetName = origin.getCurrentEntity()["asset_path"].split("\\")[-1]
 
+        
         script = StandaloneScriptMaya("Stdl_RigHigh_Maya.py")
         script.replaceVariable("ASSET_NAME", assetName)
         script.replaceVariable("TYPE_ASSET", assetType)
         script.replaceVariable("OUTPUT_PATH", outputMayaFilePath)
+        script.replaceVariable("CREATE_RIGGING_GROUPS", "True" if createRiggingGroups else "False")
         if ImportReference == True:
             script.replaceVariable("IMPORT_REFERENCE", "True")
         else:
             script.replaceVariable("IMPORT_REFERENCE", "False")
-        script.replaceVariable("REFERENCE_PATH", ReferenceFile)
+
+        script.replaceVariable("REFERENCE_PATH", referencePaths[0] if len(referencePaths) >= 1 else "")
+
+        script.replaceVariable("IMPORT_METHOD", importMethod)
+        script.replaceVariable("DO_IMPORT_NAMESPACE", "True" if doImportNamespace else "False")
+        script.replaceVariable("IMPORT_NAMESPACE", importNamespace)
+        
         script.run()
 
         # Add the scene to the current project
@@ -50,5 +167,4 @@ class FileTemplateRigHighMaya(FileTemplateBase):
 
         # Delete the scene
         os.remove(outputMayaFilePath)
-
 

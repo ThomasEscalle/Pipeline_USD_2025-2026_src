@@ -45,7 +45,7 @@ def build_template():
 
     # Importe la référence si elle existe
     imported_nodes = []
-    if importReference == "True":
+    if importReference == "True" and importReferencePath and importReferencePath != "[]" and importReferencePath != '""':
         if importMethod == "Reference":
             if doImportNamespace == "True":
                 result = cmds.file(importReferencePath, reference=True, namespace=importNamespace, returnNewNodes=True)

@@ -4,12 +4,12 @@ maya.standalone.initialize(name='python')
 import maya.cmds as cmds
 import os
 
-assetName = "Matheo"  # <-- Name of the asset, string to be set by the user
+assetName = "Albane"  # <-- Name of the asset, string to be set by the user
 typeAsset = "Chars" # <-- Type of the asset, string to be set by the user, e.g. "character", "prop", etc.
 outputPath = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.ma"  # <-- Path where to save the scene
 
 importReference = "True"    # <-- If we want to import the reference, string set to "True", otherwise "False"
-importReferencePath = "E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Matheo/Export/ModL_Publish/master/Matheo_ModL_Publish_master.usda"  # <-- Path to the reference file if importReference is "True". It is a an array of paths contained into a string. Use eval() before to use it.
+importReferencePath = "E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Albane/Export/ModH_Publish/master/Albane_ModH_Publish_master.usda"  # <-- Path to the reference file if importReference is "True". It is a an array of paths contained into a string. Use eval() before to use it.
 
 importMethod = "Reference"            # <-- Method to use for importing, can be "Reference" or "Import"
 doImportNamespace = "False" # <-- Whether to import with namespace or not . Set to "True" or "False"
@@ -19,8 +19,8 @@ importNamespace = "MOD_LOW"      # <-- Namespace to use for importing
 createRiggingGroups = "True"
 
 # Hierarchy de groupes :
-# - char_chaise_rigl_grp
-#     - char_chaise_rigl_geo
+# - char_chaise_righ_grp
+#     - char_chaise_righ_geo
 #     - GlobalMove_01
 #          - Joints_01
 #          - CTRLs_01
@@ -45,7 +45,7 @@ def build_template():
 
     # Importe la référence si elle existe
     imported_nodes = []
-    if importReference == "True":
+    if importReference == "True" and importReferencePath and importReferencePath != "[]" and importReferencePath != '""':
         if importMethod == "Reference":
             if doImportNamespace == "True":
                 result = cmds.file(importReferencePath, reference=True, namespace=importNamespace, returnNewNodes=True)
@@ -59,12 +59,12 @@ def build_template():
         imported_nodes = result if result else []
 
     # Crée les groupes standards
-    group_name = typeAsset + "_" + assetName + "_rigl_grp"
+    group_name = typeAsset + "_" + assetName + "_righ_grp"
     grp = cmds.group(empty=True, name=group_name)
 
     if createRiggingGroups == "True":
         # Crées les groupes standards
-        grp_geo = cmds.group(empty=True, name=typeAsset + "_" + assetName + "_rigl_geo")
+        grp_geo = cmds.group(empty=True, name=typeAsset + "_" + assetName + "_righ_geo")
         grp_globalMove = cmds.group(empty=True, name="GlobalMove_01")
         grp_joints = cmds.group(empty=True, name="Joints_01")
         grp_ctrls = cmds.group(empty=True, name="CTRLs_01")
