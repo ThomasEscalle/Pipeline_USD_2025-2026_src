@@ -4,6 +4,7 @@ import sys
 import ctypes
 import time
 import json
+import subprocess
 
 from qtpy.QtCore import *
 from qtpy.QtGui import *
@@ -12,6 +13,8 @@ from qtpy.QtWidgets import *
 from PrismUtils.Decorators import err_catcher_plugin as err_catcher
 
 from PrismUtils import PrismWidgets
+
+from Helpers import watchdogZBrush
 
 #append the path of the UserInterfaces folder to sys.path
 currentPath = os.path.dirname(os.path.abspath(__file__)) + os.sep + ".." + os.sep + "UserInterfaces" + os.sep
@@ -47,6 +50,8 @@ class Prism_ZBrush_Functions(object):
                 ]
             }
         self.state = json.dumps(self.state)  # convert dict to JSON string
+
+        subprocess.Popen([sys.executable, watchdogZBrush.__file__])
 
 
     @err_catcher(name=__name__)
@@ -332,11 +337,21 @@ class Prism_ZBrush_Functions(object):
     @err_catcher(name=__name__)
     def exportThumbnail(self, origin, filepath):
         #modify the filepath to remove the current ext and make it ends with preview.jpg
-        thumbnailPath = os.path.splitext(filepath)[0] + "preview.jpg"
-        command = "[RoutineDef, command, [FileNameSetNext, " + thumbnailPath + "]\n[IPress, \"Document:Export\"]]\n[RoutineCall,command]"
-        self.send_command_to_zbrush(command)
-        self.activate_zbrush()
-        #newThumbnailPath = os.path.splitext(thumbnailPath)[0] + ".jpg"     #if I find a way to convert png to jpg
+        #Create a thumbnail if it's not already done by save extended
+        if not self.core.savec.previewDefined:
+            thumbnailPath = os.path.splitext(filepath)[0] + "preview.png"
+            command = "[RoutineDef, command, [FileNameSetNext, " + thumbnailPath + "]\n[IPress, \"Document:Export\"]]\n[RoutineCall,command]"
+            self.send_command_to_zbrush(command)
+            self.activate_zbrush()
+            newThumbnailPath = os.path.splitext(thumbnailPath)[0] + ".jpg"     #if I find a way to convert png to jpg
+
+            # Load PNG
+            image = QImage(thumbnailPath)
+
+            if os.path.exists(thumbnailPath):
+                # Save as JPG, with quality (0–100)
+                image.save(newThumbnailPath, "JPG", 100)
+                os.remove(thumbnailPath)
 
     def Tools(self):
         if hasattr(self, "tools_window") and self.tools_window is not None:
@@ -433,6 +448,7 @@ class Prism_ZBrush_Functions(object):
 
         self.core.savec = PrismWidgets.SaveComment(core=self.core)
         self.core.savec.accepted.connect(lambda: self.core.saveWithCommentAccepted(self.core.savec))
+        self.core.savec.destroyed.connect(lambda: setattr(self.core, "savec", None))
         self.core.savec.show()
         self.core.savec.activateWindow()
         self.core.savec.setAttribute(Qt.WA_DeleteOnClose)
@@ -482,6 +498,11 @@ class Prism_ZBrush_Functions(object):
         sm.saveStatesToScene()
 
         # Show export window
+        if hasattr(self, "export_window") and self.export_window is not None:
+            self.export_window.resize(420, 350)
+            self.export_window.show()
+            return self.state
+        
         self.export_window = ExportWindow(self.core, self.toolsWindow)
         self.export_window.resize(420, 350)
         self.export_window.show()
