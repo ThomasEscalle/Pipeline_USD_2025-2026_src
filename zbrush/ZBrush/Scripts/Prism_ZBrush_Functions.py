@@ -409,9 +409,8 @@ class Prism_ZBrush_Functions(object):
 
     def SaveVersion(self):
         print("Saving version...")
-        with open("C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
-            oldFilePath = f.read().strip()
-        if oldFilePath is None or oldFilePath == "":
+        oldFilePath = self.getCurrentFileName()
+        if oldFilePath == "":
             command = "[RoutineDef,command,[Note, \"Please use Project Browser to create a new file before using 'Save Version' in Prism.\", 5]]\n[RoutineCall,command]"
             self.send_command_to_zbrush(command)
             self.activate_zbrush()
@@ -429,7 +428,12 @@ class Prism_ZBrush_Functions(object):
         self.core.saveVersionInfo(filePath, data)
 
     def SaveComment(self):
-        print("Saving comment...")
+        oldFilePath = self.getCurrentFileName()
+        if oldFilePath == "":
+            command = "[RoutineDef,command,[Note, \"Please use Project Browser to create a new file before using 'Save Extended' in Prism.\", 5]]\n[RoutineCall,command]"
+            self.send_command_to_zbrush(command)
+            self.activate_zbrush()
+            return False
         #prevent it to open multiple times
         if hasattr(self.core, "savec") and self.core.savec is not None:
             self.core.savec.show()
@@ -455,6 +459,12 @@ class Prism_ZBrush_Functions(object):
         return True
     
     def Import(self):
+        oldFilePath = self.getCurrentFileName()
+        if oldFilePath == "":
+            command = "[RoutineDef,command,[Note, \"Please use Project Browser to create a new file before using 'Import' in Prism.\", 5]]\n[RoutineCall,command]"
+            self.send_command_to_zbrush(command)
+            self.activate_zbrush()
+            return False
         #create the state
         sm = self.core.getStateManager()
 
@@ -562,7 +572,7 @@ class Prism_ZBrush_Functions(object):
         with open(path, "w", encoding="utf-8") as f:
             f.write(currentFileName)
             f.flush()
-
+    
 
 class ExportWindowUI(QDialog):
     def __init__(self, core, parent=None):
@@ -606,8 +616,7 @@ class ExportWindowUI(QDialog):
 
         self.version_combo = QComboBox()
         #read the json file of the current scene to get the next available version
-        with open("C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
-            currentFileName = f.read().strip()
+        currentFileName = self.core.appPlugin.getCurrentFileName()
         jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
         with open(jsonPath, "r") as f:
             entity = json.load(f)
@@ -689,6 +698,13 @@ class ExportWindow(ExportWindowUI):
 
     @err_catcher(name=__name__)
     def export(self):
+        currentFileName = self.core.appPlugin.getCurrentFileName()
+        if currentFileName == "":
+            command = "[RoutineDef,command,[Note, \"Please use Project Browser to create a new file before using 'Export' in Prism.\", 5]]\n[RoutineCall,command]"
+            self.core.appPlugin.send_command_to_zbrush(command)
+            self.core.appPlugin.activate_zbrush()
+            return False
+
         #export Geometry
         if self.export_geo_cb.isChecked():
             directory = ""
@@ -702,8 +718,7 @@ class ExportWindow(ExportWindowUI):
             ext = self.format_combo.currentText()
 
             #read the json file of the current scene
-            with open("C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json", "r", encoding="utf-8") as f:
-                currentFileName = f.read().strip()
+            currentFileName = self.core.appPlugin.getCurrentFileName()
             jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
             with open(jsonPath, "r") as f:
                 entity = json.load(f)
