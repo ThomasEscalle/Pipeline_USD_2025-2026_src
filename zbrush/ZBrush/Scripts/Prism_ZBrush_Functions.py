@@ -73,9 +73,11 @@ class Prism_ZBrush_Functions(object):
         self.toolsWindow = self.Tools()
 
         pluginDir = os.path.dirname(os.path.abspath(__file__))
-        watchdogZBrush = os.path.join(pluginDir, "Helpers/watchdogZBrush")
+        watchdogZBrush = os.path.join(pluginDir, "Helpers/watchdogZBrush.py")
 
-        subprocess.Popen([sys.executable, watchdogZBrush])
+        python_exe = "C:/Program Files/Prism2/Python311/pythonw.exe"
+
+        subprocess.Popen([python_exe, watchdogZBrush])
 
     @err_catcher(name=__name__)
     def autosaveEnabled(self, origin):
