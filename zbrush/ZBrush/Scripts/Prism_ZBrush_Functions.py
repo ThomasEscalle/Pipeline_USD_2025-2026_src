@@ -14,8 +14,6 @@ from PrismUtils.Decorators import err_catcher_plugin as err_catcher
 
 from PrismUtils import PrismWidgets
 
-from Helpers import watchdogZBrush
-
 #append the path of the UserInterfaces folder to sys.path
 currentPath = os.path.dirname(os.path.abspath(__file__)) + os.sep + ".." + os.sep + "UserInterfaces" + os.sep
 if currentPath not in sys.path:
@@ -51,7 +49,6 @@ class Prism_ZBrush_Functions(object):
             }
         self.state = json.dumps(self.state)  # convert dict to JSON string
 
-        subprocess.Popen([sys.executable, watchdogZBrush.__file__])
 
 
     @err_catcher(name=__name__)
@@ -75,6 +72,10 @@ class Prism_ZBrush_Functions(object):
         origin.startAutosaveTimer()
         self.toolsWindow = self.Tools()
 
+        pluginDir = os.path.dirname(os.path.abspath(__file__))
+        watchdogZBrush = os.path.join(pluginDir, "Helpers/watchdogZBrush")
+
+        subprocess.Popen([sys.executable, watchdogZBrush])
 
     @err_catcher(name=__name__)
     def autosaveEnabled(self, origin):
@@ -87,7 +88,7 @@ class Prism_ZBrush_Functions(object):
             origin.startAutosaveTimer()
 
     @err_catcher(name=__name__)
-    def getCurrentFileName(self, origin, path=True):
+    def getCurrentFileName(self, origin=None, path=True):
         # get current scene file name
         path = "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
         if not os.path.exists(path):
@@ -338,7 +339,7 @@ class Prism_ZBrush_Functions(object):
     def exportThumbnail(self, origin, filepath):
         #modify the filepath to remove the current ext and make it ends with preview.jpg
         #Create a thumbnail if it's not already done by save extended
-        if not self.core.savec.previewDefined:
+        if not hasattr(self.core, "savec") and not self.core.savec.previewDefined:
             thumbnailPath = os.path.splitext(filepath)[0] + "preview.png"
             command = "[RoutineDef, command, [FileNameSetNext, " + thumbnailPath + "]\n[IPress, \"Document:Export\"]]\n[RoutineCall,command]"
             self.send_command_to_zbrush(command)
