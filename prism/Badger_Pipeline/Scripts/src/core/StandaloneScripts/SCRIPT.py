@@ -1,111 +1,182 @@
-import maya.standalone
-maya.standalone.initialize(name='python')
-
-import maya.cmds as cmds
+import hou
 import os
 
-assetName = "Albane"  # <-- Name of the asset, string to be set by the user
-typeAsset = "Chars" # <-- Type of the asset, string to be set by the user, e.g. "character", "prop", etc.
-outputPath = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.ma"  # <-- Path where to save the scene
 
-importReference = "True"    # <-- If we want to import the reference, string set to "True", otherwise "False"
-importReferencePath = "E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Albane/Export/ModH_Publish/master/Albane_ModH_Publish_master.usda"  # <-- Path to the reference file if importReference is "True". It is a an array of paths contained into a string. Use eval() before to use it.
-
-importMethod = "Reference"            # <-- Method to use for importing, can be "Reference" or "Import"
-doImportNamespace = "False" # <-- Whether to import with namespace or not . Set to "True" or "False"
-importNamespace = "MOD_LOW"      # <-- Namespace to use for importing
+output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"    # <-- Path where to save the scene
+assetName = "Table"           # <-- Name of the asset, string to be set by the user
+assetType = "Modules"           # <-- Type of the asset, string to be set by the user, e.g. "character", "prop", etc.
+taskName = "Modules"             # <-- Name of the task, string to be set by the user, e.g. "Modeling", "Rigging_v012", etc.
+departmentName = "Mod" # <-- Name of the department, string to be set by the user, e.g. "ModL", "ModH", etc.
 
 
-createRiggingGroups = "True"
+# Create a new Houdini scene
+hou.hipFile.clear(suppress_save_prompt=True)
 
-# Hierarchy de groupes :
-# - char_chaise_righ_grp
-#     - char_chaise_righ_geo
-#     - GlobalMove_01
-#          - Joints_01
-#          - CTRLs_01
-#          - IKs_01
-#     - RelaySystem_01
-#     - ExtraNodes_01
-#          - ExtraNodes_To_Show_01
-#          - ExtraNodes_To_Hide_01
+# Create the Stage node if it doesn't exist
+stage = hou.node("/stage")
+if stage is None:
+    stage = hou.node("/").createNode("lopnet", "stage")
 
-def build_template():
-    cmds.file(new=True, force=True)
 
-    # Make sure the AbcImport plugin is loaded
-    if not cmds.pluginInfo("AbcImport", query=True, loaded=True):
-        cmds.loadPlugin("AbcImport")
-    # Make sure the AbcExport plugin is loaded
-    if not cmds.pluginInfo("AbcExport", query=True, loaded=True):
-        cmds.loadPlugin("AbcExport")
-    # Make sure the mayaUsdPlugin plugin is loaded
-    if not cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True):
-        cmds.loadPlugin("mayaUsdPlugin")
 
-    # Importe la référence si elle existe
-    imported_nodes = []
-    if importReference == "True" and importReferencePath and importReferencePath != "[]" and importReferencePath != '""':
-        if importMethod == "Reference":
-            if doImportNamespace == "True":
-                result = cmds.file(importReferencePath, reference=True, namespace=importNamespace, returnNewNodes=True)
-            else:
-                result = cmds.file(importReferencePath, i=True, returnNewNodes=True)
-        else:
-            if doImportNamespace == "True":
-                result = cmds.file(importReferencePath, i=True, namespace=importNamespace, returnNewNodes=True)
-            else:
-                result = cmds.file(importReferencePath, i=True, returnNewNodes=True)
-        imported_nodes = result if result else []
+###############################################
+#### Create the nodes in the Stage context ####
+###############################################
 
-    # Crée les groupes standards
-    group_name = typeAsset + "_" + assetName + "_righ_grp"
-    grp = cmds.group(empty=True, name=group_name)
+# Create a "Assembly" subnet
+assembly_subnet = stage.createNode("subnet", "Assembly")
+assembly_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
+assembly_subnet.setUserData("nodeshape", "burst")
 
-    if createRiggingGroups == "True":
-        # Crées les groupes standards
-        grp_geo = cmds.group(empty=True, name=typeAsset + "_" + assetName + "_righ_geo")
-        grp_globalMove = cmds.group(empty=True, name="GlobalMove_01")
-        grp_joints = cmds.group(empty=True, name="Joints_01")
-        grp_ctrls = cmds.group(empty=True, name="CTRLs_01")
-        grp_IKs = cmds.group(empty=True, name="IKs_01")
-        grp_relaySystem = cmds.group(empty=True, name="RelaySystem_01")
-        grp_extraNodes = cmds.group(empty=True, name="ExtraNodes_01")
-        grp_extraNodesToShow = cmds.group(empty=True, name="ExtraNodes_To_Show_01")
-        grp_extraNodesToHide = cmds.group(empty=True, name="ExtraNodes_To_Hide_01")
+# Build the nodes inside the assembly subnet
+def build_assembly_subnet():
 
-        # Parent les groupes
-        cmds.parent(grp_geo, grp)
-        cmds.parent(grp_globalMove, grp)
-        cmds.parent(grp_joints, grp_globalMove)
-        cmds.parent(grp_ctrls, grp_globalMove)
-        cmds.parent(grp_IKs, grp_globalMove)
-        cmds.parent(grp_relaySystem, grp)
-        cmds.parent(grp_extraNodes, grp)
-        cmds.parent(grp_extraNodesToShow, grp_extraNodes)
-        cmds.parent(grp_extraNodesToHide, grp_extraNodes)
 
-        # Si on a importé une référence, on met les nodes importés dans grp_geo
-        if importReference == "True" and imported_nodes:
-            # On ne veut reparenter que les transform nodes de top-level
-            import maya.api.OpenMaya as om2
-            def is_top_level_transform(node):
-                if not cmds.objectType(node, isType='transform'):
-                    return False
-                parents = cmds.listRelatives(node, parent=True)
-                return not parents
-            top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
-            for node in top_level_transforms:
-                try:
-                    cmds.parent(node, grp_geo)
-                except Exception:
-                    pass
+    # Get the ouput0 node of the assembly subnet
+    output0 = assembly_subnet.node("output0")
+    # Get the input0 node of the assembly subnet
+    inputs = assembly_subnet.indirectInputs()
+    input_stage = inputs[0] if inputs else None
 
-    # Set the outliner color of the root group to blue
-    cmds.setAttr(grp + ".useOutlinerColor", 1)
-    cmds.setAttr(grp + ".outlinerColor", 0, 0.847, 0.813, type="double3")
+    # Create a "Null" node called "IN_ASSEMBLY"
+    in_assembly = assembly_subnet.createNode("null", "IN_ASSEMBLY")
+    in_assembly.setPosition(hou.Vector2(0, 0))
 
-    cmds.file(rename=outputPath)
-    cmds.file(save=True, type='mayaAscii')
+    # Place the input and output nodes
+    input_stage.setPosition(hou.Vector2(0, 2))
+    output0.setPosition(hou.Vector2(0, -12))
 
-build_template()
+    ####################################
+    #### Connect the nodes together ####
+    ####################################
+    # Connect the IN_ASSEMBLY node to the output0 node
+    output0.setInput(0, in_assembly, 0)
+    # Connect the input0 node to the in_assembly node
+    in_assembly.setInput(0, input_stage, 0)
+
+
+    ##################
+    #### Comments ####
+    ##################
+    # Add a sticky note 
+    sticky_note = assembly_subnet.createStickyNote("AssemblySubnet")
+    sticky_note.setPosition(hou.Vector2(3, -4))
+    sticky_note_text = "C'est ici que tu peux placer tes items dans ta scène.\n"
+    sticky_note_text += "Tu peux utiliser le Layout Asset Gallery pour placer des assets en drag and drop.\n"
+    sticky_note_text += "Tu peux aussi utiliser directement les nodes \"Asset Reference\" pour importer tes assets en reference.\n"
+    sticky_note_text += "Tu peux utiliser le node \"Transform\" pour bouger tes assets dans ta scène.\n"
+    sticky_note.setText(sticky_note_text)
+    sticky_note.resize(hou.Vector2(5, 2))
+    sticky_note.setDrawBackground(False)
+    sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
+
+build_assembly_subnet()
+
+
+
+
+# Create a "Scene_Cleaning" subnet 
+sceneCleaning_subnet = stage.createNode("subnet", "Scene_Cleaning")
+sceneCleaning_subnet.setColor(hou.Color(0.776, 0.157, 0.157))  # Red
+sceneCleaning_subnet.setPosition(assembly_subnet.position() + hou.Vector2(0, -2))
+# Add a comment to the Scene_Cleaning subnet
+sceneCleaning_subnet.setComment("Ne pas toucher a ce node !")
+sceneCleaning_subnet.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+
+def build_sceneCleaning_subnet():
+    # Get the ouput0 node of the sceneCleaning subnet
+    output0 = sceneCleaning_subnet.node("output0")
+    # Get the input0 node of the sceneCleaning subnet
+    inputs = sceneCleaning_subnet.indirectInputs()
+    input_stage = inputs[0] if inputs else None
+
+    # Create a "Null" node called "IN_SCENE_CLEANING"
+    in_scene_cleaning = sceneCleaning_subnet.createNode("null", "IN_SCENE_CLEANING")
+    in_scene_cleaning.setPosition(hou.Vector2(0, 0))
+
+    # Create a "graftstages" node 
+    graftstages = sceneCleaning_subnet.createNode("graftstages", "GRAFT_STAGES")
+    graftstages.setPosition(hou.Vector2(0, -2))
+    graftstages.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+    graftstages.setParms({
+        "destpath" : f"/modu_{assetName}",
+    })
+
+    # Create a "null" node called "OUT_SCENE_CLEANING"
+    out_scene_cleaning = sceneCleaning_subnet.createNode("null", "OUT_SCENE_CLEANING")
+    out_scene_cleaning.setPosition(hou.Vector2(0, -4))
+
+
+    # Place the input and output nodes
+    input_stage.setPosition(hou.Vector2(0, 2))
+    output0.setPosition(hou.Vector2(0, -6))
+
+    # Connect the nodes together
+    # Connect the IN_SCENE_CLEANING node to the graftstages node
+    graftstages.setInput(1, in_scene_cleaning, 0)
+    # Connect the graftstages node to out_scene_cleaning node
+    out_scene_cleaning.setInput(0, graftstages, 0)
+    # Connect the input0 node to the in_scene_cleaning node
+    in_scene_cleaning.setInput(0, input_stage, 0)
+    # Connect the output0 node to the out_scene_cleaning node
+    output0.setInput(0, out_scene_cleaning, 0)
+
+    return
+
+build_sceneCleaning_subnet()
+
+
+
+# Create a null "OUT_SCENE_BUILDING" node
+out_scene_building = stage.createNode("null", "OUT_SCENE_BUILDING")
+out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
+out_scene_building.setUserData("nodeshape", "diamond")
+
+# Create a "usd_rop" node
+# usd_rop = stage.createNode("usd_rop", "USD_OUTPUT")
+# usd_rop.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+# usd_rop.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
+
+# Create a "Export" node
+export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
+export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
+export_node.parm("productName").set("Modu_Publish")
+export_node.parm("nextVersion").set(True)
+export_node.parm("updateMaster").set(True)
+
+
+
+
+
+# Create a "LOOKDEV_SCENE" subnet
+lookdev_scene = stage.createNode("subnet", "LOOKDEV_SCENE")
+lookdev_scene.setColor(hou.Color(0.776, 0.776, 0.157))  # Cyan
+lookdev_scene.setPosition(out_scene_building.position() + hou.Vector2(-4, -2))
+
+
+#####################################
+#### Connect the nodes together #####
+#####################################
+
+# assembly_subnet[0]->sceneCleaning_subnet[0]
+sceneCleaning_subnet.setInput(0, assembly_subnet, 0)
+# sceneCleaning_subnet[0]->out_scene_building[0]
+out_scene_building.setInput(0, sceneCleaning_subnet, 0)
+# out_scene_building[0]->usd_rop[0]
+export_node.setInput(0, out_scene_building, 0)
+# out_scene_building[0]->lookdev_scene[0]
+lookdev_scene.setInput(0, out_scene_building, 0)
+
+
+
+# Set the display flag on the "OUT_SCENE_BUILDING" node
+out_scene_building.setDisplayFlag(True)
+
+
+
+
+# Save the Houdini file
+hou.hipFile.save(output_hip_path)
+
+

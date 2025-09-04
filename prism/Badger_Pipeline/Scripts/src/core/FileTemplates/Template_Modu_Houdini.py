@@ -14,18 +14,27 @@ class FileTemplateModulesHoudini(FileTemplateBase):
 
     def construct(self, parent, path, origin):
 
+        # Crées le chemin ou maya vas enregistrer son fichier.
+        # A la fin, on copiras le fichier crée dans Prism sous une nouvelle version.
         filepath = os.path.dirname(__file__)
         outputHoudiniFilePath = os.path.join(filepath, "output.hip")
         outputHoudiniFilePath = outputHoudiniFilePath.replace("\\", "/")
 
-        parent.console.log(origin.getCurrentEntity())
+        # Todo : Crées un dialogue si besoin ici
+        # Pour l'instant, pas besoin de dialogue
+
         assetType = origin.getCurrentEntity()["asset_path"].split("\\")[0]
         assetName = origin.getCurrentEntity()["asset_path"].split("\\")[-1]
+
+        task = origin.getCurrentTask()
+        department = origin.getCurrentDepartment()
 
         script = StandaloneScriptHoudini("Stdl_Modu_Houdini.py", parent)
         script.replaceVariable("$$ASSET_NAME$$", assetName)
         script.replaceVariable("$$OUTPUT_PATH$$", outputHoudiniFilePath)
         script.replaceVariable("$$TYPE_ASSET$$", assetType)
+        script.replaceVariable("$$TASK_NAME$$", task)
+        script.replaceVariable("$$DEPARTMENT_NAME$$", department)
         script.run()
 
         # Add the scene to the current project
