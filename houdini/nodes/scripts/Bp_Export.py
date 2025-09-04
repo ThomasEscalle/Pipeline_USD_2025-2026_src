@@ -85,8 +85,8 @@ else:
         os.remove(exportPathInfo + "/" + file)
 
 # Set the export path to the rop and execute it
-rop.parm("lopoutput").set(exportPath)
-rop.parm("execute").pressButton()
+node.parent().parm("lopoutput").set(exportPath)
+node.parent().parm("execute").pressButton()
 
 
 #save json info
@@ -109,3 +109,4 @@ core.products.updateMasterVersion(exportPath)
 
 # Notify the user that the export is done
 hou.ui.displayMessage("Exported USD to:\n" + exportPath, severity=hou.severityType.Message)
+
