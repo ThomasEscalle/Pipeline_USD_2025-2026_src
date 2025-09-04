@@ -120,7 +120,8 @@ class TextureExportController(TextureExportUI):
         allTextures = []
         for name in material_names :
             allTextures += exportResult[(name,"")]
-        self.updateMasterVersion(productContext, allTextures)  
+        self.updateMasterVersion(productContext, allTextures)
+        self.accept()
 
     
     def get_texture_tree_format_bit(self):
