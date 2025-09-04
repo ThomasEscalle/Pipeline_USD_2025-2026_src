@@ -341,7 +341,12 @@ class Prism_ZBrush_Functions(object):
     def exportThumbnail(self, origin, filepath):
         #modify the filepath to remove the current ext and make it ends with preview.jpg
         #Create a thumbnail if it's not already done by save extended
-        if not hasattr(self.core, "savec") and not self.core.savec.previewDefined:
+        if hasattr(self.core, "savec"):
+            preview = self.core.savec.previewDefined
+        else:
+            preview = False
+
+        if  not preview:
             thumbnailPath = os.path.splitext(filepath)[0] + "preview.png"
             command = "[RoutineDef, command, [FileNameSetNext, " + thumbnailPath + "]\n[IPress, \"Document:Export\"]]\n[RoutineCall,command]"
             self.send_command_to_zbrush(command)
@@ -366,6 +371,9 @@ class Prism_ZBrush_Functions(object):
         self.toolsWindow = QWidget()
         self.toolsWindow.setWindowTitle("Prism")
         layout = QVBoxLayout()
+        btn_save_version = QPushButton("Save")
+        btn_save_version.clicked.connect(lambda: self.Save())
+        layout.addWidget(btn_save_version)
         btn_save_version = QPushButton("Save Version")
         btn_save_version.clicked.connect(lambda: self.SaveVersion())
         layout.addWidget(btn_save_version)
@@ -409,6 +417,22 @@ class Prism_ZBrush_Functions(object):
         self.pb.activateWindow()
 
         return self.pb
+    
+    def Save(self):
+        oldFilePath = self.getCurrentFileName()
+        if oldFilePath == "":
+            command = "[RoutineDef,command,[Note, \"Please use Project Browser to create a new file before using 'Save' in Prism.\", 5]]\n[RoutineCall,command]"
+            self.send_command_to_zbrush(command)
+            self.activate_zbrush()
+            return False
+        filePath = self.getCurrentFileName()
+
+        self.saveScene(self.core, filePath)
+
+        #getting data
+        data = self.core.getScenefileData(filePath)
+        self.core.saveVersionInfo(filePath, data)
+
 
     def SaveVersion(self):
         print("Saving version...")
