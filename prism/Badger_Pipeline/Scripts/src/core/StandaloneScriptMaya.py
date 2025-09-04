@@ -49,8 +49,16 @@ class StandaloneScriptMaya:
         if not os.path.exists(mayapyPath):
             raise FileNotFoundError(f"mayapy.exe not found in {mayapyPath}")
         
+        # Disable the usd plugins loading
+        # This is important to be able to load the mayaUsdPlugin
+        cenv = os.environ.copy()
+        cenv["PYTHONPATH"] = ""
+        cenv["PATH"] = ""
+
+        
+
         # Run the script
-        subprocess.run([mayapyPath, self.scriptPath], check=True)
+        subprocess.run([mayapyPath, self.scriptPath], check=True, env=cenv)
 
         
 

@@ -46,5 +46,11 @@ class StandaloneScriptHoudini:
         if not os.path.exists(hythonPath):
             raise FileNotFoundError(f"hython.exe not found in {hythonPath}")
 
+        # Disable the usd plugins loading
+        # This is important to be able to load the mayaUsdPlugin
+        cenv = os.environ.copy()
+        cenv["PYTHONPATH"] = ""
+        cenv["PATH"] = ""
+
         # Run the script
-        subprocess.run([hythonPath, self.scriptPath], check=True)
+        subprocess.run([hythonPath, self.scriptPath], check=True, env=cenv)

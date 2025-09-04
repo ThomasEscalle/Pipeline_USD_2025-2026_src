@@ -55,11 +55,9 @@ class FileTemplateModelingLowHoudini(FileTemplateBase):
         
         # Get the result settings
         resultSettings = dialog.getSettings()
-
         numberOfGroups = resultSettings["Number of output groups"]
         
-
-
+        
         assetType = origin.getCurrentEntity()["asset_path"].split("\\")[0]
         assetName = origin.getCurrentEntity()["asset_path"].split("\\")[-1]
 

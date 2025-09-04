@@ -1,5 +1,8 @@
-import maya.standalone
-maya.standalone.initialize(name='python')
+try: 			
+    import maya.standalone 			
+    maya.standalone.initialize() 		
+except: 			
+    pass
 
 import maya.cmds as cmds
 import os
@@ -8,12 +11,12 @@ assetName = "ASSET_NAME"   # <-- Name of the asset, string to be set by the user
 outputPath = "OUTPUT_PATH" # <-- Path where to save the scene
 assetType = "TYPE_ASSET"   # <-- Type of the asset, string to be set by the user, e.g. "character", "prop", etc.
 
-importReference = "IMPORT_REFERENCE"   # <-- If we want to import the reference, string set to "True", otherwise "False"               
+importReference = "IMPORT_REFERENCE"    # <-- If we want to import the reference, string set to "True", otherwise "False"               
 importReferencePaths = "REFERENCE_PATH" # <-- Path to the reference file if importReference is "True". It is a an array of paths contained into a string. Use eval() before to use it.
 
-importMethod = "IMPORT_METHOD" # <-- Method to use for importing, can be "Reference" or "Import"
+importMethod = "IMPORT_METHOD"            # <-- Method to use for importing, can be "Reference" or "Import"
 doImportNamespace = "DO_IMPORT_NAMESPACE" # <-- Whether to import with namespace or not . Set to "True" or "False"
-importNamespace = "IMPORT_NAMESPACE" # <-- Namespace to use for importing
+importNamespace = "IMPORT_NAMESPACE"      # <-- Namespace to use for importing
 
 numberOfGroups = "NUMBER_OF_GROUPS" # <-- Number of output groups
 
@@ -24,10 +27,17 @@ def build_template():
     # Make sure the AbcImport plugin is loaded
     if not cmds.pluginInfo("AbcImport", query=True, loaded=True):
         cmds.loadPlugin("AbcImport")
+        
     # Make sure the AbcExport plugin is loaded
     if not cmds.pluginInfo("AbcExport", query=True, loaded=True):
         cmds.loadPlugin("AbcExport")
-    
+
+    # Make sure the MayaUSD plugin is loaded
+    try:
+        if not cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True):
+            cmds.loadPlugin("mayaUsdPlugin")
+    except:
+        pass
 
     # Importe la référence si elle existe
     if importReference == "True":
@@ -71,3 +81,9 @@ def build_template():
 
 
 build_template()
+
+
+try: 			
+    maya.standalone.uninitialize() 		
+except: 			
+    pass

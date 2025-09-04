@@ -31,6 +31,9 @@ def build_template():
     # Make sure the AbcExport plugin is loaded
     if not cmds.pluginInfo("AbcExport", query=True, loaded=True):
         cmds.loadPlugin("AbcExport")
+    # Make sure the mayaUsdPlugin plugin is loaded
+    if not cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True):
+        cmds.loadPlugin("mayaUsdPlugin")
 
     # Importe la référence si elle existe
     if importReference == "True":

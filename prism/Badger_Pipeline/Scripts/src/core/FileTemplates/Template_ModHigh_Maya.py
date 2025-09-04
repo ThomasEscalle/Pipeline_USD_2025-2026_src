@@ -26,10 +26,10 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
         outputMayaFilePath = outputMayaFilePath.replace("\\", "/")
 
 
-        # Ici on recuperer tous products qui sont des ".abc" , et dont le nom contiens "ModL" et Publish, 
+        # Ici on recuperer tous products qui sont des ".usd" , et dont le nom contiens "ModL" et Publish, 
         # Depuis l'entitée "Current".
         ImportReference = True
-        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), ".usd", origin, ["ModL", "Publish"])
+        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc", ".abc" , ".obj"], origin, ["ModL", "Publish"])
 
         
         # Demande a l'utilisateur quel produits a importer
