@@ -218,8 +218,7 @@ class Prism_SubstancePainter_Functions(object):
     @err_catcher(name=__name__)
     def open_settings(self):
         print("Opening Settings...")
-        # call your existing logic here to show the browser
-
+        self.core.prismSettings()
 
     @err_catcher(name=__name__)
     def autosaveEnabled(self, origin):
