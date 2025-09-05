@@ -144,7 +144,12 @@ class SelectProductWidget(QWidget):
             treeWidgetItem = QTreeWidgetItem()
         treeWidgetItem.setText(0, product["product"])
         treeWidgetItem.setText(1, pformat)
-        treeWidgetItem.setText(2, product["asset"])
+        if "asset" in product:
+            treeWidgetItem.setText(2, product["asset"])
+        elif "shot" in product:
+            treeWidgetItem.setText(2, product["shot"])
+        else:
+            treeWidgetItem.setText(2, "")
         treeWidgetItem.setWhatsThis(0, "product")
 
         # Convert the product to json str

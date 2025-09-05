@@ -3,7 +3,7 @@
 from src.core.FileTemplateBase import FileTemplateBase
 from src.core.StandaloneScriptHoudini import StandaloneScriptHoudini
 import os
-
+from src.ui.AskForProductToImport import ProductImportDialog, QDialog
 try:
     from PySide6.QtWidgets import QMessageBox
 except:
@@ -18,36 +18,111 @@ class FileTemplateMasterLightHoudini(FileTemplateBase):
 
     def construct(self, parent, path, origin):
 
-        # {'paths': [{'location': 'global', 'path': 'E:\\3D\\PIPELINE\\USD_Uptight_2025_v001\\00_Template\\Uptight\\03_Production\\02_Shots\\sq_010\\master'}], 'sequence': 'sq_010', 'shot': 'master', 'type': 'shot'}
-
+        # Crées le chemin ou maya vas enregistrer son fichier.
+        # A la fin, on copiras le fichier crée dans Prism sous une nouvelle version.
         filepath = os.path.dirname(__file__)
         outputHoudiniFilePath = os.path.join(filepath, "output.hip")
         outputHoudiniFilePath = outputHoudiniFilePath.replace("\\", "/")
 
-        # Try to get the reference of the setDress if the current shot
+        # Ici on recuperer tous products qui sont des ".usd" , et dont le nom contiens "SetD" et Publish, 
+        # Depuis l'entitée "Current".
         ImportReference = True
-        ReferenceFile = ""
+        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
 
+
+        # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
+        dialog = ProductImportDialog( origin.core, parent, None)
+        default_selected = [
+            {
+                "type" : "folder",
+                "name" : "Set Dress",
+                "settings" : {
+                    "accepted_files" : [
+                        "usd", "usda", "usdc",
+                    ]
+                },
+                "items" : ReferenceFiles,
+                "select_only_one_file": True
+            }
+        ]
+        settings = [
+            {
+                "setting_name": "import_title",
+                "type": "title",
+                "default_value": "Globals"
+            },
+            {
+                "setting_name": "Create References",
+                "type": "checkbox",
+                "default_value": True
+            },
+        ]
+
+        # Set the default selected product
+        dialog.setDefaultSelectedProduct(default_selected)
         
-        parent.console.log(origin.getCurrentEntity())
+        # Set the settings configuration
+        dialog.setSettings(settings)
 
-        ReferenceFile = self.getMasterPathFromEntity(origin.getCurrentEntity(), ".usda", origin, ["SetD", "Publish"])
-        if ReferenceFile == "":
+        dialog.setWindowTitle("Import Products")
+        result = dialog.exec_()
+
+        # On annule si jamais l'utilisateur a demandé annulé sur le dialogue.
+        if result != QDialog.Accepted:
+            return
+
+
+        # On recupere les items a importer.
+        items = dialog.getResult()
+        itemsSetDress = items["Set Dress"]
+
+        # On recuper les fichiers correspondant a la liste de products
+        referencePaths = self.getPreferedFilePathsFromProductList(itemsSetDress, origin)
+        # Si il y a plus d'un fichier, on ne prend que le premier.
+        if len(referencePaths) > 1:
+            referencePaths = referencePaths[0:1]
+        referencePathsStr = str(referencePaths)
+
+                # Si il n'y a pas de references attachés, on met le ImportReference a false pour
+        # Eviter que maya n'essaye d'importer des references.
+        if ReferenceFiles is None or len(ReferenceFiles) == 0 or referencePathsStr == "[]" or referencePathsStr == "":
             ImportReference = False
-            QMessageBox.warning(parent, "Reference File Not Found", "No Set Dress reference file found for this shot. Proceeding without reference.")
-        
-        parent.console.log(f"Reference file: {ReferenceFile}")
-        
+            ReferenceFiles = []
+        else:
+            ImportReference = True
+
+        # Get the result settings
+        resultSettings = dialog.getSettings()
+        # Process the settings here. No settings for now.
+
+        if ImportReference:
+            if resultSettings["Create References"] is False:
+                ImportReference = False
+
+        # Get the asset type
         assetType = origin.getCurrentEntity()["type"]
         assetName = origin.getCurrentEntity()["sequence"] + "_" + origin.getCurrentEntity()["shot"]
+        task = origin.getCurrentTask()
+        department = origin.getCurrentDepartment()
 
+
+        # Create the standalone script and replace the variables
         script = StandaloneScriptHoudini("Stdl_MasterLight_Houdini.py", parent)
-        script.replaceVariable("$$ASSET_NAME$$", assetName)
+
         script.replaceVariable("$$OUTPUT_PATH$$", outputHoudiniFilePath)
+
+        script.replaceVariable("$$ASSET_NAME$$", assetName)
         script.replaceVariable("$$TYPE_ASSET$$", assetType)
-        script.replaceVariable("$$REFERENCE_PATH$$", ReferenceFile)
-        script.replaceVariable("$$IMPORT_REFERENCE$$", "True" if ImportReference == True else "False" )
+        script.replaceVariable("$$TASK_NAME$$", task)
+        script.replaceVariable("$$DEPARTMENT_NAME$$", department)
+
+        # Only set the import reference if it exists
+        script.replaceVariable("$$REFERENCE_PATH$$", referencePathsStr if ImportReference == True else "")
+        script.replaceVariable("$$IMPORT_REFERENCE$$", "True" if ImportReference == True else "False")
+
         script.run()
+
+
 
         # Add the scene to the current project
         scene = { "path": outputHoudiniFilePath }
