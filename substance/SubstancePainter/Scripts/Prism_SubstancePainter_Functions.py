@@ -556,12 +556,12 @@ class Prism_SubstancePainter_Functions(object):
         if len(correct_files)<5:
             return
 
-        correct_name = correct_files[0]
+        correct_name = list(set(correct_files) - set(files))
 
         for f in files:
             if "master." in f:
                 old_path = os.path.join(folder, f)
-                new_path = os.path.join(folder, correct_name)
+                new_path = os.path.join(folder, correct_name[0])
                 print(f"[FixMasterName] Renaming {old_path} → {new_path}")
                 os.rename(old_path, new_path)
 
