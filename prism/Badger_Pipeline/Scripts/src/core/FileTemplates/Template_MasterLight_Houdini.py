@@ -85,9 +85,9 @@ class FileTemplateMasterLightHoudini(FileTemplateBase):
 
                 # Si il n'y a pas de references attachés, on met le ImportReference a false pour
         # Eviter que maya n'essaye d'importer des references.
-        if ReferenceFiles is None or len(ReferenceFiles) == 0 or referencePathsStr == "[]" or referencePathsStr == "":
+        if referencePaths is None or len(referencePaths) == 0 or referencePathsStr == "[]" or referencePathsStr == "":
             ImportReference = False
-            ReferenceFiles = []
+            referencePaths = []
         else:
             ImportReference = True
 

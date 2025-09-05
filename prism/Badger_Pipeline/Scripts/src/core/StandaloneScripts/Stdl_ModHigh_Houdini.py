@@ -21,7 +21,7 @@ numberOfGroups = "$$NUMBER_OF_GROUPS$$"   # <-- Number of output groups. Only us
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
 
-# Create the Stage node if it doesn't exist
+# Create the Obj node if it doesn't exist
 obj = hou.node("/obj")
 if obj is None:
     obj = hou.node("/").createNode("geo", "stage")

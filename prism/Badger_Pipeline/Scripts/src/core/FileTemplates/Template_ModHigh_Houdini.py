@@ -101,9 +101,9 @@ class FileTemplateModelingHighHoudini(FileTemplateBase):
 
         # Si il n'y a pas de references attachés, on met le ImportReference a false pour
         # Eviter que houdini n'essaye d'importer des references.
-        if ReferenceFiles is None or len(ReferenceFiles) == 0:
+        if referencePaths is None or len(referencePaths) == 0:
             ImportReference = False
-            ReferenceFiles = []
+            referencePaths = []
         else:
             ImportReference = True
 
@@ -136,8 +136,8 @@ class FileTemplateModelingHighHoudini(FileTemplateBase):
         script.replaceVariable("$$REFERENCE_PATH$$", referencePathsStr if ImportReference else "")
 
         script.replaceVariable("$$CREATION_METHOD$$", creationMethod)
-
         script.replaceVariable("$$NUMBER_OF_GROUPS$$", numberOfGroups)
+
         script.replaceVariable("$$TASK_NAME$$", task)
         script.replaceVariable("$$DEPARTMENT_NAME$$", department)
 

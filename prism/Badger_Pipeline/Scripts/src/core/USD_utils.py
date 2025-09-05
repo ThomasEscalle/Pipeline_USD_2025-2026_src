@@ -343,7 +343,7 @@ class USDUtils:
         # Create the product in prism
         product_path = core.products.createProduct(entity, "ModL_Publish", "global")
 
-        temp_geo_path = os.path.join(assetPath, "geo_low.usda")
+        temp_geo_path = os.path.join(assetPath, "geo_low.usd")
 
         # Create a usd stage
         stage = Usd.Stage.CreateNew(temp_geo_path)
@@ -379,7 +379,7 @@ class USDUtils:
         product_path = core.products.createProduct(entity, "ModH_Publish", "global")
 
         # Create the high-resolution geometry
-        temp_geo_path = os.path.join(assetPath, "geo_high.usda")
+        temp_geo_path = os.path.join(assetPath, "geo_high.usd")
 
         # Create a usd stage
         stage = Usd.Stage.CreateNew(temp_geo_path)
@@ -417,7 +417,7 @@ class USDUtils:
 
 
         # Create a temporary mtl.usda file
-        mtl_temp_path = os.path.join(assetPath, "material.usda")
+        mtl_temp_path = os.path.join(assetPath, "material.usd")
 
         # Create a usd stage
         stage = Usd.Stage.CreateNew(mtl_temp_path)

@@ -116,7 +116,7 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
 
         # Si il n'y a pas de references attachés, on met le ImportReference a false pour
         # Eviter que maya n'essaye d'importer des references.
-        if ReferenceFiles is None or len(ReferenceFiles) == 0:
+        if referencePaths is None or len(referencePaths) == 0:
             ImportReference = False
             ReferenceFiles = []
         else:
