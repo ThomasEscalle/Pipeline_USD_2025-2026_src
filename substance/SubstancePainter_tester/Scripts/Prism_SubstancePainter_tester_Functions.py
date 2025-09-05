@@ -2,6 +2,8 @@ import os
 import traceback
 import json
 
+from shiboken6 import isValid
+
 os.environ["QT_API"] = "pyside6"   # force qtpy to use PySide6
 import qtpy
 
@@ -24,8 +26,7 @@ from Prism_SubstancePainter_tester_ExportTexture_Controllers import TextureExpor
 class Prism_SubstancePainter_tester_Functions(object):
     def __init__(self, core, plugin):
         self.core = core
-        self.plugin = plugin
-        self.susMainWin = substance_painter.ui.get_main_window()
+        #self.plugin = plugin
         self.currentState = {
                 "states": [
                     {
@@ -37,8 +38,6 @@ class Prism_SubstancePainter_tester_Functions(object):
             }
         self.currentState = json.dumps(self.currentState)  # convert dict to JSON string
 
-        self.hasQtParent = True
-
         # Add tracking lists for cleanup
         self._actions = []
         self._qt_objects = []
@@ -47,34 +46,30 @@ class Prism_SubstancePainter_tester_Functions(object):
         self._threads = []
         self._event_tokens = []
 
-        for widget in QApplication.allWidgets():
-            # Replace 'PrismProjectBrowser' with the actual class name if different
-            if widget.__class__.__name__ == "mv_ProjectBrowser" and widget.isVisible():
-                self._project_browser = widget
-                print("Tracked existing Prism Project Browser:", widget)
-                break
-
         self.core.registerCallback("masterVersionUpdated", self.fix_master_filename)
         self.core.registerCallback("onStateManagerOpen", self.onStateManagerOpen, plugin=self)
 
     @err_catcher(name=__name__)
     def startup(self, origin):
-        #origin.startAutosaveTimer()
-        origin.messageParent = self.susMainWin
+        origin.startAutosaveTimer()
+        mainWindow = substance_painter.ui.get_main_window()
+        if mainWindow and isValid(mainWindow):
+            origin.messageParent = mainWindow
+        else:
+            origin.messageParent = None
+
         self.createMenu(origin)
 
     @err_catcher(name=__name__)
     def createMenu(self, origin):
         # Create or get the top menu bar
-        for menu in self.susMainWin.menuBar().findChildren(QMenu):
+        for menu in substance_painter.ui.get_main_window().menuBar().findChildren(QMenu):
             if menu.title() == "Prism":
                 self.prism_menu = menu
                 break
         else:
-            menu_bar = self.susMainWin.menuBar()
-
             # Create the Prism menu
-            self.prism_menu = QMenu("Prism", self.susMainWin)
+            self.prism_menu = QMenu("Prism", substance_painter.ui.get_main_window())
             #menu_bar.addMenu(self.prism_menu)
             substance_painter.ui.add_menu(self.prism_menu)
 
@@ -89,7 +84,7 @@ class Prism_SubstancePainter_tester_Functions(object):
     
     @err_catcher(name=__name__)
     def add_menu_action(self, name, callback):
-        action = QAction(name, self.susMainWin)
+        action = QAction(name, substance_painter.ui.get_main_window())
         action.triggered.connect(callback)
         self.prism_menu.addAction(action)
         #substance_painter.ui.add_action(self.prism_menu, action)
@@ -202,7 +197,7 @@ class Prism_SubstancePainter_tester_Functions(object):
         print("Exporting textures...")
         # call your existing logic here to export texture
         if substance_painter.project.is_open():
-            _textureUI = TextureExportController(core=self.core, parent=self.susMainWin)
+            _textureUI = TextureExportController(core=self.core, parent=substance_painter.ui.get_main_window())
             _textureUI.exec_()
         else:
             print("No project is open.")
@@ -369,7 +364,7 @@ class Prism_SubstancePainter_tester_Functions(object):
         nodes=None,
         expType=None,
     ):
-        self._textureUI = TextureExportController(self.susMainWin)
+        self._textureUI = TextureExportController(substance_painter.ui.get_main_window())
         self._textureUI.exec_()
 
     @err_catcher(name=__name__)
@@ -564,10 +559,10 @@ class Prism_SubstancePainter_tester_Functions(object):
                 print("No project is open to capture a thumbnail.")
                 return None
 
-            rect = self.susMainWin.findChild(QWidget, "Viewer3D").rect()
+            rect = substance_painter.ui.get_main_window().findChild(QWidget, "Viewer3D").rect()
 
             pixmap = QPixmap(rect.size())
-            self.susMainWin.findChild(QWidget, "Viewer3D").render(pixmap, QPoint(), QRegion(rect))
+            substance_painter.ui.get_main_window().findChild(QWidget, "Viewer3D").render(pixmap, QPoint(), QRegion(rect))
 
             if pixmap:
                 thumbnail_path = self.core.getCurrentFileName().replace(".spp", "preview.jpg")
@@ -588,19 +583,15 @@ class Prism_SubstancePainter_tester_Functions(object):
         print("Unregistering Prism SubstancePainter plugin...")
         # --- 1. Remove menu actions ---
         try:
-            if hasattr(self, "prism_menu") and self.prism_menu:
-                self.prism_menu.removeAction(self.prism_menu.menuAction())
-                self.prism_menu.deleteLater()
-                self.prism_menu = None
-                print("Removed Prism menu action.")
+            #for menu in self.prism_menu.menuAction():
+            #    substance_painter.ui.delete_ui_element(menu)
+            substance_painter.ui.delete_ui_element(self.prism_menu)
+            self.prism_menu = None
         except Exception as e:
             print("Error removing menu action:", e)
             traceback.print_exc()
 
         # --- 6. Clear remaining references ---
-        self.susMainWin = None
-        self.currentState = None
-
 
 class ExportTextureClass(QWidget):
     className = "ExportTexture"
