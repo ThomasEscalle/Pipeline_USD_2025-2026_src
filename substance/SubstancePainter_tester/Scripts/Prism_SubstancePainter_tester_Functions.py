@@ -2,14 +2,14 @@ import os
 import traceback
 import json
 
-from shiboken6 import isValid
+import shiboken6
+import weakref
 
-os.environ["QT_API"] = "pyside6"   # force qtpy to use PySide6
-import qtpy
+os.environ["QT_API"] = "PySide6"   # force qtpy to use PySide6
 
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-from qtpy.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 from PrismUtils.Decorators import err_catcher as err_catcher
 
@@ -52,13 +52,9 @@ class Prism_SubstancePainter_tester_Functions(object):
     @err_catcher(name=__name__)
     def startup(self, origin):
         origin.startAutosaveTimer()
-        mainWindow = substance_painter.ui.get_main_window()
-        if mainWindow and isValid(mainWindow):
-            origin.messageParent = mainWindow
-        else:
-            origin.messageParent = None
-
+        origin.messageParent = None       
         self.createMenu(origin)
+
 
     @err_catcher(name=__name__)
     def createMenu(self, origin):
@@ -74,20 +70,20 @@ class Prism_SubstancePainter_tester_Functions(object):
             substance_painter.ui.add_menu(self.prism_menu)
 
             # Add actions
-            #self.add_menu_action("Save", self.save)
-            #self.add_menu_action("Save Version", self.save_version)
-            #self.add_menu_action("Save Comment", self.save_comment)
-            #self.add_menu_action("Project Browser", self.open_project_browser)
-            #self.add_menu_action("Import Geometry", self.import_geometry)
-            #self.add_menu_action("Export Textures", self.export_textures)
-            #self.add_menu_action("Settings", self.open_settings)
+            self.add_menu_action("Save", self.save)
+            self.add_menu_action("Save Version", self.save_version)
+            self.add_menu_action("Save Comment", self.save_comment)
+            self.add_menu_action("Project Browser", self.open_project_browser)
+            self.add_menu_action("Import Geometry", self.import_geometry)
+            self.add_menu_action("Export Textures", self.export_textures)
+            self.add_menu_action("Settings", self.open_settings)
     
     @err_catcher(name=__name__)
     def add_menu_action(self, name, callback):
         action = QAction(name, substance_painter.ui.get_main_window())
         action.triggered.connect(callback)
         self.prism_menu.addAction(action)
-        #substance_painter.ui.add_action(self.prism_menu, action)
+        self._actions.append(action)
 
     def onStateManagerOpen(self, origin):
         origin.loadState(ExportTextureClass)
@@ -95,6 +91,11 @@ class Prism_SubstancePainter_tester_Functions(object):
     # Example function
     @err_catcher(name=__name__)
     def save(self):
+        print("saving version...")
+        if not self.core.fileInPipeline():
+            print("No file in pipeline")
+            self.core.showFileNotInProjectWarning()
+            return False
         curFileName = self.core.getCurrentFileName()
 
         substance_painter.project.save()
@@ -109,6 +110,10 @@ class Prism_SubstancePainter_tester_Functions(object):
     @err_catcher(name=__name__)
     def save_version(self):
         print("saving version...")
+        if not self.core.fileInPipeline():
+            print("No file in pipeline")
+            self.core.showFileNotInProjectWarning()
+            return False
         # call your existing logic here to save version
         curFileName = self.core.getCurrentFileName()
         filePath = curFileName.split(".")[0]
@@ -129,19 +134,26 @@ class Prism_SubstancePainter_tester_Functions(object):
     def save_comment(self):
         print("Saving comment...")
         if not self.core.projects.ensureProject():
+            print("No project open")
             return False
 
         if not self.core.users.ensureUser():
             return False
 
         if not self.core.fileInPipeline():
+            print("No file in pipeline")
             self.core.showFileNotInProjectWarning()
             return False
+        
+        self.core.messageParent = substance_painter.ui.get_main_window()
 
-        self.core.savec = PrismWidgets.SaveComment(core=self.core)
-        self.core.savec.accepted.connect(lambda: self.core.saveWithCommentAccepted(self.core.savec))
-        self.core.savec.show()
-        self.core.savec.activateWindow()
+        self.savec = PrismWidgets.SaveComment(core=self.core)
+        self.savec.accepted.connect(lambda: self.core.saveWithCommentAccepted(self.core.savec))
+        self.savec.exec_()
+        self.savec.activateWindow()
+
+        self.core.messageParent = None
+
         return True
 
 
@@ -152,12 +164,15 @@ class Prism_SubstancePainter_tester_Functions(object):
         try:
             if not hasattr(self, "_project_browser") or self._project_browser is None:
                 print("Creating Prism Project Browser...")
+                self.core.messageParent = substance_painter.ui.get_main_window()
                 self._project_browser = self.core.projectBrowser()
 
             self._project_browser.show()
 
             self._project_browser.raise_()
             self._project_browser.activateWindow()
+            self._project_browser.destroyed.connect(lambda: setattr(self.core, "messageParent", None))
+            self.core.messageParent = None
 
         except Exception as e:
             import traceback
@@ -180,15 +195,17 @@ class Prism_SubstancePainter_tester_Functions(object):
         self.currentState = getattr(state, "state", None)
 
         # state is a QTreeWidgetItem — the UI object is on state.ui
-        import_state = getattr(state, "ui", None)
-        if import_state is None:
+        self.import_state = getattr(state, "ui", None)
+        if self.import_state is None:
             print("State UI not found on the returned item. inspect state:", dir(state))
             return state
 
         # Save states to scene so PB finds them
         sm.saveStatesToScene()
 
-        import_state.browse()
+        self.core.messageParent = substance_painter.ui.get_main_window()
+        self.import_state.browse()
+        self.core.messageParent = None
 
         return state
 
@@ -205,7 +222,9 @@ class Prism_SubstancePainter_tester_Functions(object):
     @err_catcher(name=__name__)
     def open_settings(self):
         print("Opening Settings...")
-        self.core.prismSettings()
+        self.core.messageParent = substance_painter.ui.get_main_window()
+        self.settings = self.core.prismSettings()
+        self.core.messageParent = None
 
     @err_catcher(name=__name__)
     def autosaveEnabled(self, origin):
@@ -583,15 +602,47 @@ class Prism_SubstancePainter_tester_Functions(object):
         print("Unregistering Prism SubstancePainter plugin...")
         # --- 1. Remove menu actions ---
         try:
-            #for menu in self.prism_menu.menuAction():
-            #    substance_painter.ui.delete_ui_element(menu)
+            for action in getattr(self, "_actions", []):
+                self.prism_menu.removeAction(action)
+                substance_painter.ui.delete_ui_element(action)
+            self._actions.clear()
             substance_painter.ui.delete_ui_element(self.prism_menu)
             self.prism_menu = None
         except Exception as e:
             print("Error removing menu action:", e)
             traceback.print_exc()
+        
+        # --- 2. Remove QWidget ---
+        if hasattr(self, "savec"):
+            self.cleanup_widget(self.savec)
+        if hasattr(self, "_project_browser"):
+            self.cleanup_widget(self._project_browser)
+        if hasattr(self, "import_state"):
+            self.cleanup_widget(self.import_state)
+        if hasattr(self, "_textureUI"):
+            self.cleanup_widget(self._textureUI)
+        if hasattr(self, "settings"):
+            self.cleanup_widget(self.settings)
 
         # --- 6. Clear remaining references ---
+
+    def cleanup_widget(self, widget: QWidget):
+        """
+        Safely remove and delete a QWidget and all its children.
+        """
+        if widget is None:
+            return
+
+        try:
+            widget.setParent(None)
+
+            # Hide before deleting (optional, prevents UI glitches)
+            widget.hide()
+
+            # Schedule deletion safely in Qt
+            substance_painter.ui.delete_ui_element(widget)
+        except Exception as e:
+            print(f"Error cleaning up widget {widget}: {e}")
 
 class ExportTextureClass(QWidget):
     className = "ExportTexture"
