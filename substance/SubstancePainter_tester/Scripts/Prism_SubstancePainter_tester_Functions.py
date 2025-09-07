@@ -47,7 +47,9 @@ class Prism_SubstancePainter_tester_Functions(object):
         self._event_tokens = []
 
         self.core.registerCallback("masterVersionUpdated", self.fix_master_filename)
+        self._event_tokens.append("masterVersionUpdated")
         self.core.registerCallback("onStateManagerOpen", self.onStateManagerOpen, plugin=self)
+        self._event_tokens.append("onStateManagerOpen")
 
     @err_catcher(name=__name__)
     def startup(self, origin):
@@ -600,7 +602,7 @@ class Prism_SubstancePainter_tester_Functions(object):
     def unregister(self):
         """Clean up plugin resources when Substance Painter closes."""
         print("Unregistering Prism SubstancePainter plugin...")
-        print("messageParen : ", self.core.messageParent)
+        print("messageParent : ", self.core.messageParent)
         # --- 1. Remove menu actions ---
         try:
             for action in getattr(self, "_actions", []):
@@ -618,14 +620,29 @@ class Prism_SubstancePainter_tester_Functions(object):
             self.cleanup_widget(self.savec)
         if hasattr(self, "_project_browser"):
             self.cleanup_widget(self._project_browser)
-        if hasattr(self, "import_state"):
-            self.cleanup_widget(self.import_state)
         if hasattr(self, "sm"):
             self.cleanup_widget(self.sm)
+        if hasattr(self, "import_state"):
+            self.import_state = None
         if hasattr(self, "_textureUI"):
             self.cleanup_widget(self._textureUI)
         if hasattr(self, "settings"):
             self.cleanup_widget(self.settings)
+
+        for info in getattr(self, "_event_tokens", []) or []:
+            try:
+                # Try different host APIs safely
+                if hasattr(self.core, "unregisterCallback"):
+                    try:
+                        self.core.unregisterCallback(info)
+                        print("callback unregister ! ")
+                    except Exception:
+                        # fallback to removeCallback or remove_callback variants
+                        pass
+
+            except Exception:
+                pass
+        self._event_tokens.clear()
 
         # --- 6. Clear remaining references ---
 
@@ -641,8 +658,14 @@ class Prism_SubstancePainter_tester_Functions(object):
             widget.setParent(None)
             # Hide before deleting (optional, prevents UI glitches)
             widget.hide()
+            #disconnect signals
+            try:
+                widget.disconnect()
+            except:
+                pass
             # Schedule deletion safely
             substance_painter.ui.delete_ui_element(widget)
+            widget=None
         except Exception as e:
             print(f"Error cleaning up widget {widget}: {e}")
 
