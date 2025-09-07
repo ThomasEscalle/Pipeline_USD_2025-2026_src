@@ -643,7 +643,6 @@ class Prism_SubstancePainter_tester_Functions(object):
             except Exception:
                 pass
         self._event_tokens.clear()
-
         # --- 6. Clear remaining references ---
 
     def cleanup_widget(self, widget: QWidget):
@@ -654,6 +653,15 @@ class Prism_SubstancePainter_tester_Functions(object):
             return
 
         try:
+            #---STop thread and timer---
+            for t in widget.findChildren(QTimer):
+                t.stop()
+                t.deleteLater()
+            for th in widget.findChildren(QThread):
+                th.quit()
+                th.wait(2000)
+                th.deleteLater()
+
             print(widget)
             widget.setParent(None)
             # Hide before deleting (optional, prevents UI glitches)
