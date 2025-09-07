@@ -185,9 +185,9 @@ class Prism_SubstancePainter_tester_Functions(object):
         # call your existing logic here to import geometry
 
         #create the state
-        sm = self.core.getStateManager()
+        self.sm = self.core.getStateManager()
 
-        state = sm.createState(
+        state = self.sm.createState(
             "ImportFile",
             setActive=True,
             openProductsBrowser=False,
@@ -201,7 +201,7 @@ class Prism_SubstancePainter_tester_Functions(object):
             return state
 
         # Save states to scene so PB finds them
-        sm.saveStatesToScene()
+        self.sm.saveStatesToScene()
 
         self.core.messageParent = substance_painter.ui.get_main_window()
         self.import_state.browse()
@@ -600,6 +600,7 @@ class Prism_SubstancePainter_tester_Functions(object):
     def unregister(self):
         """Clean up plugin resources when Substance Painter closes."""
         print("Unregistering Prism SubstancePainter plugin...")
+        print("messageParen : ", self.core.messageParent)
         # --- 1. Remove menu actions ---
         try:
             for action in getattr(self, "_actions", []):
@@ -619,6 +620,8 @@ class Prism_SubstancePainter_tester_Functions(object):
             self.cleanup_widget(self._project_browser)
         if hasattr(self, "import_state"):
             self.cleanup_widget(self.import_state)
+        if hasattr(self, "sm"):
+            self.cleanup_widget(self.sm)
         if hasattr(self, "_textureUI"):
             self.cleanup_widget(self._textureUI)
         if hasattr(self, "settings"):
@@ -634,12 +637,11 @@ class Prism_SubstancePainter_tester_Functions(object):
             return
 
         try:
+            print(widget)
             widget.setParent(None)
-
             # Hide before deleting (optional, prevents UI glitches)
             widget.hide()
-
-            # Schedule deletion safely in Qt
+            # Schedule deletion safely
             substance_painter.ui.delete_ui_element(widget)
         except Exception as e:
             print(f"Error cleaning up widget {widget}: {e}")
