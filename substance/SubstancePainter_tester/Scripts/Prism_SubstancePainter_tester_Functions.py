@@ -26,7 +26,7 @@ from Prism_SubstancePainter_tester_ExportTexture_Controllers import TextureExpor
 class Prism_SubstancePainter_tester_Functions(object):
     def __init__(self, core, plugin):
         self.core = core
-        #self.plugin = plugin
+        self.plugin = plugin
         self.currentState = {
                 "states": [
                     {
@@ -56,7 +56,6 @@ class Prism_SubstancePainter_tester_Functions(object):
         origin.startAutosaveTimer()
         origin.messageParent = None       
         self.createMenu(origin)
-
 
     @err_catcher(name=__name__)
     def createMenu(self, origin):
@@ -620,12 +619,22 @@ class Prism_SubstancePainter_tester_Functions(object):
             self.cleanup_widget(self.savec)
         if hasattr(self, "_project_browser"):
             self.cleanup_widget(self._project_browser)
-        if hasattr(self, "sm"):
-            self.cleanup_widget(self.sm)
         if hasattr(self, "import_state"):
-            self.import_state = None
+            self.cleanup_widget(self.import_state)
         if hasattr(self, "_textureUI"):
             self.cleanup_widget(self._textureUI)
+        #Clean up the product browser if it exists
+        for w in QApplication.allWidgets():
+            try:
+                if isinstance(w, QWidget) and "productbrowser" in w.__class__.__name__.lower():
+                    print("Cleaning stray ProductBrowser:", w)
+                    self.cleanup_widget(w)
+            except Exception:
+                pass
+        if hasattr(self, "sm"):
+            self.cleanup_widget(self.sm)
+        if hasattr(self, "productBrowser"):
+            self.cleanup_widget(self.productBrowser)
         if hasattr(self, "settings"):
             self.cleanup_widget(self.settings)
 
@@ -644,6 +653,8 @@ class Prism_SubstancePainter_tester_Functions(object):
                 pass
         self._event_tokens.clear()
         # --- 6. Clear remaining references ---
+        self.currentState = None
+        self.plugin = None
 
     def cleanup_widget(self, widget: QWidget):
         """
