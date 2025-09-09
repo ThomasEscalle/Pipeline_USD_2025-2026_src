@@ -6,6 +6,7 @@ from qtpy.QtCore import Qt
 import sys
 
 import substance_painter.textureset
+import substance_painter.ui
 
 # Get the type used by flags in this Qt binding
 FLAG_TYPE = type(QTreeWidgetItem().flags())
@@ -30,7 +31,7 @@ ITEM_IS_SELECTABLE = _get_flag("ItemIsSelectable", 0x00000001)
 
 
 class TextureExportUI(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=substance_painter.ui.get_main_window()):
         super().__init__(parent)
         self.setWindowTitle("Texture Export")
         self.resize(600, 500)
@@ -158,10 +159,3 @@ class TextureExportUI(QDialog):
             textureData[textureSetName] = allStacks
 
         return textureData
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = TextureExportUI()
-    window.show()
-    sys.exit(app.exec_())

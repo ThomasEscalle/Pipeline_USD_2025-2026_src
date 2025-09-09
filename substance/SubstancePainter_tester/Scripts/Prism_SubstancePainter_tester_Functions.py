@@ -215,8 +215,8 @@ class Prism_SubstancePainter_tester_Functions(object):
         print("Exporting textures...")
         # call your existing logic here to export texture
         if substance_painter.project.is_open():
-            _textureUI = TextureExportController(core=self.core, parent=substance_painter.ui.get_main_window())
-            _textureUI.exec_()
+            self._textureUI = TextureExportController(core=self.core, parent=substance_painter.ui.get_main_window())
+            self._textureUI.exec_()
         else:
             print("No project is open.")
 
@@ -623,6 +623,9 @@ class Prism_SubstancePainter_tester_Functions(object):
             self.cleanup_widget(self.import_state)
         if hasattr(self, "_textureUI"):
             self.cleanup_widget(self._textureUI)
+            if hasattr(self._textureUI, "sm") and not hasattr(self, "sm"):
+                self.cleanup_widget(self._textureUI.sm)
+                self._textureUI.state = None
         #Clean up the product browser if it exists
         for w in QApplication.allWidgets():
             try:
@@ -656,6 +659,7 @@ class Prism_SubstancePainter_tester_Functions(object):
         self.currentState = None
         self.plugin = None
 
+
     def cleanup_widget(self, widget: QWidget):
         """
         Safely remove and delete a QWidget and all its children.
@@ -678,8 +682,15 @@ class Prism_SubstancePainter_tester_Functions(object):
             # Hide before deleting (optional, prevents UI glitches)
             widget.hide()
             #disconnect signals
+            for signal in widget.findChildren(QObject):
+                try:
+                    signal.disconnect()
+                    print("some signals disconnnect")
+                except Exception:
+                    pass
             try:
                 widget.disconnect()
+                print("something disconnnect")
             except:
                 pass
             # Schedule deletion safely
@@ -687,6 +698,7 @@ class Prism_SubstancePainter_tester_Functions(object):
             widget=None
         except Exception as e:
             print(f"Error cleaning up widget {widget}: {e}")
+
 
 class ExportTextureClass(QWidget):
     className = "ExportTexture"

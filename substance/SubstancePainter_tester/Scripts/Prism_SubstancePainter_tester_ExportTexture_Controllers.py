@@ -7,6 +7,7 @@ from qtpy.QtCore import Qt
 from Prism_SubstancePainter_tester_ExportTextureUI import TextureExportUI
 import substance_painter.export
 import substance_painter.resource
+import substance_painter.ui
 
 import json
 import os
@@ -17,7 +18,7 @@ import shutil
 logger = logging.getLogger(__name__)
 
 class TextureExportController(TextureExportUI):
-    def __init__(self, core, parent=None):
+    def __init__(self, core, parent=substance_painter.ui.get_main_window()):
         super().__init__(parent)
         self.core = core
 
@@ -121,7 +122,8 @@ class TextureExportController(TextureExportUI):
         allTextures = []
         for name in material_names :
             allTextures += exportResult[(name,"")]
-        self.updateMasterVersion(productContext, allTextures)  
+        self.updateMasterVersion(productContext, allTextures)
+        self.accept()
 
     
     def get_texture_tree_format_bit(self):
