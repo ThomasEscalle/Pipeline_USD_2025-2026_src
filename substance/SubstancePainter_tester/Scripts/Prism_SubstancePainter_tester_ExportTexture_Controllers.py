@@ -1,8 +1,8 @@
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-from qtpy.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
-from qtpy.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from Prism_SubstancePainter_tester_ExportTextureUI import TextureExportUI
 import substance_painter.export
@@ -30,13 +30,10 @@ class TextureExportController(TextureExportUI):
         #create the state
         self.sm = self.core.getStateManager()
 
-        self.state = self.sm.createState("ExportTexture")
-        self.currentState = getattr(self.state, "state", None)
+        self.state = self.sm.createState("Export")
 
 
     def on_edit_preset(self):
-        print("current state : ", self.currentState)
-
         return self.state
 
     def on_preset_toggled(self, state):
@@ -361,3 +358,46 @@ class TextureExportController(TextureExportUI):
             results.append(masterPath)
 
         return results
+
+
+    def cleanup(self):
+        # disconnect UI signals
+        try:
+            self.edit_preset_btn.clicked.disconnect()
+        except Exception:
+            pass
+        try:
+            self.preset_check.stateChanged.disconnect()
+        except Exception:
+            pass
+        try:
+            self.export_btn.clicked.disconnect()
+        except Exception:
+            pass
+
+        # detach from parent to avoid dangling pointer to host window
+        try:
+            self.setParent(None)
+        except Exception:
+            pass
+
+        # Release state if state manager supports deletion (adjust to API)
+        try:
+            if hasattr(self.sm, "deleteState") and self.state:
+                self.sm.deleteState(self.state)
+        except Exception:
+            pass
+        self.state = None
+
+        # Clear attributes that may hold references to host resources
+        self.core = None
+
+        # Break references to child widgets (if any)
+        try:
+            self.texture_tree = None
+            self.comment_edit = None
+            self.identifier_edit = None
+            self.res_combo = None
+            self.use_next_version = None
+        except Exception:
+            pass

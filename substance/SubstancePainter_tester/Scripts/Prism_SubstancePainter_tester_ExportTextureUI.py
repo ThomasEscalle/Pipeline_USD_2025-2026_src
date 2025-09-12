@@ -1,8 +1,8 @@
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-from qtpy.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
-from qtpy.QtCore import Qt
+from PySide6.QtCore import Qt
 import sys
 
 import substance_painter.textureset
@@ -159,3 +159,6 @@ class TextureExportUI(QDialog):
             textureData[textureSetName] = allStacks
 
         return textureData
+
+    def __del__(self):
+        print("Texture Export UI has been deleted !")

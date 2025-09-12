@@ -48,8 +48,6 @@ class Prism_SubstancePainter_tester_Functions(object):
 
         self.core.registerCallback("masterVersionUpdated", self.fix_master_filename)
         self._event_tokens.append("masterVersionUpdated")
-        self.core.registerCallback("onStateManagerOpen", self.onStateManagerOpen, plugin=self)
-        self._event_tokens.append("onStateManagerOpen")
 
     @err_catcher(name=__name__)
     def startup(self, origin):
@@ -149,7 +147,7 @@ class Prism_SubstancePainter_tester_Functions(object):
         self.core.messageParent = substance_painter.ui.get_main_window()
 
         self.savec = PrismWidgets.SaveComment(core=self.core)
-        self.savec.accepted.connect(lambda: self.core.saveWithCommentAccepted(self.core.savec))
+        self.savec.accepted.connect(lambda: self.core.saveWithCommentAccepted(self.savec))
         self.savec.exec_()
         self.savec.activateWindow()
 
@@ -182,6 +180,9 @@ class Prism_SubstancePainter_tester_Functions(object):
 
     @err_catcher(name=__name__)
     def import_geometry(self):
+        if substance_painter.project.is_open():
+            print("You can't import anything if a project is already open. Please open an empty Subtance Painter scene to import geometry.")
+            return False
         print("Importing geometry...")
         # call your existing logic here to import geometry
 
@@ -216,7 +217,7 @@ class Prism_SubstancePainter_tester_Functions(object):
         # call your existing logic here to export texture
         if substance_painter.project.is_open():
             self._textureUI = TextureExportController(core=self.core, parent=substance_painter.ui.get_main_window())
-            self._textureUI.exec_()
+            self._textureUI.show()
         else:
             print("No project is open.")
 
@@ -289,6 +290,10 @@ class Prism_SubstancePainter_tester_Functions(object):
     @err_catcher(name=__name__)
     def getAppVersion(self, origin):
         return "1.0"
+
+    @err_catcher(name=__name__)
+    def getCamNodes(self, origin):
+        return []
 
     @err_catcher(name=__name__)
     def openScene(self, origin, filepath, force=False):
@@ -384,8 +389,8 @@ class Prism_SubstancePainter_tester_Functions(object):
         nodes=None,
         expType=None,
     ):
-        self._textureUI = TextureExportController(substance_painter.ui.get_main_window())
-        self._textureUI.exec_()
+        #mimic export texture logic but as a function with args
+        pass
 
     @err_catcher(name=__name__)
     def sm_export_preDelete(self, origin):
@@ -617,29 +622,36 @@ class Prism_SubstancePainter_tester_Functions(object):
         # --- 2. Remove QWidget ---
         if hasattr(self, "savec"):
             self.cleanup_widget(self.savec)
+            self.savec = None
+
         if hasattr(self, "_project_browser"):
             self.cleanup_widget(self._project_browser)
+            self._project_browser = None
+
         if hasattr(self, "import_state"):
             self.cleanup_widget(self.import_state)
+            self.import_state = None
+
         if hasattr(self, "_textureUI"):
+            #self._textureUI.cleanup()
             self.cleanup_widget(self._textureUI)
-            if hasattr(self._textureUI, "sm") and not hasattr(self, "sm"):
-                self.cleanup_widget(self._textureUI.sm)
-                self._textureUI.state = None
+            self._textureUI = None
+
         #Clean up the product browser if it exists
         for w in QApplication.allWidgets():
             try:
                 if isinstance(w, QWidget) and "productbrowser" in w.__class__.__name__.lower():
-                    print("Cleaning stray ProductBrowser:", w)
                     self.cleanup_widget(w)
             except Exception:
                 pass
+
         if hasattr(self, "sm"):
             self.cleanup_widget(self.sm)
-        if hasattr(self, "productBrowser"):
-            self.cleanup_widget(self.productBrowser)
+            self.sm = None
+
         if hasattr(self, "settings"):
             self.cleanup_widget(self.settings)
+            self.settings = None
 
         for info in getattr(self, "_event_tokens", []) or []:
             try:
@@ -647,7 +659,6 @@ class Prism_SubstancePainter_tester_Functions(object):
                 if hasattr(self.core, "unregisterCallback"):
                     try:
                         self.core.unregisterCallback(info)
-                        print("callback unregister ! ")
                     except Exception:
                         # fallback to removeCallback or remove_callback variants
                         pass
@@ -693,148 +704,9 @@ class Prism_SubstancePainter_tester_Functions(object):
                 print("something disconnnect")
             except:
                 pass
+            widget.close
             # Schedule deletion safely
             substance_painter.ui.delete_ui_element(widget)
             widget=None
         except Exception as e:
             print(f"Error cleaning up widget {widget}: {e}")
-
-
-class ExportTextureClass(QWidget):
-    className = "ExportTexture"
-    listType = "Export"
-
-    def setup(self, state, core, stateManager, stateData=None):
-        self.core = core
-        self.state = state
-        self.stateManager = stateManager
-        self.canSetVersion = True
-        self.setupUi()
-        self.connectEvents()
-
-        if stateData is not None:
-            self.loadData(stateData)
-
-    @err_catcher(name=__name__)
-    def loadData(self, data):
-        if "statename" in data:
-            self.e_name.setText(data["statename"])
-        if "option1" in data:
-            self.chb_option1.setChecked(data["option1"])
-        if "fileFormat" in data:
-            idx = self.cb_format.find(data["fileFormat"])
-            if idx != -1:
-                self.cb_format.setCurrentIndex(idx)
-        if "stateenabled" in data and self.listType == "Export":
-            self.state.setCheckState(
-                0,
-                eval(
-                    data["stateenabled"]
-                    .replace("PySide.QtCore.", "")
-                    .replace("PySide2.QtCore.", "")
-                ),
-            )
-
-        self.core.callback("onStateSettingsLoaded", self, data)
-
-    @err_catcher(name=__name__)
-    def setupUi(self):
-        self.lo_main = QVBoxLayout(self)
-        self.w_name = QWidget()
-        self.lo_name = QHBoxLayout(self.w_name)
-        self.l_name = QLabel("Name:")
-        self.e_name = QLineEdit()
-        self.e_name.setText(self.state.text(0))
-        self.l_name.setVisible(False)
-        self.e_name.setVisible(False)
-        self.lo_name.addWidget(self.l_name)
-        self.lo_name.addWidget(self.e_name)
-
-        self.gb_general = QGroupBox("General")
-        self.lo_general = QVBoxLayout(self.gb_general)
-
-        self.w_option1 = QWidget()
-        self.lo_option1 = QHBoxLayout(self.w_option1)
-        self.l_option1 = QLabel("Option1:")
-        self.chb_option1 = QCheckBox()
-        self.lo_option1.addWidget(self.l_option1)
-        self.lo_option1.addStretch()
-        self.lo_option1.addWidget(self.chb_option1)
-
-        self.w_format = QWidget()
-        self.lo_format = QHBoxLayout(self.w_format)
-        self.l_format = QLabel("Format:")
-        self.cb_format = QComboBox()
-        self.cb_format.addItems([".f1", "f2"])
-        self.lo_format.addWidget(self.l_format)
-        self.lo_format.addStretch()
-        self.lo_format.addWidget(self.cb_format)
-
-        self.lo_general.addWidget(self.w_option1)
-        self.lo_general.addWidget(self.w_format)
-
-        self.lo_main.addWidget(self.w_name)
-        self.lo_main.addWidget(self.gb_general)
-
-    @err_catcher(name=__name__)
-    def connectEvents(self):
-        self.e_name.textChanged.connect(self.nameChanged)
-        self.e_name.editingFinished.connect(self.stateManager.saveStatesToScene)
-        self.chb_option1.toggled.connect(self.stateManager.saveStatesToScene)
-        self.cb_format.currentIndexChanged.connect(self.stateManager.saveStatesToScene)
-
-    @err_catcher(name=__name__)
-    def nameChanged(self, text):
-        self.state.setText(0, text)
-
-    @err_catcher(name=__name__)
-    def updateUi(self):
-        return True
-
-    @err_catcher(name=__name__)
-    def preExecuteState(self):
-        warnings = []
-
-        if not self.chb_option1.isChecked():
-            warnings.append(["Option1 not checked.", "", 2])
-
-        return [self.state.text(0), warnings]
-
-    @err_catcher(name=__name__)
-    def executeState(self, parent, useVersion="next"):
-        fileName = self.core.getCurrentFileName()
-        context = self.core.getScenefileData(fileName)
-        outputPath = self.core.products.generateProductPath(
-            entity=context,
-            task="myProduct",
-            extension=self.cb_format.currentText(),
-        )
-
-        if not os.path.exists(os.path.dirname(outputPath)):
-            os.makedirs(os.path.dirname(outputPath))
-
-        with open(outputPath, "w") as f:
-            f.write("custom export")
-
-        self.core.popup("Custom export to: %s" % outputPath, severity="info")
-        result = {"result": "success"}
-        if result["result"] == "success":
-            return [self.state.text(0) + " - success"]
-        else:
-            return [
-                self.state.text(0)
-                + " - error - %s" % result["error"]
-            ]
-
-    @err_catcher(name=__name__)
-    def getStateProps(self):
-        stateProps = {}
-        stateProps.update(
-            {
-                "statename": self.e_name.text(),
-                "option1": self.chb_option1.isChecked(),
-                "cb_format": self.cb_format.currentText(),
-                "stateenabled": str(self.state.checkState(0)),
-            }
-        )
-        return stateProps
