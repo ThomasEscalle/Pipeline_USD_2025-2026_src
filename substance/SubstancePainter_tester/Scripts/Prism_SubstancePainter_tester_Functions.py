@@ -84,9 +84,6 @@ class Prism_SubstancePainter_tester_Functions(object):
         self.prism_menu.addAction(action)
         self._actions.append(action)
 
-    def onStateManagerOpen(self, origin):
-        origin.loadState(ExportTextureClass)
-
     # Example function
     @err_catcher(name=__name__)
     def save(self):
@@ -633,7 +630,7 @@ class Prism_SubstancePainter_tester_Functions(object):
             self.import_state = None
 
         if hasattr(self, "_textureUI"):
-            #self._textureUI.cleanup()
+            self._textureUI.cleanup()
             self.cleanup_widget(self._textureUI)
             self._textureUI = None
 
@@ -707,6 +704,5 @@ class Prism_SubstancePainter_tester_Functions(object):
             widget.close
             # Schedule deletion safely
             substance_painter.ui.delete_ui_element(widget)
-            widget=None
         except Exception as e:
             print(f"Error cleaning up widget {widget}: {e}")

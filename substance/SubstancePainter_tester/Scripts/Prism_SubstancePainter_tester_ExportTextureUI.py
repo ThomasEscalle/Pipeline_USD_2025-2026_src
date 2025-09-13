@@ -31,7 +31,7 @@ ITEM_IS_SELECTABLE = _get_flag("ItemIsSelectable", 0x00000001)
 
 
 class TextureExportUI(QDialog):
-    def __init__(self, parent=substance_painter.ui.get_main_window()):
+    def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Texture Export")
         self.resize(600, 500)

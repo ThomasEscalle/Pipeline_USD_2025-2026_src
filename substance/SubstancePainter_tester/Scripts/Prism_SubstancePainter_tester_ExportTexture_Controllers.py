@@ -18,7 +18,7 @@ import shutil
 logger = logging.getLogger(__name__)
 
 class TextureExportController(TextureExportUI):
-    def __init__(self, core, parent=substance_painter.ui.get_main_window()):
+    def __init__(self, core, parent):
         super().__init__(parent)
         self.core = core
 
