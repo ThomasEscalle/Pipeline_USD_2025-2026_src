@@ -28,19 +28,21 @@ class TextureExportController(TextureExportUI):
         self.export_btn.clicked.connect(self.on_export_btn_clicked)
 
         #create the state
-        self.sm = self.core.getStateManager()
+        #self.sm = self.core.getStateManager()
 
-        self.state = self.sm.createState("Export")
-
-
+     
     def on_edit_preset(self):
-        return self.state
+        pass
 
     def on_preset_toggled(self, state):
         self.preset_combo.setEnabled(state == Qt.Checked)
     
     def on_export_btn_clicked(self):
         print("Export button clicked")
+
+        #self.state = self.sm.createState("Export", setActive=True)
+        #self.core.appPlugin.currentState = getattr(self.state, "state", None)
+
         #get the context
         contextPath = self.core.getCurrentFileName()[:-4] + "versioninfo.json"
         #context = self.core.getScenefileData(fileName=self.core.getCurrentFileName(path=False))
@@ -84,7 +86,7 @@ class TextureExportController(TextureExportUI):
         exportPath = '/'.join(exportPath)
 
         # Save states to scene so PB finds them
-        self.sm.saveStatesToScene()
+        #self.sm.saveStatesToScene()
 
         #export the texture
 
@@ -374,20 +376,6 @@ class TextureExportController(TextureExportUI):
             self.export_btn.clicked.disconnect()
         except Exception:
             pass
-
-        # detach from parent to avoid dangling pointer to host window
-        try:
-            self.setParent(None)
-        except Exception:
-            pass
-
-        # Release state if state manager supports deletion (adjust to API)
-        try:
-            if hasattr(self.sm, "deleteState") and self.state:
-                self.sm.deleteState(self.state)
-        except Exception:
-            pass
-        self.state = None
 
         # Clear attributes that may hold references to host resources
         self.core = None

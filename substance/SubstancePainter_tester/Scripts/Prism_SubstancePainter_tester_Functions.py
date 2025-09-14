@@ -630,6 +630,16 @@ class Prism_SubstancePainter_tester_Functions(object):
             self.import_state = None
 
         if hasattr(self, "_textureUI"):
+            if hasattr(self._textureUI, "state") and not hasattr(self, "sm"):
+                self.cleanup_widget(self._textureUI.state)
+                self._textureUI.state = None
+            if hasattr(self._textureUI, "sm") and not hasattr(self, "sm"):
+                self.cleanup_widget(self._textureUI.sm)
+                try: 
+                    self._textureUI.sm.tw_export.clear()
+                except:
+                    pass
+                self._textureUI.sm = None
             self._textureUI.cleanup()
             self.cleanup_widget(self._textureUI)
             self._textureUI = None
