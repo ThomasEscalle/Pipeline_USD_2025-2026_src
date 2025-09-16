@@ -69,8 +69,6 @@ class Prism_Badger_Pipeline_Functions(object):
         # This function is called when the user wants to create a new template
         self.core.registerCallback("openPBFileContextMenu", self.onOpenPBFileContextMenu, plugin=self)
 
-        # This function is called when a master gets updated
-        self.core.registerCallback("masterVersionUpdated", self.onMasterUpdated, plugin=self)
 
         # This function is called when the user wants to create a new product
         self.core.registerCallback("openPBAssetContextMenu", self.onOpenPBAssetContextMenu, plugin=self)
@@ -101,11 +99,6 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
 
-        # Monkey patch the setEntityPreview function to paste the asset preview in the USD folder when it is updated
-        self.core.plugins.monkeyPatch(self.core.entities.setEntityPreview, self.setEntityPreview, self, force=True)
-
-
-
     # region Callbacks
 
 
@@ -129,51 +122,6 @@ class Prism_Badger_Pipeline_Functions(object):
         except Exception as e:
             self.console.showMessageBoxError("Error importing USD packages", str(e))
 
-
-    # This function is called when the entity preview is set
-    def setEntityPreview(self, *args, **kwargs):
-        # Call the original function
-        returnValue = self.core.plugins.callUnpatchedFunction(self.core.entities.setEntityPreview, *args, **kwargs)
-        
-        # Get the entity from the args
-        entity = args[0] if len(args) > 0 else None
-
-        if entity is None:
-            self.console.log("No entity provided to setEntityPreview")
-            return returnValue
-
-        if entity["type"] == "asset":
-            # If the entity is an asset, we want to set the preview to the USD filea
-            usd_assetPath = self.core.projects.getResolvedProjectStructurePath("usd_assets")
-            assetPath = entity["asset_path"].replace("\\", "/")  # Ensure the path is in the correct format
-            path = os.path.join(usd_assetPath, assetPath)
-            path = path.replace("\\", "/")  # Ensure the path is in the correct format
-            print ("ENTITY " + str(entity))
-
-            image_path = entity["preview"]
-
-            # Check if the folder exists
-            if not os.path.exists(path):
-                self.console.log("Asset path does not exist: %s" % path)
-                return returnValue
-            
-            # Copy the preview image to the asset folder
-            finalImagePath = os.path.join(path, "thumbnail.png")
-            finalImagePath = finalImagePath.replace("\\", "/")  # Ensure the path is in the correct format
-            with open(finalImagePath, "wb") as f:
-                with open(image_path, "rb") as img_f:
-                    f.write(img_f.read())
-
-            self.console.log("The entity preview for asset %s has been set to %s" % (entity["asset"], finalImagePath))
-
-            pass
-
-        elif entity["type"] == "shot":
-            # The entity is a shot
-            # @todo
-            pass
-
-        return returnValue
 
     # When we click on an entity on the left
     def onOpenPBAssetContextMenu(self, origin, rcMenu, asset):
@@ -213,27 +161,9 @@ class Prism_Badger_Pipeline_Functions(object):
     def onAssetCreated(self, origin, entity, dlg):
         ## Asset created: {'type': 'asset', 'asset_path': 'Chars/zqdqz', 'asset': 'zqdqz', 'project_path': 'E:\\3D\\PIPELINE\\USD_Uptight_2025_v001\\00_Template\\Uptight', 'project_name': 'Uptight'}
         self.console.log("Asset created: %s" % entity)
-        """
-        ## Create an asset in the USD folder.
-        path = self.core.projects.getResolvedProjectStructurePath("usd_assets")
-        self.console.log("Resolved path: %s" % path)
-
-        assetPath = os.path.join(path, entity["asset_path"])
-        self.console.log("Asset path: %s" % assetPath)
-
-        # Create the asset folder
-        if not os.path.exists(assetPath):
-            os.makedirs(assetPath)
-            self.console.log("Created asset folder: %s" % assetPath)
-        else:
-            self.console.log("Asset folder already exists: %s" % assetPath)
-
-        """
-
 
         # Check if the asset path contains the "Modules" folder
         utils = USDUtils()
-
 
         asset_path = entity["asset_path"]
         asset_path = asset_path.replace("\\", "/")  # Ensure the path is in the correct format
@@ -254,22 +184,6 @@ class Prism_Badger_Pipeline_Functions(object):
         ## {'type': 'shot', 'sequence': 'sq_010', 'shot': 'sh_040', 'project_path': 'E:\\3D\\PIPELINE\\USD_Uptight_2025_v001\\00_Template\\Uptight', 'project_name': 'Uptight'}
         self.console.log("Shot created: %s" % entity)
 
-        ## Create a shot in the USD folder.
-        path = self.core.projects.getResolvedProjectStructurePath("usd_shots")
-        self.console.log("Resolved path: %s" % path)
-
-        shotPath = os.path.join(path, entity["sequence"], entity["shot"])
-        self.console.log("Shot path: %s" % shotPath)
-
-        # Create the shot folder
-        if not os.path.exists(shotPath):
-            os.makedirs(shotPath)
-            self.console.log("Created shot folder: %s" % shotPath)
-
-        # Create the placeholder USD file (for now just an empty file)
-        usdFile = os.path.join(shotPath, "%s.usda" % entity["shot"])
-        self.createPlaceholderUSD(usdFile)
-
 
     # This function is called when prism UI is started
     def onProjectBrowserStartup(self, origin):
@@ -284,14 +198,19 @@ class Prism_Badger_Pipeline_Functions(object):
 
         self.projectBrowser = origin
 
-        origin.mainMenu = QMenu("Uptight")
+        origin.mainMenu = QMenu("Badger Pipeline")
 
-        # Add the Create Product action
-        createProductAction = QAction(self.getIcon("download.png"), "Create Product", origin)
-        createProductAction.triggered.connect(self.createProductDialog.show)
-        createProductAction.setShortcut(QKeySequence("P"))
-        origin.mainMenu.addAction(createProductAction)
 
+        # Add a "Links" menu to the main menu
+        linksMenu = QMenu("Links")
+        linksMenu.setIcon(self.getIcon("links.png"))
+        origin.mainMenu.addMenu(linksMenu)
+
+        # Add links actions to the links menu
+        links = [ "Assets" , "Chars" , "Env" , "Cinemathèque" , "DA" , "Trame temporelle" , "..."]
+        for link in links:
+            action = QAction(link, linksMenu)
+            linksMenu.addAction(action) 
 
         # Add the Show console action
         showConsoleAction = QAction(self.getIcon("console.png"), "Show Console", origin)
@@ -335,8 +254,8 @@ class Prism_Badger_Pipeline_Functions(object):
 
         self.productBrowser = origin.productBrowser
     
-        self.usdView = USD_View(origin, self)
-        origin.addTab("USD", self.usdView)
+        # self.usdView = USD_View(origin, self)
+        # origin.addTab("USD", self.usdView)
 
 
         # Monkeypath the updateIdentifiers function of the product browser
@@ -371,14 +290,25 @@ class Prism_Badger_Pipeline_Functions(object):
         # Check if the product viewer is already open
         if not hasattr(self, 'product3DViewer'):
             self.product3DViewer = Product3DViewer(self.productBrowser)
-            self.product3DViewer.setFileStage("C:/Users/Thomas/OneDrive/Documents/Prism_Pluggins/HelloWorld.usda")
+            self.product3DViewer.setFileStage("E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Nathan/Export/USD_Asset/asset.usda")
         self.product3DViewer.show()
 
 
 
     def onActionTest(self):
         # Données d'exemple
-        test_product_import_dialog(self.core, self)
+        # test_product_import_dialog(self.core, self)
+
+        project_path = self.core.projects.getResolvedProjectStructurePath("pipeline" , context = {})
+        cameras_path = os.path.join(project_path, "Camera_Template")
+        cameras_path = cameras_path.replace("\\", "/")  # Ensure the path is in the correct format
+
+        print("Cameras path: %s" % cameras_path)
+
+
+
+
+        # Test to get the path of 
 
         """
         path = getHoudiniPath()
@@ -527,7 +457,7 @@ class Prism_Badger_Pipeline_Functions(object):
         riggingLow_MayaAction = QAction(self.getIcon("maya.png"), "Maya - Low", riggingLowMenu)
         riggingLow_MayaAction.triggered.connect(lambda: self.createTemplate("RigL/Maya", origin))
         riggingLowMenu.addAction(riggingLow_MayaAction)
-        autorigLow_MayaAction01 = QAction(self.getIcon("maya.png"), "Maya - AutoRig Props", riggingLowMenu)
+        autorigLow_MayaAction01 = QAction(self.getIcon("maya.png"), "Maya - AutoRig Props Low", riggingLowMenu)
         autorigLow_MayaAction01.triggered.connect(lambda: self.createTemplate("AutorigRigL01/Maya", origin))
         riggingLowMenu.addAction(autorigLow_MayaAction01)
 
@@ -535,7 +465,7 @@ class Prism_Badger_Pipeline_Functions(object):
         riggingHigh_MayaAction = QAction(self.getIcon("maya.png"), "Maya - High", riggingLowMenu)
         riggingHigh_MayaAction.triggered.connect(lambda: self.createTemplate("RigH/Maya", origin))
         riggingLowMenu.addAction(riggingHigh_MayaAction)
-        autorigHigh_MayaAction01 = QAction(self.getIcon("maya.png"), "Maya - AutoRig Characters", riggingLowMenu)
+        autorigHigh_MayaAction01 = QAction(self.getIcon("maya.png"), "Maya - AutoRig Props High", riggingLowMenu)
         autorigHigh_MayaAction01.triggered.connect(lambda: self.createTemplate("AutorigRigH01/Maya", origin))
         riggingLowMenu.addAction(autorigHigh_MayaAction01)
 
@@ -619,36 +549,8 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
     def onMasterUpdated(self, path):
-        self.console.log("Master updated: %s" % path)
-        path = path.replace("\\", "/")
-        splitedPath = path.split("/")
 
-        # We want to update the abc in the USD folder
-        usdPath = self.core.projects.getResolvedProjectStructurePath("usd_assets")
-
-        # Master updated: E:\3D\PIPELINE\USD_Uptight_2025_v001\00_Template\Uptight\03_Production\01_Assets\Items\Trombone\Export\Modeling_Low\master\Trombone_Modeling_Low_master.abc
-        # Check if the master is in "Modeling_Low" folder
-
-        # Name of the export
-        name = splitedPath[-3]
-
-        if "Publish" not in name:
-            self.console.log("The Master you are trying to publish is not a Publish")
-            return
-        
-        # Check if the updated master is an asset or a shot
-        if "01_Assets" in path:
-
-            # Remove everything before "01_Assets" and everything after "Export" 
-            assetPath = path.split("01_Assets/")[1]
-            assetPath = assetPath.split("/Export")[0]
-
-            variation = name.split("_")[-1]
-
-            return
-
-        if "02_Shots" in path:
-            return
+        return
 
 
     #endregion Callbacks
