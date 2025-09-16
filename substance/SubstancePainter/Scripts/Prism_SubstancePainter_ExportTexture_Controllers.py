@@ -1,12 +1,13 @@
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-from qtpy.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
-from qtpy.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from Prism_SubstancePainter_ExportTextureUI import TextureExportUI
 import substance_painter.export
 import substance_painter.resource
+import substance_painter.ui
 
 import json
 import os
@@ -17,7 +18,7 @@ import shutil
 logger = logging.getLogger(__name__)
 
 class TextureExportController(TextureExportUI):
-    def __init__(self, core, parent=None):
+    def __init__(self, core, parent):
         super().__init__(parent)
         self.core = core
 
@@ -27,24 +28,24 @@ class TextureExportController(TextureExportUI):
         self.export_btn.clicked.connect(self.on_export_btn_clicked)
 
         #create the state
-        self.sm = self.core.getStateManager()
+        #self.sm = self.core.getStateManager()
 
-        self.state = self.sm.createState("ExportTexture")
-        self.currentState = getattr(self.state, "state", None)
-
-
+     
     def on_edit_preset(self):
-        print("current state : ", self.currentState)
-
-        return self.state
+        pass
 
     def on_preset_toggled(self, state):
         self.preset_combo.setEnabled(state == Qt.Checked)
     
     def on_export_btn_clicked(self):
         print("Export button clicked")
+
+        #self.state = self.sm.createState("Export", setActive=True)
+        #self.core.appPlugin.currentState = getattr(self.state, "state", None)
+
         #get the context
         contextPath = self.core.getCurrentFileName()[:-4] + "versioninfo.json"
+        #context = self.core.getScenefileData(fileName=self.core.getCurrentFileName(path=False))
         with open(contextPath, 'r') as file:
             context = json.load(file)
 
@@ -85,7 +86,7 @@ class TextureExportController(TextureExportUI):
         exportPath = '/'.join(exportPath)
 
         # Save states to scene so PB finds them
-        self.sm.saveStatesToScene()
+        #self.sm.saveStatesToScene()
 
         #export the texture
 
@@ -359,3 +360,32 @@ class TextureExportController(TextureExportUI):
             results.append(masterPath)
 
         return results
+
+
+    def cleanup(self):
+        # disconnect UI signals
+        try:
+            self.edit_preset_btn.clicked.disconnect()
+        except Exception:
+            pass
+        try:
+            self.preset_check.stateChanged.disconnect()
+        except Exception:
+            pass
+        try:
+            self.export_btn.clicked.disconnect()
+        except Exception:
+            pass
+
+        # Clear attributes that may hold references to host resources
+        self.core = None
+
+        # Break references to child widgets (if any)
+        try:
+            self.texture_tree = None
+            self.comment_edit = None
+            self.identifier_edit = None
+            self.res_combo = None
+            self.use_next_version = None
+        except Exception:
+            pass
