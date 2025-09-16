@@ -29,7 +29,7 @@ class FileTemplateRigHighMaya(FileTemplateBase):
         # Ici on recuperer tous products qui sont des ".usd" , et dont le nom contiens "ModH" et Publish, 
         # Depuis l'entitée "Current".
         ImportReference = True
-        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc", ".abc" , ".obj"], origin, ["ModH", "Publish"])
+        ReferenceFiles = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc", ".abc" , ".obj"], origin, ["ModH", "Publish"], onlyOne=True)
 
         
         # Demande a l'utilisateur quel produits a importer

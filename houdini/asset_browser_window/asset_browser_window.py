@@ -211,7 +211,14 @@ class ItemsListWidget(QtWidgets.QListWidget):
 
             filtered_assets.append(asset)
 
-
+        # Creation des dossiers
+        for folder in folders:
+            item = QtWidgets.QListWidgetItem(folder)
+            name = folder.split("/")[-1].split("\\")[-1]
+            item.setText(name)
+            item.setIcon(self.core.getPlugin("Badger_Pipeline").getIcon("folder.png"))
+            item.setWhatsThis("folder")
+            self.addItem(item)
 
         # Création des assets
         for asset in filtered_assets:
@@ -230,14 +237,7 @@ class ItemsListWidget(QtWidgets.QListWidget):
             
             self.addItem(item)
 
-        # Creation des dossiers
-        for folder in folders:
-            item = QtWidgets.QListWidgetItem(folder)
-            name = folder.split("/")[-1].split("\\")[-1]
-            item.setText(name)
-            item.setIcon(self.core.getPlugin("Badger_Pipeline").getIcon("folder.png"))
-            item.setWhatsThis("folder")
-            self.addItem(item)
+
 
 
     # Switch to list mode
@@ -264,10 +264,8 @@ class ItemsListWidget(QtWidgets.QListWidget):
     # When an item is double clicked
     # @todo : Create the corresponding houdini node
     def onItemDoubleClicked(self, item):
-        print(f"Double clicked on item: {item.text()}")
         # Vérifie si l'item est un dossier via whatsThis
         if item.whatsThis() == "folder":
-            print("It's a folder!")
             folder_name = item.text()
             self.set_current_path(folder_name)
             return

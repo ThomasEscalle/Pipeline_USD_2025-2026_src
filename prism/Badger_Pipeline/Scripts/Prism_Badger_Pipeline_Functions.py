@@ -522,15 +522,22 @@ class Prism_Badger_Pipeline_Functions(object):
         modelingHigh_HoudiniAction.triggered.connect(lambda: self.createTemplate("ModH/Houdini", origin))
         modelingLowMenu.addAction(modelingHigh_HoudiniAction)
 
-        # Rigging Low   
+        # Rigging
         riggingLowMenu = createTemplateMenu.addMenu("Rigging")
         riggingLow_MayaAction = QAction(self.getIcon("maya.png"), "Maya - Low", riggingLowMenu)
         riggingLow_MayaAction.triggered.connect(lambda: self.createTemplate("RigL/Maya", origin))
         riggingLowMenu.addAction(riggingLow_MayaAction)
+        autorigLow_MayaAction01 = QAction(self.getIcon("maya.png"), "Maya - AutoRig Props", riggingLowMenu)
+        autorigLow_MayaAction01.triggered.connect(lambda: self.createTemplate("AutorigRigL01/Maya", origin))
+        riggingLowMenu.addAction(autorigLow_MayaAction01)
+
         riggingLowMenu.addSeparator()
         riggingHigh_MayaAction = QAction(self.getIcon("maya.png"), "Maya - High", riggingLowMenu)
         riggingHigh_MayaAction.triggered.connect(lambda: self.createTemplate("RigH/Maya", origin))
         riggingLowMenu.addAction(riggingHigh_MayaAction)
+        autorigHigh_MayaAction01 = QAction(self.getIcon("maya.png"), "Maya - AutoRig Characters", riggingLowMenu)
+        autorigHigh_MayaAction01.triggered.connect(lambda: self.createTemplate("AutorigRigH01/Maya", origin))
+        riggingLowMenu.addAction(autorigHigh_MayaAction01)
 
         # Lookdev
         lookdevMenu = createTemplateMenu.addMenu("Lookdev")

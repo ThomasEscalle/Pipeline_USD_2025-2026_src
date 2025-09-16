@@ -1,4 +1,4 @@
-# RigL/Maya
+# AutorigRigL01/Maya
 
 from src.core.FileTemplateBase import FileTemplateBase
 from src.core.StandaloneScriptMaya import StandaloneScriptMaya
@@ -11,11 +11,11 @@ except:
 
 
 
-class FileTemplateRigLowMaya(FileTemplateBase):
+class FileTemplateAutorigRigLow01Maya(FileTemplateBase):
 
     def __init__(self):
         super().__init__()
-        self.template_name = "RigLowMaya"
+        self.template_name = "AutorigRigL01"
         self.template_software = "Maya"
 
     def construct(self, parent, path, origin):
@@ -51,43 +51,12 @@ class FileTemplateRigLowMaya(FileTemplateBase):
             }
         ]
         settings = [
-            
             {
-                "setting_name": "import_title",
-                "type": "title",
-                "default_value": "Globals"
-            },
-            {
-                "setting_name": "Create rigging groups",
-                "type": "checkbox",
-                "default_value": True
-            },
-            {
-                "setting_name": "import_title",
-                "type": "title",
-                "default_value": "ModLow Import Settings"
-            },
-            {
-                "setting_name": "Create References",
-                "type": "checkbox",
-                "default_value": True
-            },
-            {
-                "setting_name": "Import with namespace",
-                "type": "checkbox",
-                "default_value": False
-            },
-            {
-                "setting_name": "Import Namespace",
-                "type": "lineedit",
-                "default_value": "MOD_LOW"
-            },
-            {
-                "setting_name": "Import Method",
+                "setting_name": "Controllers placement",
                 "type": "combobox",
-                "default_value": "Reference",
-                "options": ["Reference", "Import"]
-            },
+                "default_value": "bottom",
+                "options": ["top", "centered", "bottom"],
+            }
         ]
 
         # Set the default selected product
@@ -125,13 +94,10 @@ class FileTemplateRigLowMaya(FileTemplateBase):
 
         # Get the result settings
         resultSettings = dialog.getSettings()
-        importMethod = resultSettings["Import Method"]
-        doImportNamespace = resultSettings["Import with namespace"]
-        importNamespace = resultSettings["Import Namespace"]
-        createRiggingGroups = resultSettings["Create rigging groups"]
+        ctrl_placements = resultSettings["Controllers placement"]
 
         if ImportReference:
-            if resultSettings["Create References"] is False:
+            if "Create References" in resultSettings and resultSettings["Create References"] is False:
                 ImportReference = False
 
         # Get the asset type
@@ -139,21 +105,16 @@ class FileTemplateRigLowMaya(FileTemplateBase):
         assetName = origin.getCurrentEntity()["asset_path"].split("\\")[-1]
 
         
-        script = StandaloneScriptMaya("Stdl_RigLow_Maya.py")
-        script.replaceVariable("ASSET_NAME", assetName)
-        script.replaceVariable("TYPE_ASSET", assetType)
-        script.replaceVariable("OUTPUT_PATH", outputMayaFilePath)
-        script.replaceVariable("CREATE_RIGGING_GROUPS", "True" if createRiggingGroups else "False")
-        if ImportReference == True:
-            script.replaceVariable("IMPORT_REFERENCE", "True")
-        else:
-            script.replaceVariable("IMPORT_REFERENCE", "False")
+        script = StandaloneScriptMaya("Stdl_Autorig_Rig_01_Maya.py")
 
-        script.replaceVariable("REFERENCE_PATH", referencePaths[0] if len(referencePaths) >= 1 else "")
+        script.replaceVariable("$$ASSET_NAME$$", assetName)
+        script.replaceVariable("$$TYPE_ASSET$$", assetType)
+        script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
 
-        script.replaceVariable("IMPORT_METHOD", importMethod)
-        script.replaceVariable("DO_IMPORT_NAMESPACE", "True" if doImportNamespace else "False")
-        script.replaceVariable("IMPORT_NAMESPACE", importNamespace)
+        script.replaceVariable("$$REFERENCE_PATH$$", referencePaths[0] if len(referencePaths) >= 1 else "")
+
+        script.replaceVariable("$$CTRL_PLACEMENTS$$", ctrl_placements)
+        script.replaceVariable("$$SUBDIV_LEVEL$$", "rigl")
         
         script.run()
 
