@@ -23,7 +23,6 @@ import tempfile
 
 from PrismUtils.Decorators import err_catcher_plugin as err_catcher
 
-from src.ui.USD_View import USD_View
 from src.ui.ConsoleDialog import ConsoleDialog
 from src.ui.CreateProduct import CreateProductDialog
 from src.ui.AskForProductToImport import test_product_import_dialog
@@ -39,7 +38,7 @@ from src.ui.AssignVariantsDialog import AssignVariantsDialog
 
 from src.ui.Aniversaires import get_anniversaires_aujourd_hui
 from src.ui.Games_Snake import Snake
-
+from src.ui.USD_View import USD_View
 
 class Prism_Badger_Pipeline_Functions(object):
 
@@ -140,7 +139,7 @@ class Prism_Badger_Pipeline_Functions(object):
         # Create an action named "Open in USD View" and add it to the context menu
         openInUSDViewAction = QAction(self.getIcon("usd.png"), "Open in USD View", origin)
         openInUSDViewAction.setToolTip("Open the asset in the USD View")
-        openInUSDViewAction.triggered.connect(lambda: print("Open in USD View clicked for asset: %s" % item["asset"]))
+        openInUSDViewAction.triggered.connect(lambda: self.onOpenAssetInUSDView(item))
         rcMenu.addAction(openInUSDViewAction)
         
         # Create an action named "Variants connection"
@@ -155,6 +154,8 @@ class Prism_Badger_Pipeline_Functions(object):
         widget.setStyleSheet(self.projectBrowser.styleSheet())
         widget.setupFromEntity(item)
         widget.exec_()
+
+
 
 
     # This function is called when an asset was just created
@@ -253,9 +254,6 @@ class Prism_Badger_Pipeline_Functions(object):
         origin.menubar.addMenu(origin.mainMenu)
 
         self.productBrowser = origin.productBrowser
-    
-        # self.usdView = USD_View(origin, self)
-        # origin.addTab("USD", self.usdView)
 
 
         # Monkeypath the updateIdentifiers function of the product browser
@@ -283,6 +281,7 @@ class Prism_Badger_Pipeline_Functions(object):
     def open3DViewerAction(self):
         if not self.isStandalone():
             print("This action can only be triggered in the Standalone mode")
+            QMessageBox.warning(self.projectBrowser, "Error", "This action can only be triggered in the Standalone mode")
             return
         
         from src.ui.Product3DViewer import Product3DViewer
@@ -295,26 +294,18 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
 
+    
     def onActionTest(self):
         # Données d'exemple
         # test_product_import_dialog(self.core, self)
 
-        project_path = self.core.projects.getResolvedProjectStructurePath("pipeline" , context = {})
-        cameras_path = os.path.join(project_path, "Camera_Template")
-        cameras_path = cameras_path.replace("\\", "/")  # Ensure the path is in the correct format
+        # project_path = self.core.projects.getResolvedProjectStructurePath("pipeline" , context = {})
+        # cameras_path = os.path.join(project_path, "Camera_Template")
+        # cameras_path = cameras_path.replace("\\", "/")  # Ensure the path is in the correct format
 
-        print("Cameras path: %s" % cameras_path)
+        view = USD_View("E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Nathan/Export/USD_Asset/asset.usda")
 
-
-
-
-        # Test to get the path of 
-
-        """
-        path = getHoudiniPath()
-        path = path.replace("\\", "/")  # Ensure the path is in the correct format
-        print(path)
-        """
+        pass
 
     def onActionSnakeGame(self):
         snakeGame = Snake()
@@ -593,6 +584,38 @@ class Prism_Badger_Pipeline_Functions(object):
     #endregion Helper functions
 
     #region Actions
+
+    # Open the USD View tab
+    def onOpenAssetInUSDView(self, item):
+        print("Open in USD View clicked for asset: %s" % item["asset"])
+
+        if not self.isStandalone():
+            print("This action can only be triggered in the Standalone mode")
+            QMessageBox.warning(self.projectBrowser, "Error", "This action can only be triggered in the Standalone mode")
+            return
+        
+        products = self.core.products.getProductsFromEntity(item)
+
+        # Try to find the "asset.usda" file in the products
+        displayed_product = ""
+        for product in products:
+            if product.get("product") == "USD_Asset":
+                print("Product found: %s" % product)
+                path = product.get("path")
+                path = os.path.join(path, "asset.usda")
+
+                if os.path.exists(path):
+                    displayed_product = path
+                break
+        
+        if displayed_product == "":
+            QMessageBox.warning(self.projectBrowser, "Error", "No USD_Asset product found for this asset")
+            return
+        
+        USDView = USD_View(displayed_product)
+
+        pass
+
 
     # Open the help page in the default web browser
     def onActionHelp(self):

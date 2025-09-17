@@ -58,11 +58,12 @@ class USDUtils:
 
     def createUsdItem(self, entity, parent):
         try:
-            from pxr import Usd, UsdGeom
+            from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
             parent.console.log("Error importing pxr module: %s" % e)
             parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
             return
+        
         
         # Create the USD Product where the USD asset will be created
         # usd_asset stores the path to the created USD asset
@@ -72,7 +73,6 @@ class USDUtils:
         selfPath = os.path.dirname(__file__)
         itemTemplatePath = os.path.join(selfPath, "USD_TEMPLATES", "ITEM")
 
-        
         # Create a publish for the modeling low geo
         master_path_low = self.createAssetModelingLow(entity, usd_asset, parent.core)
 
@@ -232,8 +232,17 @@ class USDUtils:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        # Create the geo.usda
-        stage = Usd.Stage.CreateNew(os.path.join(directory, "geo.usda"))
+        # Make sure the geo.usda is not in the cache
+        path = os.path.join(directory, "geo.usda")
+        layer = Sdf.Layer.Find(path)
+        if layer:
+            print(f"Reusing existing layer at {path}")
+            layer.Clear()
+            stage = None
+
+        stage = Usd.Stage.CreateNew(path)
+
+
         stage.SetFramesPerSecond(24)
         stage.SetTimeCodesPerSecond(24)
         stage.SetMetadata("metersPerUnit", 1)
@@ -310,7 +319,16 @@ class USDUtils:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        stage = Usd.Stage.CreateNew(os.path.join(directory, "mtl.usda"))
+
+        # Make sure the mtl.usda is not in the cache
+        path = os.path.join(directory, "mtl.usda")
+        layer = Sdf.Layer.Find(path)
+        if layer:
+            print(f"Reusing existing layer at {path}")
+            layer.Clear()
+            stage = None
+        stage = Usd.Stage.CreateNew(path)
+
         stage.SetFramesPerSecond(24)
         stage.SetTimeCodesPerSecond(24)
         stage.SetMetadata("metersPerUnit", 1)
@@ -344,6 +362,9 @@ class USDUtils:
         product_path = core.products.createProduct(entity, "ModL_Publish", "global")
 
         temp_geo_path = os.path.join(assetPath, "geo_low.usd")
+
+
+
 
         # Create a usd stage
         stage = Usd.Stage.CreateNew(temp_geo_path)

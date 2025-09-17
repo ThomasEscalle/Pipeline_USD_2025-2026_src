@@ -150,6 +150,28 @@ class Product3DViewer(QDialog):
         centerViewAction.triggered.connect(self.frameViewActionTriggered)
         viewMenu.addAction(centerViewAction)
 
+        # Add a separator
+        viewMenu.addSeparator()
+
+        # Add a Display Proxy geometry action
+        displayProxyAction = QAction("Display Proxy", self)
+        displayProxyAction.setCheckable(True)
+        displayProxyAction.setChecked(True)
+        displayProxyAction.triggered.connect(self.toggleDisplayProxy)
+        viewMenu.addAction(displayProxyAction)
+
+        # Add a display Render geometry action
+        displayRenderAction = QAction("Display Render", self)
+        displayRenderAction.setCheckable(True)
+        displayRenderAction.setChecked(False)
+        viewMenu.addAction(displayRenderAction)
+
+    def toggleDisplayProxy(self, checked):
+        self._dataModel.viewSettings.displayProxy = not checked
+
+    def toggleDisplayRender(self, checked):
+        self._dataModel.viewSettings.displayRender = checked
+
     def setRenderMode(self, mode):
         # Vérifier si le _dataModel est correctement initialisé
         if not hasattr(self, '_dataModel') or self._dataModel is None:
