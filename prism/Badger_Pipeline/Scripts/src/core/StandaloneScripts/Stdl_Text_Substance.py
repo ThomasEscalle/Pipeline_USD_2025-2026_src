@@ -17,7 +17,7 @@ startupinfo.wShowWindow = 0  # 0 = SW_HIDE, 6 = SW_MINIMIZE
 proc = subprocess.Popen([
     r"C:/Program Files/Adobe/Adobe Substance 3D Painter/Adobe Substance 3D Painter.exe",
     "--enable-remote-scripting"
-])
+], startupinfo=startupinfo)
 
 # Give it some seconds to start fully and open the scripting port
 time.sleep(7)
