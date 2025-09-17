@@ -1,6 +1,6 @@
 import subprocess, time
 import http.client, json, base64
-
+import win32gui, win32con, win32process
 
 assetName = "ASSET_NAME"
 outputPath = "C:/Mathieu/3D4/prsim_test/Test/03_Production/Assets/CHAR/SlySam/SlySam/Scenefiles/surf/texturing/SlySam_texturing_v0002.spp"    #"OUTPUT_PATH"
@@ -9,15 +9,18 @@ importReferencePath = "C:/Mathieu/3D4/prsim_test/Test/03_Production/Assets/CHAR/
 
 
 # Launch Painter with remote scripting enabled
-# Startup info to hide the window on Windows
-startupinfo = subprocess.STARTUPINFO()
-startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-startupinfo.wShowWindow = 0  # 0 = SW_HIDE, 6 = SW_MINIMIZE
-
 proc = subprocess.Popen([
     r"C:/Program Files/Adobe/Adobe Substance 3D Painter/Adobe Substance 3D Painter.exe",
     "--enable-remote-scripting"
-], startupinfo=startupinfo)
+])
+
+# Find and hide Painter window
+def hide_window(pid):
+    def callback(hwnd, pid_to_hide):
+        _, found_pid = win32process.GetWindowThreadProcessId(hwnd)
+        if found_pid == pid_to_hide:
+            win32gui.ShowWindow(hwnd, win32con.SW_HIDE)
+    win32gui.EnumWindows(callback, pid)
 
 # Give it some seconds to start fully and open the scripting port
 time.sleep(7)
