@@ -16,45 +16,27 @@ class USDUtils:
 
     def createUsdModule(self, entity, parent):
         parent.console.log("Creating USD module for: " + entity["asset"])
-        """
-        selfPath = os.path.dirname(__file__)
-        itemTemplatePath = os.path.join(selfPath, "USD_TEMPLATES", "MODULE")
 
-        # Create a publish for the modu.usda file
-        parent.core.products.createProduct(entity, "Modu_Publish", "global")
-        # Ingest the new version into prism
-        modu_template_path = os.path.join(itemTemplatePath, "modu.usda")
-        result = parent.core.products.ingestProductVersion([modu_template_path], entity, "Modu_Publish")
-        # Path
-        path = result["createdFiles"][0]
-        # Open the file, and replace the $$ITEM_NAME$$ with the asset name
-        with open(path, "r") as file:
-            content = file.read()
-        content = content.replace("$$ITEM_NAME$$", entity["asset"])
-        # Save the file
-        with open(path, "w") as file:
-            file.write(content)
-        # Update the master version
-        master_path = parent.core.products.updateMasterVersion(result["createdFiles"][0])
-        parent.console.log("Ingested new version: " + master_path)
+        try:
+            from pxr import Usd, UsdGeom, Kind, Sdf
+        except ImportError as e:
+            parent.console.log("Error importing pxr module: %s" % e)
+            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
+            return
+        
+        # Create the USD Product where the USD asset will be created
+        # usd_asset stores the path to the created USD asset
+        usd_asset = parent.core.products.createProduct(entity, "USD_Asset", "global")
 
 
-        # Create the module.usda
-        module = USDFileTemplate(os.path.join(itemTemplatePath, "module.usda"))
-        module.replace("$$ITEM_NAME$$", entity["asset"])
-        module.replace("$$MODU_PATH$$", master_path.replace("\\", "/"))
-        module.save(os.path.join(assetPath, entity["asset"] + ".usda"))
+        # Create a publish for "Modu_Publish" with an empty usd file
+        master_path_module = self.createEmptyModule(entity, usd_asset, parent.core)
 
-        # Create a "usd_info.txt" file with the asset information
-        object = {
-            "type": "module",
-            "entry_file": entity["asset"] + ".usda"
-        }
-        strObject = json.dumps(object, indent=4)
-        strObject = strObject.replace("'", "\"")
-        with open(os.path.join(assetPath, "usd_info.txt"), "w") as info_file:
-            info_file.write(strObject)
-        """
+        # Create the asset.usda in the USD_Asset folder, referencing the modu.usda
+        self.createModuleAssetFile(entity, usd_asset, master_path_module["usd_file"], parent)
+
+
+
 
     def createUsdItem(self, entity, parent):
         try:
@@ -111,6 +93,29 @@ class USDUtils:
 
         pass
 
+    # Create the asset.usda in the USD_Asset folder, referencing the modu.usda
+    def createModuleAssetFile(self, entity, assetPath, modu_path , parent):
+        try:
+            from pxr import Usd, UsdGeom, Kind, Sdf
+        except ImportError as e:
+            parent.console.log("Error importing pxr module: %s" % e)
+            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
+            return
+
+        # Create the USD Stage
+        stage = Usd.Stage.CreateNew(os.path.join(assetPath, "asset.usda"))
+        stage.SetFramesPerSecond(24)
+        stage.SetTimeCodesPerSecond(24)
+        stage.SetMetadata("metersPerUnit", 1)
+        stage.SetMetadata("upAxis", "Y")
+
+        # Add a reference to the modu.usda
+        prim = stage.DefinePrim("/modu_" + entity["asset"])
+        prim.GetReferences().AddReference(os.path.relpath(modu_path, assetPath).replace("\\", "/"),primPath="/modu_" + entity["asset"])
+        stage.SetDefaultPrim(prim)
+
+        # Save the file
+        stage.GetRootLayer().Save()
 
 
     # Creates a root asset file (asset.usda)
@@ -350,6 +355,41 @@ class USDUtils:
 
         # Return the path of the created usd file
         return os.path.join(directory, "mtl.usda")
+
+
+    # Create a publish for "Modu_Publish" with an empty usd file
+    def createEmptyModule(self, entity, assetPath, core, subdirectory = ""):
+        try:
+            from pxr import Usd, UsdGeom, Kind, Sdf
+        except ImportError as e:
+            return {"product": "", "usd_file": ""}
+        
+        product_path = core.products.createProduct(entity, "Modu_Publish", "global")
+
+        temp_modu_path = os.path.join(assetPath, "modu.usd")
+
+        # Create a usd stage
+        stage = Usd.Stage.CreateNew(temp_modu_path)
+        stage.SetFramesPerSecond(24)
+        stage.SetTimeCodesPerSecond(24)
+        stage.SetMetadata("metersPerUnit", 1)
+        stage.SetMetadata("upAxis", "Y")
+
+        # Just create an empty xform prim
+        xformPrim = UsdGeom.Xform.Define(stage, '/' + entity["asset"] + "_Module")
+        stage.SetDefaultPrim(xformPrim.GetPrim())
+        stage.GetRootLayer().Save()
+
+
+        result = core.products.ingestProductVersion([temp_modu_path], entity ,"Modu_Publish")
+        master_path_modu = core.products.updateMasterVersion(result["createdFiles"][0])
+
+        # Delete the temporary modu file
+        if os.path.exists(temp_modu_path):
+            os.remove(temp_modu_path)
+
+        return {"usd_file" : master_path_modu , "product": product_path}
+
 
     def createAssetModelingLow(self, entity, assetPath, core, subdirectory = ""):
         try:
