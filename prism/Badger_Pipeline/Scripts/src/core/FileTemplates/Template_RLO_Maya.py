@@ -28,15 +28,54 @@ class FileTemplateRLOMaya(FileTemplateBase):
         # - Le temps que prend la séquence (pour créer la timeline)
 
 
+        # Current entity
+        current_entity = origin.getCurrentEntity()
+
+        # Ici, on vas recuperer tous les shots de la sequence.
+        all_shots_in_sequence = origin.core.entities.getShotsFromSequence(current_entity["sequence"])
+        shots_in_sequence = []
+        for shot in all_shots_in_sequence:
+            # If the shot is not "Master", we add it to the list
+            if shot["shot"].lower() != "master" and shot != current_entity:
+                shots_in_sequence.append(shot)
+
+        # Warn the user if no other shots were found in the sequence
+        if len(shots_in_sequence) == 0:
+            QMessageBox.warning(parent, "No Shots Found", "No other shots found in the same sequence. Please make sure there are other shots in the sequence.")
+            return
+        
+        # Store the total frames of the sequence
+        total_frames = 0
+
+        # Get the range and length of each shot and add it to the shot dict
+        for shot in shots_in_sequence:
+            range = origin.core.entities.getShotRange(shot)
+            shot["range"] = range
+
+            length = range[1] - range[0] + 1
+            shot["length"] = length
+            total_frames += length
+
+            metadata = origin.core.entities.getMetaData(shot)
+            shot["metadata"] = metadata
+
+
+        print("Shots in the same sequence:", shots_in_sequence)  # List of shots in the same sequence
+
+
         # Crées le chemin ou maya vas enregistrer son fichier.
         # A la fin, on copiras le fichier crée dans Prism sous une nouvelle version.
         filepath = os.path.dirname(__file__)
         outputMayaFilePath = os.path.join(filepath, "output.ma")
         outputMayaFilePath = outputMayaFilePath.replace("\\", "/")
 
+
         # Ici, on vas recuperer le setdress de l'entitée "Current".
         importReference_SetDress = True
         setDress_Files = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
+
+
+
 
         # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
         # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
@@ -82,6 +121,50 @@ class FileTemplateRLOMaya(FileTemplateBase):
         # On annule si jamais l'utilisateur a demandé annulé sur le dialogue.
         if result != QDialog.Accepted:
             return
+
+
+        # Get the camera rig path
+        project_pipeline_path = origin.core.projects.getResolvedProjectStructurePath("pipeline" , context = {})
+        camera_file_path = os.path.join(project_pipeline_path, "Templates" , "camera_template.ma")
+        camera_file_path = camera_file_path.replace("\\", "/")
+        # Check if the camera file exists
+        if not os.path.exists(camera_file_path):
+            camera_file_path = ""
+
+        # Get the asset type
+        assetType = origin.getCurrentEntity()["type"]
+        assetName = origin.getCurrentEntity()["sequence"] + "_" + origin.getCurrentEntity()["shot"]
+        task = origin.getCurrentTask()
+        department = origin.getCurrentDepartment()
+
+        ###################################################################
+        ################### CREATE THE SCENE ##############################
+        ###################################################################
+        script = StandaloneScriptMaya("Stdl_RLO_Maya.py")
+        script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
+
+        script.replaceVariable("$$SEQUENCE_TYPE$$", assetType)
+        script.replaceVariable("$$ASSET_NAME$$", assetName)
+        script.replaceVariable("$$TASK$$", task)
+        script.replaceVariable("$$DEPARTMENT$$", department)
+
+        script.replaceVariable("$$CAMERA_RIG_PATH$$", camera_file_path)
+        script.replaceVariable("$$IMPORT_CAMERA_RIG$$", "True" if camera_file_path != "" else "False")
+
+        script.replaceVariable("$$NUMBER_OF_FRAMES$$", str(total_frames))
+        script.replaceVariable("$$FIRST_FRAME$$", "1001")
+
+        script.replaceVariable("$$SHOTS$$", str(shots_in_sequence))
+
+        script.run()
+
+
+        # Add the scene to the current project
+        scene = { "path": outputMayaFilePath }
+        origin.createSceneFromPreset(scene)
+
+        # Delete the scene
+        os.remove(outputMayaFilePath)
 
 
         """
