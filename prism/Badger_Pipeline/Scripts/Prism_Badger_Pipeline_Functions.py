@@ -11,6 +11,7 @@
 # @brief This file contains the entry functions for the Badger Pipeline plugin for Prism.
 
 from __future__ import print_function
+from functools import partial
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
@@ -207,11 +208,7 @@ class Prism_Badger_Pipeline_Functions(object):
         linksMenu.setIcon(self.getIcon("links.png"))
         origin.mainMenu.addMenu(linksMenu)
 
-        # Add links actions to the links menu
-        links = [ "Assets" , "Chars" , "Env" , "Cinemathèque" , "DA" , "Trame temporelle" , "..."]
-        for link in links:
-            action = QAction(link, linksMenu)
-            linksMenu.addAction(action) 
+        self.fill_links_menu(linksMenu)
 
         # Add the Show console action
         showConsoleAction = QAction(self.getIcon("console.png"), "Show Console", origin)
@@ -276,6 +273,50 @@ class Prism_Badger_Pipeline_Functions(object):
             self.projectBrowser.setWindowTitle(aniversairesTxt)
         else:
             self.projectBrowser.setWindowTitle("Prism - Badger Pipeline")
+
+
+    def fill_links_menu(self, menu):
+        menu.clear()
+
+        project_pipeline_path = self.core.projects.getResolvedProjectStructurePath("pipeline" , context = {})
+        links_file_path = os.path.join(project_pipeline_path, "links.json")
+        links_file_path = links_file_path.replace("\\", "/")  # Ensure the path is in the correct format
+
+        # Check if the links.json file exists, if not create a default one
+        if not os.path.exists(links_file_path):
+            links_content = {
+                "links": [
+                    {
+                        "name": "Prism Documentation",
+                        "url": "https://thomasescalle.github.io/Pipeline_USD_2025/",
+                        "shortcut": "Ctrl+Shift+H"
+                    }
+                ]
+            }
+            with open(links_file_path, "w") as f:
+                json.dump(links_content, f, indent=4)
+
+        # Load the links from the links.json file
+        try:
+            with open(links_file_path, "r") as f:
+                links_content = json.load(f)
+        except Exception as e:
+            self.console.showMessageBoxError("Error loading links.json", str(e))
+            return
+        links = links_content.get("links", [])
+
+        for link in links:
+            name = link.get("name", "No Name")
+            url = link.get("url", "")
+            if url == "":
+                continue
+            shortcut = link.get("shortcut", "")
+            action = QAction(self.getIcon("link.png"), name, menu)
+            action.setToolTip(url)
+            if shortcut != "":
+                action.setShortcut(QKeySequence(shortcut))
+            action.triggered.connect(partial(self.openUrl, urle=url))
+            menu.addAction(action)
 
 
     def open3DViewerAction(self):

@@ -2,11 +2,11 @@ import hou
 import os
 
 
-output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"    # <-- Path where to save the scene
-assetName = "Cuisine"           # <-- Name of the asset, string to be set by the user
-assetType = "Modules"           # <-- Type of the asset, string to be set by the user, e.g. "character", "prop", etc.
-taskName = "Modules"             # <-- Name of the task, string to be set by the user, e.g. "Modeling", "Rigging_v012", etc.
-departmentName = "Mod" # <-- Name of the department, string to be set by the user, e.g. "ModL", "ModH", etc.
+output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"
+assetName = "sq_010_Master"
+assetType = "shot"
+taskName = "SedD"
+departmentName = "SetD"
 
 
 # Create a new Houdini scene
@@ -54,22 +54,6 @@ def build_assembly_subnet():
     # Connect the input0 node to the in_assembly node
     in_assembly.setInput(0, input_stage, 0)
 
-
-    ##################
-    #### Comments ####
-    ##################
-    # Add a sticky note 
-    sticky_note = assembly_subnet.createStickyNote("AssemblySubnet")
-    sticky_note.setPosition(hou.Vector2(3, -4))
-    sticky_note_text = "C'est ici que tu peux placer tes items dans ta scène.\n"
-    sticky_note_text += "Tu peux utiliser le Layout Asset Gallery pour placer des assets en drag and drop.\n"
-    sticky_note_text += "Tu peux aussi utiliser directement les nodes \"Asset Reference\" pour importer tes assets en reference.\n"
-    sticky_note_text += "Tu peux utiliser le node \"Transform\" pour bouger tes assets dans ta scène.\n"
-    sticky_note.setText(sticky_note_text)
-    sticky_note.resize(hou.Vector2(5, 2))
-    sticky_note.setDrawBackground(False)
-    sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
-
 build_assembly_subnet()
 
 
@@ -83,8 +67,7 @@ sceneCleaning_subnet.setPosition(assembly_subnet.position() + hou.Vector2(0, -2)
 sceneCleaning_subnet.setComment("Ne pas toucher a ce node !")
 sceneCleaning_subnet.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
-def build_sceneCleaning_subnet():
-    # Get the ouput0 node of the sceneCleaning subnet
+def build_sceneCleaning_subnet():    # Get the ouput0 node of the sceneCleaning subnet
     output0 = sceneCleaning_subnet.node("output0")
     # Get the input0 node of the sceneCleaning subnet
     inputs = sceneCleaning_subnet.indirectInputs()
@@ -99,7 +82,7 @@ def build_sceneCleaning_subnet():
     graftstages.setPosition(hou.Vector2(0, -2))
     graftstages.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
     graftstages.setParms({
-        "destpath" : f"/modu_{assetName}",
+        "destpath" : f"/setD_{assetName}",
     })
 
     # Create a "null" node called "OUT_SCENE_CLEANING"
@@ -132,19 +115,16 @@ out_scene_building = stage.createNode("null", "OUT_SCENE_BUILDING")
 out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
 out_scene_building.setUserData("nodeshape", "diamond")
 
-# Create a "usd_rop" node
-# usd_rop = stage.createNode("usd_rop", "USD_OUTPUT")
-# usd_rop.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-# usd_rop.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
+
+
 
 # Create a "Export" node
 export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
 export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
 export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
-export_node.parm("productName").set("Modu_Publish")
+export_node.parm("productName").set("SetD_Publish")
 export_node.parm("nextVersion").set(True)
 export_node.parm("updateMaster").set(True)
-
 
 
 
@@ -153,6 +133,8 @@ export_node.parm("updateMaster").set(True)
 lookdev_scene = stage.createNode("subnet", "LOOKDEV_SCENE")
 lookdev_scene.setColor(hou.Color(0.776, 0.776, 0.157))  # Cyan
 lookdev_scene.setPosition(out_scene_building.position() + hou.Vector2(-4, -2))
+
+
 
 
 #####################################
@@ -170,13 +152,13 @@ lookdev_scene.setInput(0, out_scene_building, 0)
 
 
 
+##################
+#### Comments ####
+##################
+
 # Set the display flag on the "OUT_SCENE_BUILDING" node
 out_scene_building.setDisplayFlag(True)
 
 
-
-
 # Save the Houdini file
 hou.hipFile.save(output_hip_path)
-
-
