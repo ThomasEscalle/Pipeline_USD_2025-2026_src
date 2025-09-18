@@ -87,7 +87,9 @@ class FileTemplateSurfHoudini(FileTemplateBase):
         # Set the settings configuration
         dialog.setSettings(settings)
 
-        dialog.setWindowTitle("Import Products")
+        dialog.navigate(origin.getCurrentEntity())
+        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/Surfacing/#comment-creer-une-scene-dans-houdini")
+        dialog.setWindowTitle("Import Settings")
         result = dialog.exec_()
 
         # On annule si jamais l'utilisateur a demandé annulé sur le dialogue.

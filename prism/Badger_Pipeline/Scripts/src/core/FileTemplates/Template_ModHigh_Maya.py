@@ -95,7 +95,9 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
         # Set the settings configuration
         dialog.setSettings(settings)
 
-        dialog.setWindowTitle("Import Products")
+        dialog.navigate(origin.getCurrentEntity())
+        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/ModelingHigh/#comment-creer-une-scene-dans-maya")
+        dialog.setWindowTitle("Import Settings")
         result = dialog.exec_()
 
 

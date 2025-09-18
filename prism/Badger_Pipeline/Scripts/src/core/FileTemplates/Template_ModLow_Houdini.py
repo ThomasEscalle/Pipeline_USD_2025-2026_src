@@ -46,7 +46,9 @@ class FileTemplateModelingLowHoudini(FileTemplateBase):
         dialog.setSettings(settings)
         dialog.hideImportTab()
         
-        dialog.setWindowTitle("Import Products")
+        dialog.navigate(origin.getCurrentEntity())
+        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/ModelingLow/#comment-creer-une-scene-dans-houdini")
+        dialog.setWindowTitle("Import Settings")
         result = dialog.exec_()
 
         # On annule si jamais l'utilisateur a demandé annulé sur le dialogue.

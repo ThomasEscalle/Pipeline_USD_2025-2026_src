@@ -2,6 +2,7 @@
 
 from src.core.FileTemplateBase import FileTemplateBase
 from src.core.StandaloneScriptMaya import StandaloneScriptMaya
+from src.ui.AskForProductToImport import ProductImportDialog, QDialog
 import os
 
 try:
@@ -19,6 +20,71 @@ class FileTemplateRLOMaya(FileTemplateBase):
         self.template_software = "Maya"
 
     def construct(self, parent, path, origin):
+
+        # Les elements a importer pour ce template sont :
+        # - Le set dress (.USD)
+        # - Les rigs des assets connectés (char et prop) (.ma)
+        # - Le nombre d'autres shots dans la séquence (pour créer les cameras)
+        # - Le temps que prend la séquence (pour créer la timeline)
+
+
+        # Crées le chemin ou maya vas enregistrer son fichier.
+        # A la fin, on copiras le fichier crée dans Prism sous une nouvelle version.
+        filepath = os.path.dirname(__file__)
+        outputMayaFilePath = os.path.join(filepath, "output.ma")
+        outputMayaFilePath = outputMayaFilePath.replace("\\", "/")
+
+        # Ici, on vas recuperer le setdress de l'entitée "Current".
+        importReference_SetDress = True
+        setDress_Files = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
+
+        # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
+        # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
+        dialog = ProductImportDialog( origin.core, parent, None)
+        default_selected = [
+            {
+                "type" : "folder",
+                "name" : "Set Dress",
+                "settings" : {
+                    "accepted_files" : [
+                        "usd", "usda", "usdc",
+                    ]
+                },
+                "items" : setDress_Files,
+                "select_only_one_file": True
+            },
+            {
+                "type" : "folder",
+                "name" : "Rigs",
+                "settings" : {
+                    "accepted_files" : [
+                        "ma",
+                    ]
+                },
+                # "items" : rig_paths_chars + rig_paths_props,
+            }
+        ]
+        settings = [
+
+        ]
+
+        # Set the default selected product
+        dialog.setDefaultSelectedProduct(default_selected)
+        
+        # Set the settings configuration
+        dialog.setSettings(settings)
+
+        dialog.navigate(origin.getCurrentEntity())
+        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/RLO/#comment-creer-une-scene-dans-maya")
+        dialog.setWindowTitle("Import Settings")
+        result = dialog.exec_()
+
+        # On annule si jamais l'utilisateur a demandé annulé sur le dialogue.
+        if result != QDialog.Accepted:
+            return
+
+
+        """
         filepath = os.path.dirname(__file__)
         outputMayaFilePath = os.path.join(filepath, "output.ma")
         outputMayaFilePath = outputMayaFilePath.replace("\\", "/")
@@ -137,3 +203,5 @@ class FileTemplateRLOMaya(FileTemplateBase):
         # Add the scene to the current project
         scene = { "path": outputMayaFilePath }
         origin.createSceneFromPreset(scene)
+
+        """

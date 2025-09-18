@@ -23,35 +23,33 @@ class ProductImportDialog(QDialog):
         self.pluggin_parent = pluggin_parent
         self.setupUi()
         
-    def setupUi(self) :
+    def setupUi(self):
         self.main_layout = QVBoxLayout(self)
 
-        # Create the tab widget
-        self.tab_widget = QTabWidget(self)
+        # Create stacked widget for pages
+        self.stacked_widget = QStackedWidget(self)
         
-        # First tab - Settings
-        self.settings_tab = QWidget()
-        self.settings_layout = QVBoxLayout(self.settings_tab)
+        # Page 0 - Settings
+        self.settings_page = QWidget()
+        self.settings_layout = QVBoxLayout(self.settings_page)
         
         # Create the settings widget
-        self.settings_widget = SettingsWidget(parent=self.settings_tab)
+        self.settings_widget = SettingsWidget(parent=self.settings_page)
         self.settings_layout.addWidget(self.settings_widget)
         
-        # Second tab - Product Import
-        self.import_tab = QWidget()
-        self.import_layout = QVBoxLayout(self.import_tab)
+        # Page 1 - Import Products
+        self.import_page = QWidget()
+        self.import_layout = QVBoxLayout(self.import_page)
         
         # Create the SelectProductsToImportWidget
         self.select_products_widget = SelectProductsToImportWidget(core=self.core, pluggin_parent=self.pluggin_parent)
 
-        # Add the widget to the import tab layout
+        # Add the widget to the import page layout
         self.import_layout.addWidget(self.select_products_widget)
 
-
-
-        # Add tabs to the tab widget
-        self.tab_widget.addTab(self.settings_tab, "Settings")
-        self.tab_widget.addTab(self.import_tab, "Import Products")
+        # Add pages to the stacked widget
+        self.stacked_widget.addWidget(self.settings_page)
+        self.stacked_widget.addWidget(self.import_page)
 
 
 
@@ -60,26 +58,96 @@ class ProductImportDialog(QDialog):
         # Bottom buttons layout
         self.buttons_layout = QHBoxLayout()
 
+        self.btn_help = QPushButton("Help")
+        self.btn_help.setIcon(self.pluggin_parent.getIcon("help.png"))
+        self.btn_help.clicked.connect(self.openHelp)
+        self.btn_help.setVisible(False)
+
+        self.btn_previous = QPushButton("Previous")
+        self.btn_previous.setIcon(self.pluggin_parent.getIcon("previous.png"))
+        self.btn_previous.clicked.connect(self.goToSettingsPage)
+        self.btn_previous.setVisible(False)
+
+        self.btn_next = QPushButton("Next")
+        self.btn_next.setIcon(self.pluggin_parent.getIcon("next.png"))
+        self.btn_next.clicked.connect(self.goToImportPage)
+
         self.btn_import = QPushButton("Create")
         self.btn_import.setIcon(self.pluggin_parent.getIcon("check.png"))
         self.btn_import.clicked.connect(self.onCreate)
+        self.btn_import.setVisible(False)
 
         self.btn_cancel = QPushButton("Cancel")
         self.btn_cancel.setIcon(self.pluggin_parent.getIcon("cancel.png"))
         self.btn_cancel.clicked.connect(self.reject)
 
+        self.buttons_layout.addWidget(self.btn_help)
         self.buttons_layout.addStretch()
+        self.buttons_layout.addWidget(self.btn_previous)
+        self.buttons_layout.addWidget(self.btn_next)
         self.buttons_layout.addWidget(self.btn_import)
         self.buttons_layout.addWidget(self.btn_cancel)
 
-        # Add tab widget and buttons to main layout
-        self.main_layout.addWidget(self.tab_widget)
+        # Add stacked widget and buttons to main layout
+        self.main_layout.addWidget(self.stacked_widget)
         self.main_layout.addLayout(self.buttons_layout)
         self.setLayout(self.main_layout)
 
-    # Hide the import tab
+        # Initialize state
+        self.import_page_hidden = False
+        self.help_link = ""
+        self.updateButtons()
+
+    def navigate(self, entity):
+        self.select_products_widget.navigate(entity)
+
+    def updateButtons(self):
+        """Update button visibility based on current page and import_page_hidden state"""
+        page = self.stacked_widget.currentIndex()
+        
+        # Update help button visibility
+        self.btn_help.setVisible(bool(self.help_link))
+        
+        if self.import_page_hidden:
+            # Only settings page, show Create and Cancel
+            self.btn_previous.setVisible(False)
+            self.btn_next.setVisible(False)
+            self.btn_import.setVisible(True)
+        else:
+            if page == 0:  # Settings page
+                self.btn_previous.setVisible(False)
+                self.btn_next.setVisible(True)
+                self.btn_import.setVisible(False)
+            elif page == 1:  # Import page
+                self.btn_previous.setVisible(True)
+                self.btn_next.setVisible(False)
+                self.btn_import.setVisible(True)
+
+    def goToSettingsPage(self):
+        """Navigate to the settings page"""
+        self.stacked_widget.setCurrentIndex(0)
+        self.updateButtons()
+
+    def goToImportPage(self):
+        """Navigate to the import page"""
+        self.stacked_widget.setCurrentIndex(1)
+        self.updateButtons()
+
+    def openHelp(self):
+        """Open the help link in the default browser"""
+        if self.help_link:
+            QDesktopServices.openUrl(QUrl(self.help_link))
+
+    def setHelpLink(self, help_link):
+        """Set the help link URL"""
+        self.help_link = help_link
+        self.updateButtons()
+
+    # Hide the import page (show only settings and Create)
     def hideImportTab(self):
-        self.tab_widget.removeTab(self.tab_widget.indexOf(self.import_tab))
+        self.import_page_hidden = True
+        self.stacked_widget.setCurrentIndex(0)
+        self.updateButtons()
 
     def onCreate(self):
         self.accept()

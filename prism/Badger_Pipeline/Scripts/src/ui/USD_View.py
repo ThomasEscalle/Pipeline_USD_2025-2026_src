@@ -46,6 +46,25 @@ class USD_View():
 
     def __init__(self, file_path):
         
+        # Montre un QMessageBox pour indiquer que ce script n'est pas stable et qu'il peut entrainer des problemes de fonctionnement 
+        # apres fermeture sur les autres parties de l'application. Et qu'il est conseillé de redemarrer prism apres utilisation.
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle("Avertissement")
+        msg.setText("Ce script USD_View n'est pas stable et peut entraîner des problèmes de fonctionnement après sa fermeture.\nIl est conseillé de redémarrer Prism après son utilisation. \n\nVoulez-vous continuer ?")
+        msg.setStandardButtons(QMessageBox.Ok)
+        # Yes no buttons
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+
+        msg.exec_()
+        if msg.clickedButton() == msg.button(QMessageBox.Yes):
+            print("L'utilisateur a choisi de continuer.")
+        else:
+            print("L'utilisateur a choisi de ne pas continuer.")
+            return
+
+
+        
         from pxr import Usdviewq, Usd, UsdGeom, Ar, UsdAppUtils,UsdUtils ,Sdf
         from pxr.Usdviewq.appController import AppController
         from pxr.Usdviewq.settings import ConfigManager
