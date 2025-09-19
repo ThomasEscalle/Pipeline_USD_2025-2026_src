@@ -3,43 +3,21 @@ import os
 
 
 output_hip_path = "$$OUTPUT_PATH$$"
-assetName = "seq_010_shot_010"
-assetType = "light"
+
+assetName = "$$ASSET_NAME$$"
+assetType = "$$TYPE_ASSET$$"
+task_name = "$$TASK_NAME$$"
+department_name = "$$DEPARTMENT_NAME$$"
+
+shot_start = int("$$SHOT_START$$")
+shot_end = int("$$SHOT_END$$")
+shot_length = int("$$SHOT_LENGTH$$")
+shot_preroll = int("$$SHOT_PREROLL$$")
+shot_postroll = int("$$SHOT_POSTROLL$$")
+
 masterLightPath = "$$MASTER_LIGHT_PATH$$"
 assemblyPath = "$$ASSEMBLY_PATH$$"
 
-script = """
-import PrismInit
-import os
-from PySide2.QtCore import QStandardPaths
-core = PrismInit.pcore
-
-# Use the drop down menu to select example code snippets.
-node = hou.pwd()
-stage = node.editableStage()
-
-# Get the "USD_ROP" node from the current path
-rop = node.parent().node("USD_ROP")
-
-# Set the path to the output file in the temp directory/temporary_light.usda
-output_path = os.path.join(QStandardPaths.writableLocation(QStandardPaths.TempLocation), "temporary_light.usda")
-rop.parm("lopoutput").set(output_path)
-rop.parm("execute").pressButton()
-
-# Create a new product in Prism
-fnameData = core.getScenefileData(core.getCurrentFileName(), getEntityFromPath=True)
-core.products.createProduct(fnameData, "Light_Publish", "global")
-
-# Ingest the new version into prism
-result = core.products.ingestProductVersion([output_path], fnameData,"Light_Publish")
-
-path = result["createdFiles"][0]
-folder = os.path.dirname(path)
-
-# Update the product with the new version
-core.products.updateMasterVersion(result["createdFiles"][0])
-
-"""
 
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
@@ -74,10 +52,25 @@ def build_assembly_subnet():
     in_import.setPosition(hou.Vector2(0, 0))
 
 
+    
+    # Create a reference node for the assembly
+    assembly_ref = import_subnet.createNode("reference", "Assembly_Ref")
+    assembly_ref.parm("filepath1").set( assemblyPath if assemblyPath != "" else "")
+    assembly_ref.parm("primpath1").set(f"/{assetName}")
+    assembly_ref.setPosition(in_import.position() + hou.Vector2(0, -2))
+
+
+    # Create a reference node for the master light
+    master_light_ref = import_subnet.createNode("reference", "Master_Light_Ref")
+    master_light_ref.parm("filepath1").set(masterLightPath)
+    master_light_ref.parm("primpath1").set("/Master_Light")
+    master_light_ref.setPosition(assembly_ref.position() + hou.Vector2(0, -2))
+
+
 
     # Create a "Null" node called "OUT_IMPORT"
     out_import = import_subnet.createNode("null", "OUT_IMPORT")
-    out_import.setPosition(in_import.position() + hou.Vector2(0, -2))
+    out_import.setPosition(master_light_ref.position() + hou.Vector2(0, -2))
 
 
     # Place the input and output nodes
@@ -89,8 +82,12 @@ def build_assembly_subnet():
     ####################################
     # Connect the IN_IMPORT node to the input_stage node
     in_import.setInput(0, input_stage, 0)
-    # Connect the out_import to the in_import node
-    out_import.setInput(0, in_import, 0)
+    # Connect the input_stage node to the in_import node
+    assembly_ref.setInput(0, in_import, 0)
+    # Connect the assembly_ref node to the master_light_ref node
+    master_light_ref.setInput(0, assembly_ref, 0)
+    # Connect the last node (assembly or master light) to the out_import node
+    out_import.setInput(0, master_light_ref, 0)
     # Connect the output0 node to the out_import node
     output0.setInput(0, out_import, 0)
     #####################################
@@ -117,6 +114,7 @@ def build_light_subnet():
     in_light.setPosition(hou.Vector2(0, 0))
 
 
+
     # Create a "Null" node called "OUT_LIGHT"
     out_light = light_subnet.createNode("null", "OUT_LIGHT")
     out_light.setPosition(hou.Vector2(0, -4))
@@ -131,6 +129,8 @@ def build_light_subnet():
     out_light.setInput(0, in_light, 0)
     # Connect the input_stage node to the in_light node
     in_light.setInput(0, input_stage, 0)
+
+
     # Connect the output0 node to the out_light node
     output0.setInput(0, out_light, 0)
 
@@ -193,53 +193,17 @@ out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, 
 
 
 
-# Create a "Export" subnet
-export_subnet = stage.createNode("subnet", "Export")
-export_subnet.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-export_subnet.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
-# Add a button parameter to the export subnet
-export_subnet_button_parm = hou.ButtonParmTemplate("publish", "PUBLISH")
-export_subnet_button_parm.setScriptCallback("hou.pwd().node('Python_Script').cook(force=True)")
-export_subnet_button_parm.setScriptCallbackLanguage(hou.scriptLanguage.Python)
-export_subnet.addSpareParmTuple(export_subnet_button_parm)
 
-
-def build_export_subnet():
-    print("Building Export Subnet...")
-    # Get the ouput0 node of the export subnet
-    output0 = export_subnet.node("output0")
-    # Get the input0 node of the export subnet
-    inputs = export_subnet.indirectInputs()
-    input_stage = inputs[0] if inputs else None
-
-    # Create a USD_ROP node inside the export subnet
-    usd_rop_export = export_subnet.createNode("usd_rop", "USD_ROP")
-    usd_rop_export.setPosition(hou.Vector2(2, -1))
-    usd_rop_export.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-    usd_rop_export.setParms({
-        "defaultprim": f"/setD_{assetName}"
-    })
-
-    # Create a pythonscript node inside the export subnet
-    python_script = export_subnet.createNode("pythonscript", "Python_Script")
-    python_script.setPosition(hou.Vector2(-3, 0))
-    python_script.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-    python_script.setParms({
-        "python": script
-    })
-
-    # Place the input and output nodes
-    input_stage.setPosition(hou.Vector2(0, 0))
-    output0.setPosition(hou.Vector2(0, -4))
-
-    # Connect the nodes together
-    # Connect the Input stage to the USD_ROP node
-    usd_rop_export.setInput(0, input_stage, 0)
-
-build_export_subnet()
-
-
-
+# Create a "Export" node
+export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
+export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
+export_node.parm("productName").set("Light_Publish")
+export_node.parm("nextVersion").set(True)
+export_node.parm("updateMaster").set(True)
+export_node.parm("defaultprim").set(f"/{assetName}")
+export_node.setComment("Publier le USD du lighting")
+export_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
 #####################################
 #### Connect the nodes together #####
@@ -254,7 +218,7 @@ sceneCleaning_subnet.setInput(0, light_mixer, 0)
 # connect the Scene Cleaning subnet to the OUT_SCENE_ASSEMBLY node
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
 # connect the OUT_SCENE_ASSEMBLY node to the Export subnet
-export_subnet.setInput(0, out_scene_building, 0)
+export_node.setInput(0, out_scene_building, 0)
 
 
 
@@ -262,16 +226,6 @@ export_subnet.setInput(0, out_scene_building, 0)
 #### Comments ####
 ##################
 
-# Add a sticky note 
-sticky_note = stage.createStickyNote("stage_comment")
-sticky_note.setPosition(hou.Vector2(3, -4))
-sticky_note_text = "Cette scène sert importer le master light dans l'assembly et a adapter les lumieres en fonction.\n"
-sticky_note_text += "Rends toi dans le subnet \"Light\" pour ajouter ou modifier des lumières.\n"
-sticky_note_text += "Une fois finis, utilise le node \"Export\" pour exporter ta scène.\n\n"
-sticky_note.setText(sticky_note_text)
-sticky_note.resize(hou.Vector2(5, 2))
-sticky_note.setDrawBackground(False)
-sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
 
 
 # Set the display flag on the "OUT_SCENE_BUILDING" node

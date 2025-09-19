@@ -173,8 +173,8 @@ class FileTemplateFLOMaya(FileTemplateBase):
 
 
         # Get the asset type
-        assetType = origin.getCurrentEntity()["type"]
-        assetName = origin.getCurrentEntity()["sequence"] + "_" + origin.getCurrentEntity()["shot"]
+        assetType = current_entity["type"]
+        assetName = current_entity["sequence"] + "_" + current_entity["shot"]
         task = origin.getCurrentTask()
         department = origin.getCurrentDepartment()
 

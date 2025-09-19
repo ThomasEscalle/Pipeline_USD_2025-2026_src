@@ -1,44 +1,20 @@
 import hou
 import os
 
-
 output_hip_path = "$$OUTPUT_PATH$$"
-assetName = "seq_010_shot_010"
-assetType = "tlo"
-lightPath = "$$LIGHT_PATH$$"
 
-script = """
-import PrismInit
-import os
-from PySide2.QtCore import QStandardPaths
-core = PrismInit.pcore
+assetName = "$$ASSET_NAME$$"
+assetType = "$$TYPE_ASSET$$"
+task_name = "$$TASK_NAME$$"
+department_name = "$$DEPARTMENT_NAME$$"
 
-# Use the drop down menu to select example code snippets.
-node = hou.pwd()
-stage = node.editableStage()
+shot_start = int("$$SHOT_START$$")
+shot_end = int("$$SHOT_END$$")
+shot_length = int("$$SHOT_LENGTH$$")
+shot_preroll = int("$$SHOT_PREROLL$$")
+shot_postroll = int("$$SHOT_POSTROLL$$")
 
-# Get the "USD_ROP" node from the current path
-rop = node.parent().node("USD_ROP")
-
-# Set the path to the output file in the temp directory/temporary_tlo.usda
-output_path = os.path.join(QStandardPaths.writableLocation(QStandardPaths.TempLocation), "temporary_tlo.usda")
-rop.parm("lopoutput").set(output_path)
-rop.parm("execute").pressButton()
-
-# Create a new product in Prism
-fnameData = core.getScenefileData(core.getCurrentFileName(), getEntityFromPath=True)
-core.products.createProduct(fnameData, "TLO_Publish", "global")
-
-# Ingest the new version into prism
-result = core.products.ingestProductVersion([output_path], fnameData,"TLO_Publish")
-
-path = result["createdFiles"][0]
-folder = os.path.dirname(path)
-
-# Update the product with the new version
-core.products.updateMasterVersion(result["createdFiles"][0])
-
-"""
+light_path = "$$LIGHT_PATH$$"
 
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
@@ -183,57 +159,26 @@ build_sceneCleaning_subnet()
 
 
 # Create a null "OUT_SCENE_ASSEMBLY" node
-out_scene_building = stage.createNode("null", "OUT_SCENE_ASSEMBLY")
+out_scene_building = stage.createNode("null", "OUT_SCENE_TLO")
 out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
 
 
 
-# Create a "Export" subnet
-export_subnet = stage.createNode("subnet", "Export")
-export_subnet.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-export_subnet.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
-# Add a button parameter to the export subnet
-export_subnet_button_parm = hou.ButtonParmTemplate("publish", "PUBLISH")
-export_subnet_button_parm.setScriptCallback("hou.pwd().node('Python_Script').cook(force=True)")
-export_subnet_button_parm.setScriptCallbackLanguage(hou.scriptLanguage.Python)
-export_subnet.addSpareParmTuple(export_subnet_button_parm)
+# Add a "rendergeometrysettings" node to the stage
+render_geometry_settings = stage.createNode("rendergeometrysettings", "Render_Geometry_Settings_0")
 
 
-def build_export_subnet():
-    print("Building Export Subnet...")
-    # Get the ouput0 node of the export subnet
-    output0 = export_subnet.node("output0")
-    # Get the input0 node of the export subnet
-    inputs = export_subnet.indirectInputs()
-    input_stage = inputs[0] if inputs else None
 
-    # Create a USD_ROP node inside the export subnet
-    usd_rop_export = export_subnet.createNode("usd_rop", "USD_ROP")
-    usd_rop_export.setPosition(hou.Vector2(2, -1))
-    usd_rop_export.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-    usd_rop_export.setParms({
-        "defaultprim": f"/setD_{assetName}"
-    })
-
-    # Create a pythonscript node inside the export subnet
-    python_script = export_subnet.createNode("pythonscript", "Python_Script")
-    python_script.setPosition(hou.Vector2(-3, 0))
-    python_script.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-    python_script.setParms({
-        "python": script
-    })
-
-    # Place the input and output nodes
-    input_stage.setPosition(hou.Vector2(0, 0))
-    output0.setPosition(hou.Vector2(0, -4))
-
-    # Connect the nodes together
-    # Connect the Input stage to the USD_ROP node
-    usd_rop_export.setInput(0, input_stage, 0)
-
-build_export_subnet()
-
-
+# Create a "Export" node
+export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
+export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -8))
+export_node.parm("productName").set("TLO_Publish_FG")
+export_node.parm("nextVersion").set(True)
+export_node.parm("updateMaster").set(True)
+export_node.parm("defaultprim").set(f"/{assetName}")
+export_node.setComment("Publier le USD du lighting")
+export_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
 
 #####################################
@@ -247,7 +192,7 @@ sceneCleaning_subnet.setInput(0, TLO_subnet, 0)
 # connect the Scene Cleaning subnet to the OUT_SCENE_ASSEMBLY node
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
 # connect the OUT_SCENE_ASSEMBLY node to the Export subnet
-export_subnet.setInput(0, out_scene_building, 0)
+export_node.setInput(0, out_scene_building, 0)
 
 
 

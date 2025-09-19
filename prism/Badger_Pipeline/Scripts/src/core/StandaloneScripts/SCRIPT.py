@@ -1,262 +1,216 @@
-import maya.standalone
-maya.standalone.initialize(name='python')
-
-import maya.api.OpenMaya as om2
-import maya.cmds as cmds
-import random
+import hou
 import os
 
-outputPath = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.ma"
-
-asset_type = "shot"
-sequenceName = "sq_010_sh_010"
-task_name = "Animation"
-department_name = "anim"
-
-shot_range = "[1001, 1016]"  # This is a string representation of a list ( start_frame, end_frame)
-shot_length = "16"  # This is an integer
-shot_preroll = "0"  # This is an integer
-shot_postroll = "5"  # This is an integer
-
-
-
-set_dress_path = "['E:/3D/Projects/06_Ouyang/03_Production/02_Shots/sq_010/Master/Export/SetD_Publish/master/sq_010-Master_SetD_Publish_master.usd']"      # This is a string representation of a list of paths but that should only contain one item
-rigs_chars_paths = "['E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Matheo/Export/RigH_Publish/master/Matheo_RigH_Publish_master.ma', 'E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Nathan/Export/RigH_Publish/master/Nathan_RigH_Publish_master.ma']"  # This is a string representation of a list of paths
-rigs_props_paths = "[]"  # This is a string representation of a list of paths
-
-create_bookmarks = "True"  # "True" or "False"
-
-
-
-# Create a bookmark in the timeline
-def createBookmark(name, start, stop, color):
-    bm = cmds.createNode("timeSliderBookmark")
-    cmds.setAttr(bm + ".name", name, type="string")
-    cmds.setAttr(bm + ".color", *color)
-    cmds.setAttr(bm + ".timeRangeStart", start)
-    cmds.setAttr(bm + ".timeRangeStop", stop)
-    return bm
-
-# Get a random color from a predefined list
-def getRandomColor():
-   colors = [
-      "#F9BFCB",
-      "#DD1E3F",
-      "#ED1E24",
-      "#FCE3DF",
-      "#F57F73",
-      "#F47D52",
-      "#F14924",
-      "#D36A28",
-      "#AAAAAA",
-      "#FFA419",
-      "#E4BD20",
-      "#FAF9E5",
-      "#F7EC14",
-      "#9AC93B",
-      "#91C73E",
-      "#69BD44",
-      "#10813F",
-      "#71C16A",
-      "#99D4C0",
-      "#63C6C1",
-      "#DEF2F3",
-      "#6FCCDD",
-      "#D9D7EC",
-      "#3853A4",
-      "#7651A1",
-      "#80469B",
-      "#D4A2C8" ,
-      "#B9539F",
-      "#7D277E",
-      "#D1B48C",
-   ]
-   color = random.choice(colors)
-   color_tuple = (int(color[1:3], 16) / 255, int(color[3:5], 16) / 255, int(color[5:7], 16) / 255)
-   return color_tuple
-
-
-# Set the color of a given object
-def setColor(obj, color ):
-
-    # If the color is a tuple, we convert it to a hex string
-    if type(color) == tuple and len(color) == 3:
-        r = int(color[0] * 255)
-        g = int(color[1] * 255)
-        b = int(color[2] * 255)
-        color = "#{:02X}{:02X}{:02X}".format(r, g, b)
-
-    # If the color is empty, we return
-    if color == "":
-        print("Invalid color : " + color)
-        return
-
-
-    # If the color is not valid (size != 7), we return
-    if len(color) != 7:
-        print("Invalid color : " + color)
-        return
-    
-    # If the object is a list, we iterate over it
-    # and call the function recursively
-    if type(obj) == list:
-        for o in obj:
-            setColor(o, color)
-        return
-    
-    # Get the color as RGB
-    r = int(color[1:3], 16) / 255
-    g = int(color[3:5], 16) / 255
-    b = int(color[5:7], 16) / 255
+output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"
 
-    # Round the values
-    r = round(r, 3)
-    g = round(g, 3)
-    b = round(b, 3)
+assetName = "sq_010_sh_030"
+assetType = "shot"
+task_name = "TLO"
+department_name = "tlo"
 
-    # Convert the color to display space
-    colorV = [r , g , b]
-    colorVdp = cmds.colorManagementConvert(toDisplaySpace=[colorV[0], colorV[1], colorV[2]])
+shot_start = int("1001")
+shot_end = int("1005")
+shot_length = int("5")
+shot_preroll = int("0")
+shot_postroll = int("0")
 
+light_path = "E:/3D/Projects/06_Ouyang/03_Production/02_Shots/sq_010/sh_030/Export/Light_Publish/master/sq_010-sh_030_Light_Publish_master.usd"
 
-    # Set the color in the viewport
-    cmds.setAttr(obj + ".overrideEnabled", 1)
-    cmds.setAttr(obj + ".overrideRGBColors", 1)
-    cmds.setAttr(obj + ".overrideColorRGB", colorV[0], colorV[1], colorV[2])
+# Create a new Houdini scene
+hou.hipFile.clear(suppress_save_prompt=True)
 
-    # Color in the outliner
-    cmds.setAttr(obj + ".useOutlinerColor", 1)
-    cmds.setAttr(obj + ".outlinerColor", colorVdp[0], colorVdp[1], colorVdp[2])
+# Create the Stage node if it doesn't exist
+stage = hou.node("/stage")
+if stage is None:
+    stage = hou.node("/").createNode("lopnet", "stage")
 
 
-    # Get the shapes of the object
-    shapes = cmds.listRelatives(obj, shapes=True)
 
-    # If the object has shapes, we color them
-    if shapes is not None:
-        for shape in shapes:
-            cmds.setAttr(shape + ".overrideEnabled", 1)
-            cmds.setAttr(shape + ".overrideRGBColors", 1)
-            cmds.setAttr(shape + ".overrideColorRGB", colorV[0], colorV[1], colorV[2])
+###############################################
+#### Create the nodes in the Stage context ####
+###############################################
 
+# Create a "IMPORT" subnet
+import_subnet = stage.createNode("subnet", "IMPORT")
+import_subnet.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
 
-# Check if a node is a top level transform (no parent)
-def is_top_level_transform(node):
-    if not cmds.objectType(node, isType='transform'):
-        return False
-    parents = cmds.listRelatives(node, parent=True)
-    return not parents
+# Build the nodes inside the assembly subnet
+def build_assembly_subnet():
 
 
+    # Get the ouput0 node of the assembly subnet
+    output0 = import_subnet.node("output0")
+    # Get the input0 node of the assembly subnet
+    inputs = import_subnet.indirectInputs()
+    input_stage = inputs[0] if inputs else None
 
+    # Create a "Null" node called "IN_IMPORT"
+    in_import = import_subnet.createNode("null", "IN_IMPORT")
+    in_import.setPosition(hou.Vector2(0, 0))
 
 
 
+    # Create a "Null" node called "OUT_IMPORT"
+    out_import = import_subnet.createNode("null", "OUT_IMPORT")
+    out_import.setPosition(in_import.position() + hou.Vector2(0, -2))
 
-# Main function to build the template
-def build_template():
-    cmds.file(new=True, force=True)
 
+    # Place the input and output nodes
+    input_stage.setPosition(hou.Vector2(0, 2))
+    output0.setPosition( out_import.position() + hou.Vector2(0, -2))
 
-    # Make sure the AbcImport plugin is loaded
-    if not cmds.pluginInfo("AbcImport", query=True, loaded=True):
-        cmds.loadPlugin("AbcImport")
-    # Make sure the AbcExport plugin is loaded
-    if not cmds.pluginInfo("AbcExport", query=True, loaded=True):
-        cmds.loadPlugin("AbcExport")
-    # Make sure the MayaUSD plugin is loaded
-    if not cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True):
-        cmds.loadPlugin("mayaUsdPlugin")
-    # Make sure the timeSliderBookmark plugin is loaded
-    if not cmds.pluginInfo("timeSliderBookmark", query=True, loaded=True):
-        cmds.loadPlugin("timeSliderBookmark")
+    ####################################
+    #### Connect the nodes together ####
+    ####################################
+    # Connect the IN_IMPORT node to the input_stage node
+    in_import.setInput(0, input_stage, 0)
+    # Connect the out_import to the in_import node
+    out_import.setInput(0, in_import, 0)
+    # Connect the output0 node to the out_import node
+    output0.setInput(0, out_import, 0)
+    #####################################
 
 
-    # Set the framerange from first_frame to first_frame + number_of_frames - 1
-    shot_range_eval = eval(shot_range)
-    start_frame = shot_range_eval[0]
-    number_of_frames = int(shot_length)
 
-    end_frame = int(start_frame) + int(number_of_frames) + int(shot_postroll) - 1
-    start_frame = int(start_frame) - int(shot_preroll)
+build_assembly_subnet()
 
-    # Set the playback options
-    cmds.playbackOptions(min=start_frame, max=end_frame)
-    cmds.playbackOptions(animationStartTime=start_frame, animationEndTime=end_frame)
-    cmds.currentTime(start_frame)
 
-    # If create_bookmarks is True, we create a bookmark for the shot's preroll, and postroll
-    if create_bookmarks == "True":
-        if int(shot_preroll) > 0:
-            createBookmark("Preroll", start_frame, start_frame + int(shot_preroll) , (1, 0, 0))
-        if int(shot_postroll) > 0:
-            createBookmark("Postroll", end_frame - int(shot_postroll) + 1, end_frame +1, (1, 0, 0))
+# Create a "TLO" subnet
+TLO_subnet = stage.createNode("subnet", "TLO")
+TLO_subnet.setColor(hou.Color(0.157, 0.776, 0.157))  # Green
+TLO_subnet.setPosition(import_subnet.position() + hou.Vector2(0, -2))
+TLO_subnet.setUserData("nodeshape", "burst")
 
+def build_TLO_subnet():
+    # Get the ouput0 node of the TLO subnet
+    output0 = TLO_subnet.node("output0")
+    # Get the input0 node of the TLO subnet
+    inputs = TLO_subnet.indirectInputs()
+    input_stage = inputs[0] if inputs else None
 
-    # Create a 'Cameras_grp' group
-    camera_grp_name = "Cameras_grp"
-    cam_grp = cmds.group(empty=True, name=camera_grp_name)
-    setColor(cam_grp, "#00C2B7")  # RGB values for teal
+    # Create a "Null" node called "IN_TLO"
+    in_tlo = TLO_subnet.createNode("null", "IN_TLO")
+    in_tlo.setPosition(hou.Vector2(0, 0))
 
 
-    # Create a ('assets_grp') group
-    assets_grp_name = "Assets_grp"
-    assets_grp = cmds.group(empty=True, name=assets_grp_name)
-    setColor(assets_grp, "#6B2DBB")  # RGB values for Blue
+    # Create a "Null" node called "OUT_TLO"
+    out_tlo = TLO_subnet.createNode("null", "OUT_TLO")
+    out_tlo.setPosition(hou.Vector2(0, -4))
 
-    # Create a ('props_grp') group inside the assets group
-    props_grp_name = "Props_grp"
-    props_grp = cmds.group(empty=True, name=props_grp_name, parent=assets_grp)
 
-    # Create a ('characters_grp') group inside the assets group
-    characters_grp_name = "Characters_grp"
-    characters_grp = cmds.group(empty=True, name=characters_grp_name, parent=assets_grp)
-    
-    # Create a ('set_grp') group
-    set_grp_name = "Set_grp"
-    set_grp = cmds.group(empty=True, name=set_grp_name)
-    setColor(set_grp, "#D4D400")  # RGB values for yellow
+    # Place the input and output nodes
+    input_stage.setPosition(hou.Vector2(0, 2))
+    output0.setPosition(hou.Vector2(0, -6))
 
+    # Connect the nodes together
+    # Connect the IN_TLO node to the graftstages node
+    out_tlo.setInput(0, in_tlo, 0)
+    # Connect the input_stage node to the in_tlo node
+    in_tlo.setInput(0, input_stage, 0)
+    # Connect the output0 node to the out_tlo node
+    output0.setInput(0, out_tlo, 0)
 
+    return
+build_TLO_subnet()
 
 
 
 
+# Create a "Scene_Cleaning" subnet 
+sceneCleaning_subnet = stage.createNode("subnet", "Scene_Cleaning")
+sceneCleaning_subnet.setColor(hou.Color(0.776, 0.157, 0.157))  # Red
+sceneCleaning_subnet.setPosition(TLO_subnet.position() + hou.Vector2(0, -2))
+# Add a comment to the Scene_Cleaning subnet
+sceneCleaning_subnet.setComment("Ne pas toucher a ce node !")
+sceneCleaning_subnet.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
+def build_sceneCleaning_subnet():    # Get the ouput0 node of the sceneCleaning subnet
+    output0 = sceneCleaning_subnet.node("output0")
+    # Get the input0 node of the sceneCleaning subnet
+    inputs = sceneCleaning_subnet.indirectInputs()
+    input_stage = inputs[0] if inputs else None
 
+    # Create a "Null" node called "IN_SCENE_CLEANING"
+    in_scene_cleaning = sceneCleaning_subnet.createNode("null", "IN_SCENE_CLEANING")
+    in_scene_cleaning.setPosition(hou.Vector2(0, 0))
 
 
+    # Create a "null" node called "OUT_SCENE_CLEANING"
+    out_scene_cleaning = sceneCleaning_subnet.createNode("null", "OUT_SCENE_CLEANING")
+    out_scene_cleaning.setPosition(hou.Vector2(0, -4))
 
 
-    ####################################################################
-    ####################################################################
-    ####    I M P O R T    D U    S E T     D R E S S       USD  #######
-    ####################################################################
-    ####################################################################
+    # Place the input and output nodes
+    input_stage.setPosition(hou.Vector2(0, 2))
+    output0.setPosition(hou.Vector2(0, -6))
 
-    # Import the set dress as a usd reference in the usd layer editor
-    shape_node = cmds.createNode('mayaUsdProxyShape')
-    shape_node = cmds.rename(shape_node, "usd_setDress")
-    
-    setDress_path_valid = eval(set_dress_path)
-    if len(setDress_path_valid) > 0:
-        stdPath = setDress_path_valid[0]
-        cmds.setAttr('{}.filePath'.format(shape_node), stdPath, type='string')
-    
-    # Get the transform node of the shape
-    transform_node_usd = cmds.listRelatives(shape_node, parent=True)[0]
-    cmds.parent(transform_node_usd, set_grp)
-    # Scale the set_grp by 100 to convert from meters to centimeters
-    cmds.setAttr(set_grp + ".scale", 100, 100, 100)
-    
+    # Connect the nodes together
+    # Connect the IN_SCENE_CLEANING node to the graftstages node
+    out_scene_cleaning.setInput(0, in_scene_cleaning, 0)
+    # Connect the input0 node to the in_scene_cleaning node
+    in_scene_cleaning.setInput(0, input_stage, 0)
+    # Connect the output0 node to the out_scene_cleaning node
+    output0.setInput(0, out_scene_cleaning, 0)
 
-    ####################################################################
-    ####################################################################
-    ####################################################################
+    return
 
+build_sceneCleaning_subnet()
 
 
-    cmds.file(rename=outputPath)
-    cmds.file(save=True, type='mayaAscii')
 
-build_template()
+# Create a null "OUT_SCENE_ASSEMBLY" node
+out_scene_building = stage.createNode("null", "OUT_SCENE_ASSEMBLY")
+out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
+
+
+
+
+# Create a "Export" node
+export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
+export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -8))
+export_node.parm("productName").set("TLO_Publish_FG")
+export_node.parm("nextVersion").set(True)
+export_node.parm("updateMaster").set(True)
+export_node.parm("defaultprim").set(f"/{assetName}")
+export_node.setComment("Publier le USD du lighting")
+export_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+
+
+#####################################
+#### Connect the nodes together #####
+#####################################
+
+# connect the IMPORT subnet to the TLO subnet
+TLO_subnet.setInput(0, import_subnet, 0)
+# connect the TLO  to the Scene Cleaning subnet
+sceneCleaning_subnet.setInput(0, TLO_subnet, 0)
+# connect the Scene Cleaning subnet to the OUT_SCENE_ASSEMBLY node
+out_scene_building.setInput(0, sceneCleaning_subnet, 0)
+# connect the OUT_SCENE_ASSEMBLY node to the Export subnet
+export_node.setInput(0, out_scene_building, 0)
+
+
+
+##################
+#### Comments ####
+##################
+
+# Add a sticky note 
+sticky_note = stage.createStickyNote("stage_comment")
+sticky_note.setPosition(hou.Vector2(3, -4))
+sticky_note_text = "Cette scene sert a preparer les render settings.\n"
+sticky_note_text += "C'est ici que l'on vas gerer les Render Layers, AOVS, render settings...\n"
+sticky_note_text += "Une fois finis, utilise le node \"Export\" pour exporter ta scène.\n\n"
+sticky_note.setText(sticky_note_text)
+sticky_note.resize(hou.Vector2(5, 2))
+sticky_note.setDrawBackground(False)
+sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
+
+
+# Set the display flag on the "OUT_SCENE_BUILDING" node
+out_scene_building.setDisplayFlag(True)
+
+
+# Save the Houdini file
+hou.hipFile.save(output_hip_path)

@@ -2,47 +2,42 @@ import hou
 import os
 
 
+#  
+#  # The way it is used in the pipeline :
+#
+#  output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"
+#  
+#  assetName = "sq_010_sh_030"
+#  assetType = "shot"
+#  task_name = "Assembly"
+#  department_name = "abl"
+#  
+#  shot_start = int("1001")
+#  shot_end = int("1005")
+#  shot_length = int("5")
+#  shot_preroll = int("0")
+#  shot_postroll = int("0")
+#  
+#  set_dress_filepath = "E:/3D/Projects/06_Ouyang/03_Production/02_Shots/sq_010/Master/Export/SetD_Publish/master/sq_010-Master_SetD_Publish_master.usd"
+# 
+
+
+
+
 output_hip_path = "$$OUTPUT_PATH$$"
-assetName = "seq_010_shot_010"
-assetType = "assembly"
 
-setDressingPath = "$$SET_DRESSING_PATH$$"
+assetName = "$$ASSET_NAME$$"
+assetType = "$$TYPE_ASSET$$"
+task_name = "$$TASK_NAME$$"
+department_name = "$$DEPARTMENT_NAME$$"
 
+shot_start = int("$$SHOT_START$$")
+shot_end = int("$$SHOT_END$$")
+shot_length = int("$$SHOT_LENGTH$$")
+shot_preroll = int("$$SHOT_PREROLL$$")
+shot_postroll = int("$$SHOT_POSTROLL$$")
 
-script = """
-import PrismInit
-import os
-from PySide2.QtCore import QStandardPaths
-core = PrismInit.pcore
-
-# Use the drop down menu to select example code snippets.
-node = hou.pwd()
-stage = node.editableStage()
-
-# Get the "USD_ROP" node from the current path
-rop = node.parent().node("USD_ROP")
-
-# Set the path to the output file in the temp directory/temporary_assembly.usda
-output_path = os.path.join(QStandardPaths.writableLocation(QStandardPaths.TempLocation), "temporary_assembly.usda")
-rop.parm("lopoutput").set(output_path)
-rop.parm("execute").pressButton()
-
-# Create a new product in Prism
-fnameData = core.getScenefileData(core.getCurrentFileName(), getEntityFromPath=True)
-core.products.createProduct(fnameData, "Assembly_Publish", "global")
-
-# Ingest the new version into prism
-result = core.products.ingestProductVersion([output_path], fnameData,"Assembly_Publish")
-
-path = result["createdFiles"][0]
-folder = os.path.dirname(path)
-
-# Update the product with the new version
-core.products.updateMasterVersion(result["createdFiles"][0])
-
-"""
-
-
+set_dress_filepath = "$$SETDRESS_FILEPATH$$"
 
 
 # Create a new Houdini scene
@@ -84,6 +79,42 @@ def build_assembly_subnet():
     set_dress_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
     set_dress_subnet.setPosition(in_assembly.position() + hou.Vector2(0, -2))
     set_dress_subnet.setComment("Import the Set Dress elements here")
+
+    def build_set_dress_subnet():
+        # Get the ouput0 node of the set_dress subnet
+        setD_output0 = set_dress_subnet.node("output0")
+        # Get the input0 node of the set_dress subnet
+        setD_inputs = set_dress_subnet.indirectInputs()
+        setD_input_stage = setD_inputs[0] if setD_inputs else None
+
+        # Create a "Null" node called "IN_SET_DRESS"
+        in_set_dress = set_dress_subnet.createNode("null", "IN_SET_DRESS")
+        in_set_dress.setPosition(hou.Vector2(0, 0))
+
+        # Create a "Reference" node to import the set dress USD
+        if set_dress_filepath and os.path.isfile(set_dress_filepath):
+            reference_node = set_dress_subnet.createNode("reference", "Set_Dress_Reference")
+            reference_node.setPosition(in_set_dress.position() + hou.Vector2(0, -2))
+            reference_node.parm("filepath1").set(set_dress_filepath.replace("\\", "/"))
+            reference_node.parm("primpath1").set(f"/{assetName}/Set_Dress")
+            reference_node.setComment(f"Reference the Set Dress USD:\n{set_dress_filepath}")
+            reference_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+
+            # Connect the nodes together
+            reference_node.setInput(0, in_set_dress, 0)
+            setD_output0.setInput(0, reference_node, 0)
+        else:
+            # If no valid set dress filepath is provided, connect IN_SET_DRESS directly to output0
+            setD_output0.setInput(0, in_set_dress, 0)
+
+        # Place the input and output nodes
+        setD_input_stage.setPosition(hou.Vector2(0, 2))
+        setD_output0.setPosition(hou.Vector2(0, -4))
+
+        pass
+
+    build_set_dress_subnet()
+    
 
     # Create a Subnet called "ITEMS"
     items_subnet = assembly_subnet.createNode("subnet", "ITEMS")
@@ -201,51 +232,16 @@ out_scene_building = stage.createNode("null", "OUT_SCENE_ASSEMBLY")
 out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
 
 
-
-# Create a "Export" subnet
-export_subnet = stage.createNode("subnet", "Export")
-export_subnet.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-export_subnet.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
-# Add a button parameter to the export subnet
-export_subnet_button_parm = hou.ButtonParmTemplate("publish", "PUBLISH")
-export_subnet_button_parm.setScriptCallback("hou.pwd().node('Python_Script').cook(force=True)")
-export_subnet_button_parm.setScriptCallbackLanguage(hou.scriptLanguage.Python)
-export_subnet.addSpareParmTuple(export_subnet_button_parm)
-
-
-def build_export_subnet():
-    print("Building Export Subnet...")
-    # Get the ouput0 node of the export subnet
-    output0 = export_subnet.node("output0")
-    # Get the input0 node of the export subnet
-    inputs = export_subnet.indirectInputs()
-    input_stage = inputs[0] if inputs else None
-
-    # Create a USD_ROP node inside the export subnet
-    usd_rop_export = export_subnet.createNode("usd_rop", "USD_ROP")
-    usd_rop_export.setPosition(hou.Vector2(2, -1))
-    usd_rop_export.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-    usd_rop_export.setParms({
-        "defaultprim": f"/assembly_{assetName}"
-    })
-
-    # Create a pythonscript node inside the export subnet
-    python_script = export_subnet.createNode("pythonscript", "Python_Script")
-    python_script.setPosition(hou.Vector2(-3, 0))
-    python_script.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-    python_script.setParms({
-        "python": script
-    })
-
-    # Place the input and output nodes
-    input_stage.setPosition(hou.Vector2(0, 0))
-    output0.setPosition(hou.Vector2(0, -4))
-
-    # Connect the nodes together
-    # Connect the Input stage to the USD_ROP node
-    usd_rop_export.setInput(0, input_stage, 0)
-
-build_export_subnet()
+# Create a "Export" node
+export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
+export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
+export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
+export_node.parm("productName").set("Assembly_Publish")
+export_node.parm("nextVersion").set(True)
+export_node.parm("updateMaster").set(True)
+export_node.parm("defaultprim").set(f"/{assetName}")
+export_node.setComment("Publier le USD de l'assembly")
+export_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
 
 
@@ -259,24 +255,7 @@ sceneCleaning_subnet.setInput(0, assembly_subnet, 0)
 # sceneCleaning_subnet[0]->out_scene_building[0]
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
 # out_scene_building[0]->usd_rop[0]
-export_subnet.setInput(0, out_scene_building, 0)
-
-
-
-##################
-#### Comments ####
-##################
-
-# Add a sticky note 
-sticky_note = stage.createStickyNote("stage_comment")
-sticky_note.setPosition(hou.Vector2(3, -4))
-sticky_note_text = "Cette scène sert a importer l'ensemble des éléments qui ont été crées jusqu'ici.\n"
-sticky_note_text += "Rends toi dans le subnet \"Assembly\" pour importer les elements manquants.\n"
-sticky_note_text += "Une fois finis, utilise le node \"Export\" pour exporter ta scène.\n\n"
-sticky_note.setText(sticky_note_text)
-sticky_note.resize(hou.Vector2(5, 2))
-sticky_note.setDrawBackground(False)
-sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
+export_node.setInput(0, out_scene_building, 0)
 
 
 # Set the display flag on the "OUT_SCENE_BUILDING" node
