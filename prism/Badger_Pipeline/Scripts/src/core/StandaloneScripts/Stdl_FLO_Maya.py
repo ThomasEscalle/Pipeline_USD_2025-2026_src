@@ -13,8 +13,12 @@ sequenceName = "$$ASSET_NAME$$"
 task_name = "$$TASK$$"
 department_name = "$$DEPARTMENT$$"
 
-number_of_frames_str = "$$NUMBER_OF_FRAMES$$"
-first_frame_str = "$$FIRST_FRAME$$"
+shot_range = "$$SHOT_RANGE$$"  # This is a string representation of a list ( start_frame, end_frame)
+shot_length = "$$SHOT_LENGTH$$"  # This is an integer
+shot_preroll = "$$SHOT_PREROLL$$"  # This is an integer
+shot_postroll = "$$SHOT_POSTROLL$$"  # This is an integer
+
+
 
 set_dress_path = "$$SET_DRESS_PATH$$"      # This is a string representation of a list of paths but that should only contain one item
 rigs_chars_paths = "$$RIGS_CHARS_PATHS$$"  # This is a string representation of a list of paths
@@ -22,13 +26,6 @@ rigs_props_paths = "$$RIGS_PROPS_PATHS$$"  # This is a string representation of 
 
 create_bookmarks = "$$CREATE_BOOKMARKS$$"  # "True" or "False"
 
-
-camera_rig_path = "$$CAMERA_RIG_PATH$$"
-import_camera_rig = "$$IMPORT_CAMERA_RIG$$"  # "True" or "False"
-auto_hide_cameras = "$$AUTO_HIDE_CAMERAS$$"  # "True" or "False"
-
-# shots_str looks something like this : "[{'sequence': 'sq_010', 'shot': 'sh_010', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_010', 'location': 'global', 'type': 'shot', 'paths': [{'location': 'global', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_010'}], 'range': [1001, 1100], 'length': 100, 'metadata': {}}, {'sequence': 'sq_010', 'shot': 'sh_020', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_020', 'location': 'global', 'type': 'shot', 'paths': [{'location': 'global', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_020'}], 'range': [1001, 1080], 'length': 80, 'metadata': {'preroll': {'value': '50', 'show': True}, 'postroll': {'value': '50', 'show': True}}}]" 
-shots_str = "$$SHOTS$$" 
 
 
 # Create a bookmark in the timeline
@@ -153,6 +150,9 @@ def is_top_level_transform(node):
 
 
 
+
+
+
 # Main function to build the template
 def build_template():
     cmds.file(new=True, force=True)
@@ -173,23 +173,24 @@ def build_template():
 
 
     # Set the framerange from first_frame to first_frame + number_of_frames - 1
-    try:
-        first_frame = int(first_frame_str)
-        number_of_frames = int(number_of_frames_str)
-    except ValueError:
-        first_frame = 1001
-        number_of_frames = 100
-    last_frame = first_frame + number_of_frames - 1
+    shot_range_eval = eval(shot_range)
+    start_frame = shot_range_eval[0]
+    number_of_frames = int(shot_length)
 
-    # Convert the shots string to a list of dictionaries
-    shots_in_sequence = eval(shots_str)
-
+    end_frame = int(start_frame) + int(number_of_frames) + int(shot_postroll) - 1
+    start_frame = int(start_frame) - int(shot_preroll)
 
     # Set the playback options
-    cmds.playbackOptions(min=first_frame, max=last_frame)
-    cmds.playbackOptions(animationStartTime=first_frame, animationEndTime=last_frame)
-    cmds.currentTime(first_frame)
-    
+    cmds.playbackOptions(min=start_frame, max=end_frame)
+    cmds.playbackOptions(animationStartTime=start_frame, animationEndTime=end_frame)
+    cmds.currentTime(start_frame)
+
+    # If create_bookmarks is True, we create a bookmark for the shot's preroll, and postroll
+    if create_bookmarks == "True":
+        if int(shot_preroll) > 0:
+            createBookmark("Preroll", start_frame, start_frame + int(shot_preroll) , (1, 0, 0))
+        if int(shot_postroll) > 0:
+            createBookmark("Postroll", end_frame - int(shot_postroll) + 1, end_frame +1, (1, 0, 0))
 
 
     # Create a 'Cameras_grp' group
@@ -220,71 +221,11 @@ def build_template():
 
 
 
-    # Iterate over all the shots
-    current_frame = first_frame
-    created_cameras = []
-    last_random_color = None
-    for shot in shots_in_sequence:
-        
-        # Range is relative (it always starts at 1001)
-        # We want to convert it to absolute range in the timeline
-        absolute_start = shot['range'][0] + (current_frame - 1001)
-        absolute_stop  = shot['range'][1] + (current_frame - 1001) + 1  # +1 to include the last frame of the shot
 
-        # Create a random color for the bookmark
-        random_color = getRandomColor()
-        while random_color == last_random_color: # Avoid having the same color as the last one
-            random_color = getRandomColor()
-        last_random_color = random_color
 
-        if create_bookmarks == "True":
-            # Create a bookmark for the shot
-            createBookmark(name=shot['shot'], start=absolute_start, stop=absolute_stop, color=random_color)
 
-        if import_camera_rig == "True" and camera_rig_path != "":
-            # Import the camera rig
-            imported_nodes = cmds.file(camera_rig_path, i=True, returnNewNodes=True)
-            if imported_nodes is None:
-                imported_nodes = []
 
-            # Parent the top level transform nodes to the cam_grp
-            top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
-            for node in top_level_transforms:
-                # Skip if the node is not a transform
-                # Create a parent node with the shot name _grp
-                parent_node = cmds.group(empty=True, name="cam_" + shot['shot'] + "_grp")
 
-                # Put the node under the parent node and rename it to shot name + original name
-                node = cmds.rename(node, shot['shot'] + "_" + node)
-                cmds.parent(node, parent_node)
-
-                if auto_hide_cameras == "True":
-                    # Add a key on the visibility of the camera at the start and end of the shot
-                    cmds.setAttr(parent_node + ".visibility", 0)
-                    cmds.setKeyframe(parent_node, attribute="visibility", time=0, value=0)
-                    cmds.setKeyframe(parent_node, attribute="visibility", time=absolute_start, value=1)
-                    cmds.setKeyframe(parent_node, attribute="visibility", time=absolute_stop, value=0)
-                cmds.parent(parent_node, cam_grp)
-                setColor(parent_node, random_color)
-
-                # Iterate over the children of the node to find the camera and set its color and rename it's transform node
-                childrens = cmds.listRelatives(node, allDescendents=True, fullPath=True)
-                if childrens is not None:
-                    for child in childrens:
-                        if cmds.objectType(child) == "camera":
-                            # Get the transform no²de of the camera
-                            transform = cmds.listRelatives(child, parent=True, fullPath=True)[0]
-                            created_cameras.append({"shot": shot['shot'], "transform": transform})
-
-        # Update the bookmark current frame for the next shot
-        current_frame += shot['length']
-
-    # Iterate over the created cameras and rename them to shot name + _cam
-    # We need to do this in a second time
-    for cam in created_cameras:
-        cmds.rename(cam['transform'], cam['shot'] + "_cam")
-
-    
 
 
     ####################################################################
@@ -312,48 +253,6 @@ def build_template():
     ####################################################################
     ####################################################################
     ####################################################################
-
-
-
-
-
-    ###################################################
-    ###################################################
-    ####    I M P O R T    D E S    R I G S     #######
-    ###################################################
-    ###################################################
-
-    # Import the characters rigs
-    rigs_eval_chars = eval(rigs_chars_paths)
-    for rig_path in rigs_eval_chars:
-        if os.path.exists(rig_path):
-
-            imported_nodes = cmds.file(rig_path, reference=True, returnNewNodes=True, namespace ="chars")
-
-            if imported_nodes is None:
-                imported_nodes = []
-
-            # Parent the top level transform nodes to the characters_grp
-            top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
-            for node in top_level_transforms:
-                cmds.parent(node, characters_grp)
-
-    # Import the props rigs
-    rigs_eval_props = eval(rigs_props_paths)
-    for rig_path in rigs_eval_props:
-        if os.path.exists(rig_path):
-            imported_nodes = cmds.file(rig_path, reference=True, returnNewNodes=True, namespace ="props")
-            if imported_nodes is None:
-                imported_nodes = []
-
-            # Parent the top level transform nodes to the props_grp
-            top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
-            for node in top_level_transforms:
-                cmds.parent(node, props_grp)
-
-
-
-    ###################################################
 
 
 

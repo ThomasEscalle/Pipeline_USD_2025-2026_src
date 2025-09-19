@@ -12,20 +12,20 @@ except:
 
 
 
-class FileTemplateRLOMaya(FileTemplateBase):
+class FileTemplateFLOMaya(FileTemplateBase):
 
     def __init__(self):
         super().__init__()
-        self.template_name = "RLOMaya"
+        self.template_name = "FLOMaya"
         self.template_software = "Maya"
 
     def construct(self, parent, path, origin):
 
         # Les elements a importer pour ce template sont :
         # - Le set dress (.USD)
-        # - Les rigs des assets connectés (char et prop) (.ma)
-        # - Le nombre d'autres shots dans la séquence (pour créer les cameras)
-        # - Le temps que prend la séquence (pour créer la timeline)
+        # - Les rigs des assets connectés (char et prop) (.ma ou .mb en high)
+        # - Soit la caméra du RLO, soit créer une caméra rig
+        # - Le temps que prend la séquence (pour créer la timeline), plus son pré-roll et post-roll 
 
 
 
@@ -37,23 +37,31 @@ class FileTemplateRLOMaya(FileTemplateBase):
 
         # Current entity
         current_entity = origin.getCurrentEntity()
+        shot_details = self.getShotDetails(current_entity, origin)  # {'range': [1001, 1005], 'length': 5, 'metadata': {'preroll': {'value': '5', 'show': True}, 'postroll': {'value': '5', 'show': True}}}
 
+        shot_range = shot_details.get("range", [1001, 1100])
+        shot_length = shot_details.get("length", 100)
 
+        # Get the preroll and postroll from the shot metadata if it exists
+        shot_metadata = shot_details.get("metadata", {})
+        shot_preroll = 0
+        shot_postroll = 0
+        if "preroll" in shot_metadata and "value" in shot_metadata["preroll"]:
+            try:
+                shot_preroll = int(shot_metadata["preroll"]["value"])
+            except ValueError:
+                shot_preroll = 0
+        if "postroll" in shot_metadata and "value" in shot_metadata["postroll"]:
+            try:
+                shot_postroll = int(shot_metadata["postroll"]["value"])
+            except ValueError:
+                shot_postroll = 0
 
-        # Ici, on vas recuperer tous les shots de la sequence, 
-        # Sauf le master, ni l'entitée courante.
-        sequence_data = self.getAllShotsFromCurrentSequence(current_entity, origin, includeMaster=False, excludeCurrent=True)
-        shots_in_sequence = sequence_data["shots"]
-        total_frames = sequence_data["total_frames"]
-        # Display a warning if there is no other shots in the sequence
-        if len(shots_in_sequence) == 0:
-            QMessageBox.warning(parent, "No Other Shots Found", "There are no other shots in the sequence. The scene cannot be created.")
-            return
-
-
-        # Ici, on vas recuperer le setdress de l'entitée "Current".
+    
+        # Ici, on vas recuperer le setdress de l'entitée master du shot courant.
         importReference_SetDress = True
-        setDress_Files = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
+        master_entity = self.getCurrentShotMaster(current_entity, origin)
+        setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
 
 
         # On vas récupérer tous les assets connectés a l'entitée courante.
@@ -61,7 +69,6 @@ class FileTemplateRLOMaya(FileTemplateBase):
         #     { "type": "asset", "asset_path": "Chars\\Nathan"   },
         #     { "type": "asset", "asset_path": "Chars\\Mathilde" },
         # ...
-
         connected_entities = origin.core.entities.getConnectedEntities(origin.getCurrentEntity())
         rigs_chars = []
         rigs_props = []
@@ -70,14 +77,13 @@ class FileTemplateRLOMaya(FileTemplateBase):
         for entity in connected_entities:
             # Si c'est un character
             if "char" in entity["asset_path"].lower() :
-                products = self.getMatchingProductsFromEntity(entity, [".ma" , ".mb"], origin, ["RigL", "Publish"])
+                products = self.getMatchingProductsFromEntity(entity, [".ma" , ".mb"], origin, ["RigH", "Publish"])
                 rigs_chars.extend(products)
             # Si c'est un prop
             elif "prop" in entity["asset_path"].lower() :
-                products = self.getMatchingProductsFromEntity(entity, [".ma" , ".mb"], origin, ["RigL", "Publish"])
+                products = self.getMatchingProductsFromEntity(entity, [".ma" , ".mb"], origin, ["RigH", "Publish"])
                 rigs_props.extend(products)
 
-        # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
         # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
         dialog = ProductImportDialog( origin.core, parent, None)
         default_selected = [
@@ -114,26 +120,6 @@ class FileTemplateRLOMaya(FileTemplateBase):
             },
         ]
         settings = [
-            {
-                "setting_name": "import_title",
-                "type": "title",
-                "default_value": "Globals"
-            },
-            {
-                "setting_name": "Import Camera Rig",
-                "type": "checkbox",
-                "default_value": True
-            },
-            {
-                "setting_name": "Auto Hide Cameras (Only one visible at a time)",
-                "type": "checkbox",
-                "default_value": True
-            },
-            {
-                "setting_name": "Create Bookmarks for Shots",
-                "type": "checkbox",
-                "default_value": True
-            }
         ]
 
         # Set the default selected product
@@ -143,7 +129,7 @@ class FileTemplateRLOMaya(FileTemplateBase):
         dialog.setSettings(settings)
 
         dialog.navigate(origin.getCurrentEntity())
-        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/RLO/#comment-creer-une-scene-dans-maya")
+        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/FLO/#comment-creer-une-scene-dans-maya")
         dialog.setWindowTitle("Import Settings")
         result = dialog.exec_()
 
@@ -172,15 +158,6 @@ class FileTemplateRLOMaya(FileTemplateBase):
         products_rigs_props_str = str(products_rigs_props)
 
 
-
-        # Get the settings results
-        resultSettings = dialog.getSettings()
-        import_camera_rig = resultSettings["Import Camera Rig"]
-        create_bookmarks = resultSettings["Create Bookmarks for Shots"]
-        auto_hide_cameras = resultSettings["Auto Hide Cameras (Only one visible at a time)"]
-
-
-
         # Get the camera rig path
         project_pipeline_path = origin.core.projects.getResolvedProjectStructurePath("pipeline" , context = {})
         camera_file_path = os.path.join(project_pipeline_path, "Templates" , "camera_template.ma")
@@ -190,8 +167,9 @@ class FileTemplateRLOMaya(FileTemplateBase):
             camera_file_path = ""
 
 
-
-
+        # Get the settings results from the dialog
+        settings = dialog.getSettings()
+        create_bookmarks = True
 
 
         # Get the asset type
@@ -203,7 +181,7 @@ class FileTemplateRLOMaya(FileTemplateBase):
         ###################################################################
         ################### CREATE THE SCENE ##############################
         ###################################################################
-        script = StandaloneScriptMaya("Stdl_RLO_Maya.py")
+        script = StandaloneScriptMaya("Stdl_FLO_Maya.py")
         script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
 
         script.replaceVariable("$$SEQUENCE_TYPE$$", assetType)
@@ -211,9 +189,12 @@ class FileTemplateRLOMaya(FileTemplateBase):
         script.replaceVariable("$$TASK$$", task)
         script.replaceVariable("$$DEPARTMENT$$", department)
 
+        script.replaceVariable("$$SHOT_RANGE$$", str(shot_range))
+        script.replaceVariable("$$SHOT_LENGTH$$", str(shot_length))
+        script.replaceVariable("$$SHOT_PREROLL$$", str(shot_preroll))
+        script.replaceVariable("$$SHOT_POSTROLL$$", str(shot_postroll))
+
         script.replaceVariable("$$CAMERA_RIG_PATH$$", camera_file_path)
-        script.replaceVariable("$$IMPORT_CAMERA_RIG$$", "True" if camera_file_path != "" else "False")
-        script.replaceVariable("$$AUTO_HIDE_CAMERAS$$", "True" if auto_hide_cameras else "False")
 
         script.replaceVariable("$$SET_DRESS_PATH$$", products_setDress_str)
         script.replaceVariable("$$RIGS_CHARS_PATHS$$", products_rigs_chars_str)
@@ -221,11 +202,7 @@ class FileTemplateRLOMaya(FileTemplateBase):
 
         script.replaceVariable("$$CREATE_BOOKMARKS$$", "True" if create_bookmarks else "False")
 
-        script.replaceVariable("$$NUMBER_OF_FRAMES$$", str(total_frames))
-        script.replaceVariable("$$FIRST_FRAME$$", "1001")
-
-        script.replaceVariable("$$SHOTS$$", str(shots_in_sequence))
-
+    
         script.run()
 
 
@@ -339,7 +316,7 @@ class FileTemplateRLOMaya(FileTemplateBase):
         ###################################################
         ### CREATE THE SCENE ##############################
         ###################################################
-        script = StandaloneScriptMaya("Stdl_RLO_Maya.py")
+        script = StandaloneScriptMaya("Stdl_FLO_Maya.py")
         script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
         script.replaceVariable("$$ASSET_NAME$$", assetName)
         script.replaceVariable("$$RIG_PATHS_PROPS$$", str(rig_paths_props))

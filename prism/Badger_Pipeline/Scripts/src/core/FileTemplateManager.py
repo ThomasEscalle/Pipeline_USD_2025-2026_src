@@ -12,6 +12,7 @@ from src.core.FileTemplates.Template_Assembly_Houdini import FileTemplateAssembl
 from src.core.FileTemplates.Template_Light_Houdini import FileTemplateLightHoudini
 from src.core.FileTemplates.Template_TLO_Houdini import FileTemplateTLOHoudini
 from src.core.FileTemplates.Template_RLO_Maya import FileTemplateRLOMaya
+from src.core.FileTemplates.Template_FLO_Maya import FileTemplateFLOMaya
 
 from src.core.FileTemplates.Template_Autorig_RigLow_01_Maya import FileTemplateAutorigRigLow01Maya
 from src.core.FileTemplates.Template_Autorig_RigHigh_01_Maya import FileTemplateAutorigRigHigh01Maya
@@ -30,6 +31,7 @@ templates = {
             "Surf/Houdini" : FileTemplateSurfHoudini(),
             "MLgt/Houdini" : FileTemplateMasterLightHoudini(),
             "rlo/Maya" : FileTemplateRLOMaya(),
+            "flo/Maya" : FileTemplateFLOMaya(),
             "abl/Houdini" : FileTemplateAssemblyHoudini(),
             "lgt/Houdini" : FileTemplateLightHoudini(),
             "tlo/Houdini" : FileTemplateTLOHoudini(),
