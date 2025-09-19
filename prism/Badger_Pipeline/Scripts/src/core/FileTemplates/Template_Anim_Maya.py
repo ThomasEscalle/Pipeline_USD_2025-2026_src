@@ -12,11 +12,11 @@ except:
 
 
 
-class FileTemplateFLOMaya(FileTemplateBase):
+class FileTemplateAnimMaya(FileTemplateBase):
 
     def __init__(self):
         super().__init__()
-        self.template_name = "FLOMaya"
+        self.template_name = "AnimMaya"
         self.template_software = "Maya"
 
     def construct(self, parent, path, origin):
@@ -26,7 +26,8 @@ class FileTemplateFLOMaya(FileTemplateBase):
         # - Les rigs des assets connectés (char et prop) (.ma ou .mb en high)
         # - Soit la caméra du RLO, soit créer une caméra rig
         # - Le temps que prend la séquence (pour créer la timeline), plus son pré-roll et post-roll 
-        # - Eventuellement le ghost du RLO (si il y'en a un)
+        # - Eventuellement le ghost du FLO (si il y'en a un)
+
 
 
         # Crées le chemin ou maya vas enregistrer son fichier temporaire.
@@ -129,7 +130,7 @@ class FileTemplateFLOMaya(FileTemplateBase):
         dialog.setSettings(settings)
 
         dialog.navigate(origin.getCurrentEntity())
-        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/FLO/#comment-creer-une-scene-dans-maya")
+        dialog.setHelpLink("https://thomasescalle.github.io/Pipeline_USD_2025/departements/Anim/#comment-creer-une-scene-dans-maya")
         dialog.setWindowTitle("Import Settings")
         result = dialog.exec_()
 
@@ -181,7 +182,7 @@ class FileTemplateFLOMaya(FileTemplateBase):
         ###################################################################
         ################### CREATE THE SCENE ##############################
         ###################################################################
-        script = StandaloneScriptMaya("Stdl_FLO_Maya.py")
+        script = StandaloneScriptMaya("Stdl_Anim_Maya.py")
         script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
 
         script.replaceVariable("$$SEQUENCE_TYPE$$", assetType)
@@ -316,7 +317,7 @@ class FileTemplateFLOMaya(FileTemplateBase):
         ###################################################
         ### CREATE THE SCENE ##############################
         ###################################################
-        script = StandaloneScriptMaya("Stdl_FLO_Maya.py")
+        script = StandaloneScriptMaya("Stdl_Anim_Maya.py")
         script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
         script.replaceVariable("$$ASSET_NAME$$", assetName)
         script.replaceVariable("$$RIG_PATHS_PROPS$$", str(rig_paths_props))

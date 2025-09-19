@@ -6,25 +6,25 @@ import maya.cmds as cmds
 import random
 import os
 
-outputPath = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.ma"
+outputPath = "$$OUTPUT_PATH$$"
 
-asset_type = "shot"
-sequenceName = "sq_010_sh_010"
-task_name = "Animation"
-department_name = "anim"
+asset_type = "$$SEQUENCE_TYPE$$"
+sequenceName = "$$ASSET_NAME$$"
+task_name = "$$TASK$$"
+department_name = "$$DEPARTMENT$$"
 
-shot_range = "[1001, 1016]"  # This is a string representation of a list ( start_frame, end_frame)
-shot_length = "16"  # This is an integer
-shot_preroll = "0"  # This is an integer
-shot_postroll = "5"  # This is an integer
+shot_range = "$$SHOT_RANGE$$"  # This is a string representation of a list ( start_frame, end_frame)
+shot_length = "$$SHOT_LENGTH$$"  # This is an integer
+shot_preroll = "$$SHOT_PREROLL$$"  # This is an integer
+shot_postroll = "$$SHOT_POSTROLL$$"  # This is an integer
 
 
 
-set_dress_path = "['E:/3D/Projects/06_Ouyang/03_Production/02_Shots/sq_010/Master/Export/SetD_Publish/master/sq_010-Master_SetD_Publish_master.usd']"      # This is a string representation of a list of paths but that should only contain one item
-rigs_chars_paths = "['E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Matheo/Export/RigH_Publish/master/Matheo_RigH_Publish_master.ma', 'E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Nathan/Export/RigH_Publish/master/Nathan_RigH_Publish_master.ma']"  # This is a string representation of a list of paths
-rigs_props_paths = "[]"  # This is a string representation of a list of paths
+set_dress_path = "$$SET_DRESS_PATH$$"      # This is a string representation of a list of paths but that should only contain one item
+rigs_chars_paths = "$$RIGS_CHARS_PATHS$$"  # This is a string representation of a list of paths
+rigs_props_paths = "$$RIGS_PROPS_PATHS$$"  # This is a string representation of a list of paths
 
-create_bookmarks = "True"  # "True" or "False"
+create_bookmarks = "$$CREATE_BOOKMARKS$$"  # "True" or "False"
 
 
 
