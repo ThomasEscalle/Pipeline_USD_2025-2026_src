@@ -222,9 +222,15 @@ export_node.setInput(0, out_scene_building, 0)
 
 
 
-##################
-#### Comments ####
-##################
+
+
+################################################
+####  Set the frame range of the scene      ####
+################################################
+# Set the frame range of the Houdini scene
+hou.playbar.setFrameRange(shot_start , shot_end )
+hou.playbar.setPlaybackRange(shot_start , shot_end )
+hou.setFrame(shot_start )
 
 
 

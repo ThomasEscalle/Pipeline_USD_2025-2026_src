@@ -216,5 +216,14 @@ sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
 out_scene_building.setDisplayFlag(True)
 
 
+################################################
+####  Set the frame range of the scene      ####
+################################################
+# Set the frame range of the Houdini scene
+hou.playbar.setFrameRange(shot_start , shot_end )
+hou.playbar.setPlaybackRange(shot_start , shot_end )
+hou.setFrame(shot_start )
+
+
 # Save the Houdini file
 hou.hipFile.save(output_hip_path)

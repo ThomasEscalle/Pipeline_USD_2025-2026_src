@@ -1,12 +1,13 @@
 import hou
 import os
 
+
 output_hip_path = "C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/prism/Badger_Pipeline/Scripts/src/core/FileTemplates/output.hip"
 
 assetName = "sq_010_sh_030"
 assetType = "shot"
-task_name = "TLO"
-department_name = "tlo"
+task_name = "Lighting"
+department_name = "lgt"
 
 shot_start = int("1001")
 shot_end = int("1005")
@@ -14,7 +15,9 @@ shot_length = int("5")
 shot_preroll = int("0")
 shot_postroll = int("0")
 
-light_path = "E:/3D/Projects/06_Ouyang/03_Production/02_Shots/sq_010/sh_030/Export/Light_Publish/master/sq_010-sh_030_Light_Publish_master.usd"
+masterLightPath = "E:/3D/Projects/06_Ouyang/03_Production/02_Shots/sq_010/Master/Export/MLgt_Publish/master/sq_010-Master_MLgt_Publish_master.usd"
+assemblyPath = "E:/3D/Projects/06_Ouyang/03_Production/02_Shots/sq_010/sh_030/Export/Assembly_Publish/master/sq_010-sh_030_Assembly_Publish_master.usd"
+
 
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
@@ -49,10 +52,25 @@ def build_assembly_subnet():
     in_import.setPosition(hou.Vector2(0, 0))
 
 
+    
+    # Create a reference node for the assembly
+    assembly_ref = import_subnet.createNode("reference", "Assembly_Ref")
+    assembly_ref.parm("filepath1").set( assemblyPath if assemblyPath != "" else "")
+    assembly_ref.parm("primpath1").set(f"/{assetName}")
+    assembly_ref.setPosition(in_import.position() + hou.Vector2(0, -2))
+
+
+    # Create a reference node for the master light
+    master_light_ref = import_subnet.createNode("reference", "Master_Light_Ref")
+    master_light_ref.parm("filepath1").set(masterLightPath)
+    master_light_ref.parm("primpath1").set("/Master_Light")
+    master_light_ref.setPosition(assembly_ref.position() + hou.Vector2(0, -2))
+
+
 
     # Create a "Null" node called "OUT_IMPORT"
     out_import = import_subnet.createNode("null", "OUT_IMPORT")
-    out_import.setPosition(in_import.position() + hou.Vector2(0, -2))
+    out_import.setPosition(master_light_ref.position() + hou.Vector2(0, -2))
 
 
     # Place the input and output nodes
@@ -64,8 +82,12 @@ def build_assembly_subnet():
     ####################################
     # Connect the IN_IMPORT node to the input_stage node
     in_import.setInput(0, input_stage, 0)
-    # Connect the out_import to the in_import node
-    out_import.setInput(0, in_import, 0)
+    # Connect the input_stage node to the in_import node
+    assembly_ref.setInput(0, in_import, 0)
+    # Connect the assembly_ref node to the master_light_ref node
+    master_light_ref.setInput(0, assembly_ref, 0)
+    # Connect the last node (assembly or master light) to the out_import node
+    out_import.setInput(0, master_light_ref, 0)
     # Connect the output0 node to the out_import node
     output0.setInput(0, out_import, 0)
     #####################################
@@ -74,28 +96,28 @@ def build_assembly_subnet():
 
 build_assembly_subnet()
 
+# Create a "Light" subnet
+light_subnet = stage.createNode("subnet", "Light")
+light_subnet.setColor(hou.Color(0.157, 0.776, 0.157))  # Green
+light_subnet.setPosition(import_subnet.position() + hou.Vector2(0, -2))
+light_subnet.setUserData("nodeshape", "burst")
 
-# Create a "TLO" subnet
-TLO_subnet = stage.createNode("subnet", "TLO")
-TLO_subnet.setColor(hou.Color(0.157, 0.776, 0.157))  # Green
-TLO_subnet.setPosition(import_subnet.position() + hou.Vector2(0, -2))
-TLO_subnet.setUserData("nodeshape", "burst")
-
-def build_TLO_subnet():
-    # Get the ouput0 node of the TLO subnet
-    output0 = TLO_subnet.node("output0")
-    # Get the input0 node of the TLO subnet
-    inputs = TLO_subnet.indirectInputs()
+def build_light_subnet():
+    # Get the ouput0 node of the light subnet
+    output0 = light_subnet.node("output0")
+    # Get the input0 node of the light subnet
+    inputs = light_subnet.indirectInputs()
     input_stage = inputs[0] if inputs else None
 
-    # Create a "Null" node called "IN_TLO"
-    in_tlo = TLO_subnet.createNode("null", "IN_TLO")
-    in_tlo.setPosition(hou.Vector2(0, 0))
+    # Create a "Null" node called "IN_LIGHT"
+    in_light = light_subnet.createNode("null", "IN_LIGHT")
+    in_light.setPosition(hou.Vector2(0, 0))
 
 
-    # Create a "Null" node called "OUT_TLO"
-    out_tlo = TLO_subnet.createNode("null", "OUT_TLO")
-    out_tlo.setPosition(hou.Vector2(0, -4))
+
+    # Create a "Null" node called "OUT_LIGHT"
+    out_light = light_subnet.createNode("null", "OUT_LIGHT")
+    out_light.setPosition(hou.Vector2(0, -4))
 
 
     # Place the input and output nodes
@@ -103,23 +125,30 @@ def build_TLO_subnet():
     output0.setPosition(hou.Vector2(0, -6))
 
     # Connect the nodes together
-    # Connect the IN_TLO node to the graftstages node
-    out_tlo.setInput(0, in_tlo, 0)
-    # Connect the input_stage node to the in_tlo node
-    in_tlo.setInput(0, input_stage, 0)
-    # Connect the output0 node to the out_tlo node
-    output0.setInput(0, out_tlo, 0)
+    # Connect the IN_LIGHT node to the graftstages node
+    out_light.setInput(0, in_light, 0)
+    # Connect the input_stage node to the in_light node
+    in_light.setInput(0, input_stage, 0)
+
+
+    # Connect the output0 node to the out_light node
+    output0.setInput(0, out_light, 0)
 
     return
-build_TLO_subnet()
+build_light_subnet()
 
+
+# Create a lightMixer node
+light_mixer = stage.createNode("lightmixer", "Light_Mixer")
+light_mixer.setColor(hou.Color(0.157, 0.776, 0.157))  # Green
+light_mixer.setPosition(light_subnet.position() + hou.Vector2(0, -2))
 
 
 
 # Create a "Scene_Cleaning" subnet 
 sceneCleaning_subnet = stage.createNode("subnet", "Scene_Cleaning")
 sceneCleaning_subnet.setColor(hou.Color(0.776, 0.157, 0.157))  # Red
-sceneCleaning_subnet.setPosition(TLO_subnet.position() + hou.Vector2(0, -2))
+sceneCleaning_subnet.setPosition(light_mixer.position() + hou.Vector2(0, -2))
 # Add a comment to the Scene_Cleaning subnet
 sceneCleaning_subnet.setComment("Ne pas toucher a ce node !")
 sceneCleaning_subnet.setGenericFlag(hou.nodeFlag.DisplayComment,True)
@@ -168,23 +197,24 @@ out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, 
 # Create a "Export" node
 export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
 export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -8))
-export_node.parm("productName").set("TLO_Publish_FG")
+export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
+export_node.parm("productName").set("Light_Publish")
 export_node.parm("nextVersion").set(True)
 export_node.parm("updateMaster").set(True)
 export_node.parm("defaultprim").set(f"/{assetName}")
 export_node.setComment("Publier le USD du lighting")
 export_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
-
 #####################################
 #### Connect the nodes together #####
 #####################################
 
-# connect the IMPORT subnet to the TLO subnet
-TLO_subnet.setInput(0, import_subnet, 0)
-# connect the TLO  to the Scene Cleaning subnet
-sceneCleaning_subnet.setInput(0, TLO_subnet, 0)
+# connect the IMPORT subnet to the Light subnet
+light_subnet.setInput(0, import_subnet, 0)
+# connect the Light subnet to the Light Mixer
+light_mixer.setInput(0, light_subnet, 0)
+# connect the Light Mixer to the Scene Cleaning subnet
+sceneCleaning_subnet.setInput(0, light_mixer, 0)
 # connect the Scene Cleaning subnet to the OUT_SCENE_ASSEMBLY node
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
 # connect the OUT_SCENE_ASSEMBLY node to the Export subnet
@@ -192,20 +222,16 @@ export_node.setInput(0, out_scene_building, 0)
 
 
 
-##################
-#### Comments ####
-##################
 
-# Add a sticky note 
-sticky_note = stage.createStickyNote("stage_comment")
-sticky_note.setPosition(hou.Vector2(3, -4))
-sticky_note_text = "Cette scene sert a preparer les render settings.\n"
-sticky_note_text += "C'est ici que l'on vas gerer les Render Layers, AOVS, render settings...\n"
-sticky_note_text += "Une fois finis, utilise le node \"Export\" pour exporter ta scène.\n\n"
-sticky_note.setText(sticky_note_text)
-sticky_note.resize(hou.Vector2(5, 2))
-sticky_note.setDrawBackground(False)
-sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
+
+################################################
+####  Set the frame range of the scene      ####
+################################################
+# Set the frame range of the Houdini scene
+hou.playbar.setFrameRange(shot_start , shot_end )
+hou.playbar.setPlaybackRange(shot_start , shot_end )
+hou.setFrame(shot_start )
+
 
 
 # Set the display flag on the "OUT_SCENE_BUILDING" node
