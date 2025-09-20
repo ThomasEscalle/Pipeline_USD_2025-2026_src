@@ -138,7 +138,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self, parent=maya_main_window()):
         super(SaveAsWindow, self).__init__(parent)
         self.setWindowTitle("Badger Pipeline")
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(100)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
         # Setup the User Interface
