@@ -1,0 +1,6 @@
+[
+    {
+        "name": "Show Message",
+        "code": "pcore.popup(\"Hello World\")"
+    }
+]

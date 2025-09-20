@@ -1,0 +1,786 @@
+{
+    "globals": {
+        "project_name": "$$PROJECT_NAME$$",
+        "prism_version": "v2.0.10",
+        "departments_asset": [
+            {
+                "abbreviation": "ModL",
+                "defaultTasks": [
+                    "Modeling"
+                ],
+                "name": "Modeling Low"
+            },
+            {
+                "abbreviation": "ModH",
+                "defaultTasks": [
+                    "Modeling"
+                ],
+                "name": "Modeling High"
+            },
+            {
+                "abbreviation": "RigL",
+                "defaultTasks": [
+                    "Rigging"
+                ],
+                "name": "Rig Low"
+            },
+            {
+                "abbreviation": "RigH",
+                "defaultTasks": [
+                    "Rigging"
+                ],
+                "name": "Rig High"
+            },
+            {
+                "abbreviation": "Mod",
+                "defaultTasks": [
+                    "Modules"
+                ],
+                "name": "Modules"
+            },
+            {
+                "abbreviation": "Surf",
+                "defaultTasks": [
+                    "Surfacing",
+                    "Texturing"
+                ],
+                "name": "Surfacing"
+            }
+        ],
+        "departments_shot": [
+            {
+                "abbreviation": "anim",
+                "defaultTasks": [
+                    "Animation"
+                ],
+                "name": "Animation"
+            },
+            {
+                "abbreviation": "fx",
+                "defaultTasks": [
+                    "Effects"
+                ],
+                "name": "FX"
+            },
+            {
+                "abbreviation": "cfx",
+                "defaultTasks": [
+                    "CharacterEffects"
+                ],
+                "name": "CharFX"
+            },
+            {
+                "abbreviation": "lgt",
+                "defaultTasks": [
+                    "Lighting"
+                ],
+                "name": "Lighting"
+            },
+            {
+                "abbreviation": "cmp",
+                "defaultTasks": [
+                    "Compositing"
+                ],
+                "name": "Compositing"
+            },
+            {
+                "abbreviation": "rlo",
+                "defaultTasks": [
+                    "RLO"
+                ],
+                "name": "RLO"
+            },
+            {
+                "abbreviation": "flo",
+                "defaultTasks": [
+                    "FLO"
+                ],
+                "name": "FLO"
+            },
+            {
+                "abbreviation": "tlo",
+                "defaultTasks": [
+                    "TLO"
+                ],
+                "name": "TLO"
+            },
+            {
+                "abbreviation": "MLgt",
+                "defaultTasks": [
+                    "MasterLight"
+                ],
+                "name": "Master Lighting"
+            },
+            {
+                "abbreviation": "SetD",
+                "defaultTasks": [
+                    "SetDress"
+                ],
+                "name": "Set Dress"
+            },
+            {
+                "abbreviation": "abl",
+                "defaultTasks": [
+                    "Assembly"
+                ],
+                "name": "Assembly"
+            }
+        ],
+        "taskpresets_asset": [
+            {
+                "departments": [
+                    {
+                        "name": "Concept",
+                        "tasks": [
+                            "Concept"
+                        ]
+                    },
+                    {
+                        "name": "Modeling",
+                        "tasks": [
+                            "Modeling"
+                        ]
+                    },
+                    {
+                        "name": "Surfacing",
+                        "tasks": [
+                            "Surfacing"
+                        ]
+                    },
+                    {
+                        "name": "Rigging",
+                        "tasks": [
+                            "Rigging"
+                        ]
+                    }
+                ],
+                "name": "All"
+            },
+            {
+                "departments": [
+                    {
+                        "name": "Modeling Low",
+                        "tasks": [
+                            "Modeling"
+                        ]
+                    },
+                    {
+                        "name": "Modeling High",
+                        "tasks": [
+                            "Modeling"
+                        ]
+                    },
+                    {
+                        "name": "Rig Low",
+                        "tasks": [
+                            "Rigging"
+                        ]
+                    },
+                    {
+                        "name": "Rig High",
+                        "tasks": [
+                            "Rigging"
+                        ]
+                    },
+                    {
+                        "name": "Surfacing",
+                        "tasks": [
+                            "Texturing",
+                            "Surfacing"
+                        ]
+                    }
+                ],
+                "name": "Character"
+            },
+            {
+                "departments": [
+                    {
+                        "name": "Modeling Low",
+                        "tasks": [
+                            "Modeling"
+                        ]
+                    },
+                    {
+                        "name": "Modeling High",
+                        "tasks": [
+                            "Modeling"
+                        ]
+                    },
+                    {
+                        "name": "Rig Low",
+                        "tasks": [
+                            "Rigging"
+                        ]
+                    },
+                    {
+                        "name": "Rig High",
+                        "tasks": [
+                            "Rigging"
+                        ]
+                    },
+                    {
+                        "name": "Surfacing",
+                        "tasks": [
+                            "Texturing",
+                            "Surfacing"
+                        ]
+                    }
+                ],
+                "name": "Prop"
+            },
+            {
+                "departments": [
+                    {
+                        "name": "Modules",
+                        "tasks": [
+                            "Modules"
+                        ]
+                    }
+                ],
+                "name": "Module"
+            },
+            {
+                "name": "Item",
+                "departments": [
+                    {
+                        "name": "Modeling Low",
+                        "tasks": [
+                            "Modeling"
+                        ]
+                    },
+                    {
+                        "name": "Modeling High",
+                        "tasks": [
+                            "Modeling"
+                        ]
+                    },
+                    {
+                        "name": "Surfacing",
+                        "tasks": [
+                            "Texturing",
+                            "Surfacing"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "taskpresets_shot": [
+            {
+                "departments": [
+                    {
+                        "name": "Layout",
+                        "tasks": [
+                            "Layout"
+                        ]
+                    },
+                    {
+                        "name": "Animation",
+                        "tasks": [
+                            "Animation"
+                        ]
+                    },
+                    {
+                        "name": "FX",
+                        "tasks": [
+                            "Effects"
+                        ]
+                    },
+                    {
+                        "name": "CharFX",
+                        "tasks": [
+                            "CharacterEffects"
+                        ]
+                    },
+                    {
+                        "name": "Lighting",
+                        "tasks": [
+                            "Lighting"
+                        ]
+                    },
+                    {
+                        "name": "Compositing",
+                        "tasks": [
+                            "Compositing"
+                        ]
+                    }
+                ],
+                "name": "All"
+            },
+            {
+                "departments": [
+                    {
+                        "name": "RLO",
+                        "tasks": [
+                            "RLO"
+                        ]
+                    },
+                    {
+                        "name": "Set Dress",
+                        "tasks": [
+                            "Set Dress"
+                        ]
+                    },
+                    {
+                        "name": "Master Lighting",
+                        "tasks": [
+                            "MasterLight"
+                        ]
+                    }
+                ],
+                "name": "Master"
+            },
+            {
+                "departments": [
+                    {
+                        "name": "Animation",
+                        "tasks": [
+                            "Animation"
+                        ]
+                    },
+                    {
+                        "name": "FX",
+                        "tasks": [
+                            "FX"
+                        ]
+                    },
+                    {
+                        "name": "Lighting",
+                        "tasks": [
+                            "Lighting"
+                        ]
+                    },
+                    {
+                        "name": "FLO",
+                        "tasks": [
+                            "FLO"
+                        ]
+                    },
+                    {
+                        "name": "TLO",
+                        "tasks": [
+                            "TLO"
+                        ]
+                    },
+                    {
+                        "name" : "Assembly",
+                        "tasks": [
+                            "Assembly"
+                        ]
+                    }
+                ],
+                "name": "Shot"
+            }
+        ],
+        "uselocalfiles": false,
+        "track_dependencies": "publish",
+        "checkframerange": true,
+        "forcefps": false,
+        "fps": 24.0,
+        "forceversions": false,
+        "forceResolution": false,
+        "resolution": [
+            1920,
+            1080
+        ],
+        "resolutionPresets": [
+            "3840x2160",
+            "1920x1080",
+            "1280x720",
+            "960x540",
+            "640x360"
+        ],
+        "requirePublishComment": true,
+        "publishCommentLength": 3,
+        "defaultImportStateName": "{entity}_{product}_{version}",
+        "useStrictAssetDetection": false,
+        "versionPadding": 4,
+        "framePadding": 4,
+        "versionFormat": "v#",
+        "matchScenefileVersions": false,
+        "expectedPrjPath": "",
+        "useMasterVersion": true,
+        "useMasterRenderVersion": false,
+        "backupScenesOnPublish": false,
+        "scenefileLocking": false,
+        "productTasks": false,
+        "required_plugins": [],
+        "allowAdditionalTasks": true,
+        "defaultMayaNamespace": "{entity}_{task}"
+    },
+    "folder_structure": {
+        "pipeline": {
+            "value": "@project_path@/00_Pipeline"
+        },
+        "assets": {
+            "value": "@project_path@/03_Production/01_Assets/@asset_path@"
+        },
+        "sequences": {
+            "value": "@project_path@/03_Production/02_Shots/@sequence@"
+        },
+        "shots": {
+            "value": "@sequence_path@/@shot@"
+        },
+        "textures": {
+            "value": "@project_path@/04_Resources/Textures"
+        },
+        "departments": {
+            "value": "@entity_path@/Scenefiles/@department@"
+        },
+        "tasks": {
+            "value": "@department_path@/@task@"
+        },
+        "assetScenefiles": {
+            "value": "@task_path@/@asset@_@task@_@version@@extension@"
+        },
+        "shotScenefiles": {
+            "value": "@task_path@/@sequence@-@shot@_@task@_@version@@extension@"
+        },
+        "products": {
+            "value": "@entity_path@/Export/@product@"
+        },
+        "productVersions": {
+            "value": "@product_path@/@version@@_(wedge)@"
+        },
+        "productFilesAssets": {
+            "value": "@productversion_path@/@asset@_@product@_@version@@.(frame)@@extension@"
+        },
+        "productFilesShots": {
+            "value": "@productversion_path@/@sequence@-@shot@_@product@_@version@@.(frame)@@extension@"
+        },
+        "3drenders": {
+            "value": "@entity_path@/Renders/3dRender/@identifier@"
+        },
+        "2drenders": {
+            "value": "@entity_path@/Renders/2dRender/@identifier@"
+        },
+        "externalMedia": {
+            "value": "@entity_path@/Renders/external/@identifier@"
+        },
+        "renderVersions": {
+            "value": "@render_path@/@version@"
+        },
+        "aovs": {
+            "value": "[expression,#  available variables:\n#  \"core\" - PrismCore\n#  \"context\" - dict\n\nif context.get(\"mediaType\") == \"2drenders\":\n\ttemplate = \"@renderversion_path@\"\nelse:\n\ttemplate = \"@renderversion_path@/@aov@\"]"
+        },
+        "renderFilesAssets": {
+            "value": "[expression,#  available variables:\n#  \"core\" - PrismCore\n#  \"context\" - dict\n\nif context.get(\"mediaType\") == \"2drenders\":\n\ttemplate = \"@aov_path@/@asset@_@identifier@_@version@@.(frame)@@extension@\"\nelse:\n\ttemplate = \"@aov_path@/@asset@_@identifier@_@version@_@aov@@.(frame)@@extension@\"]"
+        },
+        "renderFilesShots": {
+            "value": "[expression,#  available variables:\n#  \"core\" - PrismCore\n#  \"context\" - dict\n\nif context.get(\"mediaType\") == \"2drenders\":\n\ttemplate = \"@aov_path@/@sequence@-@shot@_@identifier@_@version@@.(frame)@@extension@\"\nelse:\n\ttemplate = \"@aov_path@/@sequence@-@shot@_@identifier@_@version@_@aov@@.(frame)@@extension@\"]"
+        },
+        "playblasts": {
+            "value": "@entity_path@/Playblasts/@identifier@"
+        },
+        "playblastVersions": {
+            "value": "@playblast_path@/@version@"
+        },
+        "playblastFilesAssets": {
+            "value": "@playblastversion_path@/@asset@_@identifier@_@version@@.(frame)@@extension@"
+        },
+        "playblastFilesShots": {
+            "value": "@playblastversion_path@/@sequence@-@shot@_@identifier@_@version@@.(frame)@@extension@"
+        },
+        "usd_path": {
+            "value": "@project_path@/05_USD"
+        },
+        "usd_assets": {
+            "value": "@usd_path@/01_Assets"
+        },
+        "usd_shots": {
+            "value": "@usd_path@/02_Shots"
+        },
+        "deadlineJobName": {
+            "value": "[expression,#  available variables:\n#  \"core\" - PrismCore\n#  \"context\" - dict\n\nif context.get(\"type\") == \"asset\":\n    base = \"@asset@\"\nelse:\n    base = \"@sequence@-@shot@\"\n\ntemplate = base + \"_@product@@identifier@_@version@\"]"
+        },
+        "houdini_HDAs": {
+            "value": "@project_path@/04_Resources/HDAs"
+        }
+    },
+    "defaultpasses": {
+        "houdini_arnold": [
+            [
+                "direct",
+                "DirectLight"
+            ],
+            [
+                "indirect",
+                "IndirectLight"
+            ],
+            [
+                "emission",
+                "Emission"
+            ],
+            [
+                "diffuse",
+                "DiffuseReflection"
+            ],
+            [
+                "specular",
+                "SpecularReflection"
+            ],
+            [
+                "transmission",
+                "SpecularTransmisson"
+            ],
+            [
+                "sss",
+                "SSS"
+            ],
+            [
+                "volume",
+                "Volume"
+            ],
+            [
+                "albedo",
+                "Albedo"
+            ],
+            [
+                "direct",
+                "Beauty"
+            ],
+            [
+                "Z",
+                "Depth"
+            ],
+            [
+                "N",
+                "Normal"
+            ],
+            [
+                "crypto_asset",
+                "CryptoAsset"
+            ],
+            [
+                "crypto_object",
+                "CryptoObject"
+            ],
+            [
+                "crypto_material",
+                "CryptoMaterial"
+            ]
+        ],
+        "houdini_mantra": [
+            [
+                "Color",
+                "Cf"
+            ],
+            [
+                "Opacity",
+                "Of"
+            ],
+            [
+                "Alpha",
+                "Af"
+            ],
+            [
+                "Position",
+                "P"
+            ],
+            [
+                "Position-Z",
+                "Pz"
+            ],
+            [
+                "Normal",
+                "N"
+            ],
+            [
+                "Emission",
+                "Ce"
+            ]
+        ],
+        "houdini_redshift": [
+            [
+                "Cryptomatte",
+                "cryptomatte"
+            ],
+            [
+                "Z Depth",
+                "Z"
+            ],
+            [
+                "Puzzle Matte",
+                "puzzleMatte"
+            ],
+            [
+                "Diffuse Lighting",
+                "diffuse"
+            ],
+            [
+                "Reflections",
+                "reflection"
+            ],
+            [
+                "Refractions",
+                "refraction"
+            ],
+            [
+                "Global Illumination",
+                "gi"
+            ],
+            [
+                "Shadows",
+                "shadows"
+            ],
+            [
+                "Normals",
+                "N"
+            ]
+        ],
+        "houdini_vray": [
+            [
+                "Diffuse",
+                "diffuse"
+            ],
+            [
+                "Reflection",
+                "reflection"
+            ],
+            [
+                "Refraction",
+                "refraction"
+            ],
+            [
+                "Self Illumination",
+                "illum"
+            ],
+            [
+                "Shadow",
+                "shadow"
+            ],
+            [
+                "Specular",
+                "specular"
+            ],
+            [
+                "GI",
+                "gi"
+            ],
+            [
+                "SSS",
+                "sss"
+            ]
+        ],
+        "houdini_3delight": [
+            [
+                "Ci"
+            ],
+            [
+                "Diffuse"
+            ],
+            [
+                "Subsurface-scattering"
+            ],
+            [
+                "Reflection"
+            ],
+            [
+                "Refraction"
+            ],
+            [
+                "Volume scattering"
+            ],
+            [
+                "Incandescence"
+            ],
+            [
+                "Z (depth)"
+            ],
+            [
+                "Ci"
+            ],
+            [
+                "Camera space position"
+            ],
+            [
+                "Camera space normal"
+            ]
+        ],
+        "maya_vray": {
+            "Background": "backgroundChannel",
+            "Caustics": "causticsChannel",
+            "Diffuse": "diffuseChannel",
+            "Extra Tex": "ExtraTexElement",
+            "GI": "giChannel",
+            "Lighting": "lightingChannel",
+            "Multi Matte": "MultiMatteElement",
+            "Normals": "normalsChannel",
+            "Reflection": "reflectChannel",
+            "Refraction": "refractChannel",
+            "SSS": "FastSSS2Channel",
+            "Self Illumination": "selfIllumChannel",
+            "Shadow": "shadowChannel",
+            "Specular": "specularChannel",
+            "Velocity": "velocityChannel",
+            "Z-depth": "zdepthChannel"
+        },
+        "maya_arnold": [
+            "N",
+            "Z",
+            "albedo",
+            "background",
+            "diffuse",
+            "direct",
+            "emission",
+            "indirect",
+            "motionvector",
+            "opacity",
+            "specular",
+            "sss",
+            "transmission",
+            "volume",
+            "shadow"
+        ],
+        "maya_redshift": [
+            "Ambient Occlusion",
+            "Background",
+            "Caustics",
+            "Depth",
+            "Diffuse Filter",
+            "Diffuse Lighting",
+            "Emission",
+            "Global Illumination",
+            "Matte",
+            "Motion Vectors",
+            "Normals",
+            "Puzzle Matte",
+            "Reflections",
+            "Refractions",
+            "Shadows",
+            "Specular Lighting",
+            "Volume Lighting",
+            "World Position"
+        ]
+    },
+    "export_paths": {},
+    "environmentVariables": {},
+    "render_paths": {},
+    "deadline": {
+        "submitScenes": true,
+        "useScriptDependencies": true,
+        "usePoolPresets": false,
+        "poolPresets": [],
+        "pools": [],
+        "groups": []
+    },
+    "houdini": {
+        "useRelativePaths": false
+    },
+    "maya": {
+        "setPrefix": ""
+    },
+    "media": {
+        "mp4Compression": 18
+    },
+    "usd": {
+        "useRelativePaths": false,
+        "renderer": [
+            "Arnold",
+            "Karma",
+            "Redshift"
+        ],
+        "playblastRenderer": [
+            "GL"
+        ]
+    }
+}

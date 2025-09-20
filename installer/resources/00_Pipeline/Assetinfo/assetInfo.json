@@ -1,0 +1,331 @@
+{
+    "TreeTrunk": {
+        "description": "The trunk of the tree"
+    },
+    "assets": {
+        "TreeTrunk": {
+            "metadata": {}
+        },
+        "Round_Lichen": {
+            "metadata": {}
+        },
+        "qzdzqd": {
+            "metadata": {}
+        },
+        "table": {
+            "metadata": {},
+            "connectedEntities": [
+                {
+                    "type": "shot",
+                    "shot": "master",
+                    "sequence": "sq_010"
+                }
+            ]
+        },
+        "Tube_Coral": {
+            "metadata": {}
+        },
+        "Pavot_Flower": {
+            "metadata": {}
+        },
+        "Trunk_01": {
+            "metadata": {}
+        },
+        "Orange_Lights": {
+            "metadata": {}
+        },
+        "Champignon_Arbre": {
+            "metadata": {}
+        },
+        "TEST": {
+            "metadata": {}
+        },
+        "TEST2": {
+            "metadata": {}
+        },
+        "ASSET": {
+            "metadata": {}
+        },
+        "dqzdqzd": {
+            "metadata": {}
+        },
+        "AssetName": {
+            "metadata": {}
+        },
+        "qzdqzd": {
+            "metadata": {}
+        },
+        "qzdqd": {
+            "metadata": {}
+        },
+        "ASSEBT": {
+            "metadata": {}
+        },
+        "PERSONNAGE": {
+            "metadata": {}
+        },
+        "BLABLA": {
+            "metadata": {}
+        },
+        "BQDZD": {
+            "metadata": {}
+        },
+        "KIND": {
+            "metadata": {}
+        },
+        "ASSETINFO00": {
+            "metadata": {}
+        },
+        "ASSETINFO01": {
+            "metadata": {}
+        },
+        "ASSETINFO02": {
+            "metadata": {}
+        },
+        "01": {
+            "metadata": {}
+        },
+        "02": {
+            "metadata": {}
+        },
+        "03": {
+            "metadata": {}
+        },
+        "a_01": {
+            "metadata": {}
+        },
+        "a_02": {
+            "metadata": {}
+        },
+        "a_03": {
+            "metadata": {}
+        },
+        "a_04": {
+            "metadata": {}
+        },
+        "a_05": {
+            "metadata": {}
+        },
+        "a_06": {
+            "metadata": {}
+        },
+        "b_01": {
+            "metadata": {}
+        },
+        "Asset": {
+            "metadata": {}
+        },
+        "b_02": {
+            "metadata": {}
+        },
+        "b_03": {
+            "metadata": {}
+        },
+        "b_04": {
+            "metadata": {}
+        },
+        "b_05": {
+            "metadata": {}
+        },
+        "b_06": {
+            "metadata": {}
+        },
+        "b_07": {
+            "metadata": {}
+        },
+        "b_08": {
+            "metadata": {}
+        },
+        "b_09": {
+            "metadata": {}
+        },
+        "b_10": {
+            "metadata": {}
+        },
+        "b_11": {
+            "metadata": {}
+        },
+        "b_12": {
+            "metadata": {}
+        },
+        "b_13": {
+            "metadata": {}
+        },
+        "b_14": {
+            "metadata": {}
+        },
+        "b_16": {
+            "metadata": {}
+        },
+        "b_17": {
+            "metadata": {}
+        },
+        "FILLE": {
+            "metadata": {}
+        },
+        "BBB": {
+            "metadata": {}
+        },
+        "CCC": {
+            "metadata": {}
+        },
+        "DDD": {
+            "metadata": {}
+        },
+        "AAA": {
+            "metadata": {}
+        },
+        "EEE": {
+            "metadata": {}
+        },
+        "FFF": {
+            "metadata": {}
+        },
+        "GGG": {
+            "metadata": {}
+        },
+        "HHH": {
+            "metadata": {}
+        },
+        "III": {
+            "metadata": {}
+        },
+        "JJJ": {
+            "metadata": {}
+        },
+        "A_TEST_VARIANT_TEXTURES": {
+            "metadata": {}
+        },
+        "KKK": {
+            "metadata": {}
+        },
+        "LLL": {
+            "metadata": {}
+        },
+        "MMM": {
+            "metadata": {}
+        },
+        "NNN": {
+            "metadata": {}
+        },
+        "OOO": {
+            "metadata": {}
+        },
+        "PPP": {
+            "metadata": {}
+        },
+        "QQQ": {
+            "metadata": {}
+        },
+        "RRR": {
+            "metadata": {}
+        },
+        "": {
+            "metadata": {}
+        },
+        "Mirroir": {
+            "metadata": {}
+        },
+        "Mathilde": {
+            "metadata": {},
+            "connectedEntities": [
+                {
+                    "type": "shot",
+                    "shot": "_sequence",
+                    "sequence": "sq_010"
+                },
+                {
+                    "type": "shot",
+                    "shot": "Master",
+                    "sequence": "sq_010"
+                },
+                {
+                    "type": "shot",
+                    "shot": "sh_010",
+                    "sequence": "sq_010"
+                }
+            ]
+        },
+        "Matheo": {
+            "metadata": {},
+            "connectedEntities": [
+                {
+                    "type": "shot",
+                    "shot": "_sequence",
+                    "sequence": "sq_010"
+                },
+                {
+                    "type": "shot",
+                    "shot": "sh_010",
+                    "sequence": "sq_010"
+                }
+            ]
+        },
+        "Albane": {
+            "metadata": {}
+        },
+        "Table": {
+            "metadata": {}
+        },
+        "Iris": {
+            "metadata": {}
+        },
+        "Nathan": {
+            "metadata": {},
+            "connectedEntities": [
+                {
+                    "type": "shot",
+                    "shot": "_sequence",
+                    "sequence": "sq_010"
+                },
+                {
+                    "type": "shot",
+                    "shot": "Master",
+                    "sequence": "sq_010"
+                },
+                {
+                    "type": "shot",
+                    "shot": "sh_010",
+                    "sequence": "sq_010"
+                }
+            ]
+        },
+        "Mathieu": {
+            "metadata": {},
+            "connectedEntities": [
+                {
+                    "type": "shot",
+                    "shot": "Master",
+                    "sequence": "sq_010"
+                },
+                {
+                    "type": "shot",
+                    "shot": "sh_010",
+                    "sequence": "sq_010"
+                }
+            ]
+        },
+        "Poubelle": {
+            "metadata": {},
+            "connectedEntities": [
+                {
+                    "type": "shot",
+                    "shot": "Master",
+                    "sequence": "sq_010"
+                }
+            ]
+        },
+        "Bureau": {
+            "metadata": {}
+        },
+        "Ordinateur": {
+            "metadata": {}
+        },
+        "Cuisine": {
+            "metadata": {}
+        }
+    },
+    "DDD": {
+        "description": "DDD"
+    }
+}

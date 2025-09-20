@@ -2,6 +2,7 @@
 #include "ui_Page_020_NameAndLocation.h"
 
 #include <QFileDialog>
+#include <QStandardPaths>
 #include <QDir>
 
 #include "MainWizard.h"
@@ -17,7 +18,8 @@ Page_020_NameAndLocation::Page_020_NameAndLocation()
     setSubTitle(tr("Please enter the name and location for the new project."));
     setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/ICON_64.png"));
 
-    ui->le_path->setText(QDir::homePath());
+    /// Set the default value to the desktop path
+    ui->le_path->setText(QStandardPaths::writableLocation(QStandardPaths::DesktopLocation));
 }
 
 Page_020_NameAndLocation::~Page_020_NameAndLocation()
@@ -29,6 +31,16 @@ Page_020_NameAndLocation::~Page_020_NameAndLocation()
 int Page_020_NameAndLocation::nextId() const
 {
     return MainWizard::PAGE_021_OPTIONS;
+}
+
+QString Page_020_NameAndLocation::getName()
+{
+    return ui->le_name->text();
+}
+
+QString Page_020_NameAndLocation::getPath()
+{
+    return ui->le_path->text();
 }
 
 void Page_020_NameAndLocation::on_btn_select_clicked()

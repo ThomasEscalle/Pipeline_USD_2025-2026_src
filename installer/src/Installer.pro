@@ -9,11 +9,10 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/FileHelper.cpp \
     src/InstallProcess.cpp \
     src/InstallProcessTools.cpp \
     src/InstallProcessCreate.cpp \
-    src/InstallStep.cpp \
-    src/InstallSteps.cpp \
     src/Page_010_SelectComponents.cpp \
     src/Page_011_SelectLocation.cpp \
     src/Page_012_Instalation.cpp \
@@ -22,16 +21,16 @@ SOURCES += \
     src/Page_021_Options.cpp \
     src/Page_022_Creation.cpp \
     src/Page_023_Conclusion.cpp \
+    src/SoftwareHelpers.cpp \
     src/main.cpp \
     src/MainWizard.cpp \
     src/Page_000_Welcome.cpp
 
 HEADERS += \
+    src/FileHelper.h \
     src/InstallProcess.h \
     src/InstallProcessTools.h \
     src/InstallProcessCreate.h \
-    src/InstallStep.h \
-    src/InstallSteps.h \
     src/Page_010_SelectComponents.h \
     src/MainWizard.h \
     src/Page_000_Welcome.h \
@@ -41,7 +40,8 @@ HEADERS += \
     src/Page_020_NameAndLocation.h \
     src/Page_021_Options.h \
     src/Page_022_Creation.h \
-    src/Page_023_Conclusion.h
+    src/Page_023_Conclusion.h \
+    src/SoftwareHelpers.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

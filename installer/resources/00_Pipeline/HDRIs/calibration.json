@@ -1,0 +1,14 @@
+{
+    "caveStudio_chrLightRig001_lights_graded_aces_4K_v002.exr" : {
+        "exposure": 0.4
+    },
+    "caveStudio_chrLightRig001_bg_graded_aces_4K_v002.exr" : {
+        "exposure": 4.1
+    },
+    "MZ8A9680_4k_acescg.exr" : {
+        "exposure": -2.6
+    },
+    "Treasure Island - colorchecker.exr" : {
+        "exposure": 7.0
+    }
+}

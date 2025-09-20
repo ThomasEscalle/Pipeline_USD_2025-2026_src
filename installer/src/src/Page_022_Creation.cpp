@@ -1,6 +1,10 @@
 #include "Page_022_Creation.h"
 #include "ui_Page_022_Creation.h"
 #include "InstallProcessCreate.h"
+
+#include "Page_020_NameAndLocation.h"
+
+
 #include <QApplication>
 #include "MainWizard.h"
 
@@ -33,6 +37,22 @@ Page_022_Creation::~Page_022_Creation()
 
 void Page_022_Creation::initializePage()
 {
+    // Récupérer les composants sélectionnés depuis la page de sélection
+    MainWizard* mainWizard = qobject_cast<MainWizard*>(wizard());
+    if (mainWizard) {
+        Page_020_NameAndLocation* selectPage = qobject_cast<Page_020_NameAndLocation*>(
+            mainWizard->page(MainWizard::PAGE_020_NAMEANDLOCATION));
+        if (selectPage) {
+            QString name = selectPage->getName();
+            dynamic_cast<InstallProcessCreate*>(m_createProcess)->setProjectName(name);
+
+            QString path = selectPage->getPath();
+            dynamic_cast<InstallProcessCreate*>(m_createProcess)->setProjectPath(path);
+        }
+    }
+
+
+
     // todo : Start the creation
     startCreation();
 }
@@ -40,7 +60,7 @@ void Page_022_Creation::initializePage()
 void Page_022_Creation::startCreation()
 {
     // Démarrer le processus de création
-    m_createProcess->startInstallation();
+    m_createProcess->install();
 }
 
 void Page_022_Creation::log(const QString &message)

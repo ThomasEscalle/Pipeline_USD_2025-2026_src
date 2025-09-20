@@ -17,6 +17,9 @@ public:
 
     int nextId() const override;
 
+    QString getName();
+    QString getPath();
+
 private slots:
     void on_btn_select_clicked();
 

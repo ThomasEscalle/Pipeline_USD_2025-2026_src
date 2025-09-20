@@ -1,0 +1,116 @@
+{
+    "shotRanges": {
+        "sq_010": {
+            "master": [
+                1001,
+                1100
+            ],
+            "sh_010": [
+                1001,
+                1016
+            ],
+            "sh_020": [
+                1001,
+                1005
+            ],
+            "sh_030": [
+                1001,
+                1005
+            ],
+            "Master": [
+                1001,
+                1100
+            ]
+        }
+    },
+    "shots": {
+        "sq_010": {
+            "master": {
+                "connectedEntities": [
+                    {
+                        "type": "asset",
+                        "asset_path": "Props\\table"
+                    }
+                ]
+            },
+            "Master": {
+                "metadata": {},
+                "connectedEntities": [
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Nathan"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Mathilde"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Mathieu"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Items\\Poubelle"
+                    }
+                ]
+            },
+            "_sequence": {
+                "connectedEntities": [
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Nathan"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Mathilde"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Matheo"
+                    }
+                ]
+            },
+            "sh_020": {
+                "metadata": {
+                    "preroll": {
+                        "value": "50",
+                        "show": true
+                    },
+                    "postroll": {
+                        "value": "50",
+                        "show": true
+                    }
+                }
+            },
+            "sh_010": {
+                "metadata": {
+                    "postroll": {
+                        "value": "5",
+                        "show": true
+                    }
+                },
+                "connectedEntities": [
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Matheo"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Mathieu"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Mathilde"
+                    },
+                    {
+                        "type": "asset",
+                        "asset_path": "Chars\\Nathan"
+                    }
+                ]
+            },
+            "sh_030": {
+                "metadata": {}
+            }
+        }
+    }
+}

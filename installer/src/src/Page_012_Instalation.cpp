@@ -40,12 +40,7 @@ void Page_012_Instalation::initializePage()
             mainWizard->page(MainWizard::PAGE_010_SELECTCOMPONENTS));
         if (selectPage) {
             QStringList selectedComponents = selectPage->getSelectedComponents();
-            
-            // Configurer le processus d'installation avec les composants sélectionnés
-            InstallProcessTools* installProcessTools = qobject_cast<InstallProcessTools*>(m_installProcess);
-            if (installProcessTools) {
-                installProcessTools->setSelectedComponents(selectedComponents);
-            }
+            m_installProcess->setSelectedComponents(selectedComponents);
         }
     }
     
@@ -56,7 +51,7 @@ void Page_012_Instalation::initializePage()
 void Page_012_Instalation::startInstallation()
 {
     // Démarrer le processus d'installation
-    m_installProcess->startInstallation();
+    m_installProcess->install();
 }
 
 void Page_012_Instalation::log(const QString &message)
