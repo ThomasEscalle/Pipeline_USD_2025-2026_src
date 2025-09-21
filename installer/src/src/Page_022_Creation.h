@@ -34,12 +34,15 @@ public:
     // Setter pour mettre la page en temps que complete
     void setComplete(const bool& isComplete) {m_isComplete = isComplete; emit completeChanged();}
 
+    QString createdPath() const;
+
 private slots:
     void onLogMessage(const QString &message);
     void onCreationFinished();
 
 private:
     bool m_isComplete = false;
+    QString m_createdPath;
     Ui::Page_022_Creation* ui;
     InstallProcess *m_createProcess;
 };

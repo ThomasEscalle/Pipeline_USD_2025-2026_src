@@ -19,6 +19,7 @@ public:
 
 private slots:
     void on_btn_whatsnext_clicked();
+    void on_btn_explorer_clicked();
 
 private:
     Ui::Page_023_Conclusion *ui;

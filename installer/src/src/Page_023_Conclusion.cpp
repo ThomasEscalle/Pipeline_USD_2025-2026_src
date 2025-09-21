@@ -3,6 +3,8 @@
 
 #include "MainWizard.h"
 
+#include "Page_022_Creation.h"
+
 #include <QDesktopServices>
 #include <QUrl>
 
@@ -18,6 +20,7 @@ Page_023_Conclusion::Page_023_Conclusion()
     setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/ICON_64.png"));
 
     setFinalPage(true);
+
 
 }
 
@@ -37,5 +40,20 @@ void Page_023_Conclusion::on_btn_whatsnext_clicked()
     /// https://thomasescalle.github.io/Pipeline_USD_2025/demarage/
 
     QDesktopServices::openUrl(QUrl("https://thomasescalle.github.io/Pipeline_USD_2025/demarage/"));
+}
+
+
+void Page_023_Conclusion::on_btn_explorer_clicked()
+{
+    // Récupérer les composants sélectionnés depuis la page de sélection
+    MainWizard* mainWizard = qobject_cast<MainWizard*>(wizard());
+    if (mainWizard) {
+        Page_022_Creation* selectPage = qobject_cast<Page_022_Creation*>(
+            mainWizard->page(MainWizard::PAGE_022_CREATION));
+        if (selectPage) {
+            QDesktopServices::openUrl(QUrl(selectPage->createdPath()));
+        }
+    }
+
 }
 

@@ -17,6 +17,10 @@ int main(int argc, char *argv[])
     qDebug()<< "Zbrush path : " << SoftwareHelpers::getZbrushPath();
     qDebug()<< "Substance Painter path : " << SoftwareHelpers::getSubstancePainterPath();
 
+
+    qDebug()<< "Prism path : " << SoftwareHelpers::getPrismPath();
+    return 0;
+
     QApplication a(argc, argv);
     MainWizard w;
     w.show();

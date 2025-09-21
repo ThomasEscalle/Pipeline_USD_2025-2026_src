@@ -6,6 +6,7 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
+#include <QDebug>
 #include <QDir>
 #include <QStandardPaths>
 
@@ -357,3 +358,46 @@ QString SoftwareHelpers::getSubstancePainterPath()
 #endif
 }
 
+
+
+QString SoftwareHelpers::getPrismPath()
+{
+    /// Search for a folder named "Prism".
+    /// THis sofware is not in the registry.
+    /// So we want to scan the "Program Files" folders and "Program Files (x86)" folders.
+    /// Than, we scan the root of each Disk (C:/, D:/, E:/, etc...) to find a folder named "Prism"
+    /// If we find it, we return the path.
+
+    QDir dir;
+    QStringList foldersToScan;
+
+    // Add the standard program files folders
+    foldersToScan << QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation).replace("\\", "/");
+    foldersToScan << QStandardPaths::writableLocation(QStandardPaths::HomeLocation).replace("\\", "/");
+    foldersToScan << QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation).replace("\\", "/").replace(" (x86)", "");
+
+
+
+    /// Add all the disks roots
+    foreach (const QFileInfo &drive, QDir::drives()) {
+        foldersToScan << drive.absolutePath().replace("\\", "/");
+        foldersToScan << drive.absolutePath().replace("\\", "/") + "Program Files";
+        foldersToScan << drive.absolutePath().replace("\\", "/") + "C:/Program Files (x86)";
+    }
+    // Scan the root of each disk
+    foreach (const QFileInfo &drive, QDir::drives()) {
+        QString prismPath = drive.absolutePath() + "/Prism";
+        if (QDir(prismPath).exists()) {
+            QString path = prismPath.replace("\\", "/");
+            path = path.replace("//", "/");
+
+
+            /// Check if there is a "Python311/Prism.exe" file in this folder
+            if (QFile::exists(path + "/Python311/Prism.exe")) {
+                return path;
+            }
+        }
+    }
+
+    return "";
+}

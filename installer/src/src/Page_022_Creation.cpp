@@ -4,7 +4,7 @@
 
 #include "Page_020_NameAndLocation.h"
 
-
+#include "FileHelper.h"
 #include <QApplication>
 #include "MainWizard.h"
 
@@ -48,6 +48,8 @@ void Page_022_Creation::initializePage()
 
             QString path = selectPage->getPath();
             dynamic_cast<InstallProcessCreate*>(m_createProcess)->setProjectPath(path);
+
+            m_createdPath =FileHelper::JoinPath(path , name);
         }
     }
 
@@ -55,12 +57,15 @@ void Page_022_Creation::initializePage()
 
     // todo : Start the creation
     startCreation();
+
+
 }
 
 void Page_022_Creation::startCreation()
 {
     // Démarrer le processus de création
     m_createProcess->install();
+
 }
 
 void Page_022_Creation::log(const QString &message)
@@ -81,4 +86,9 @@ void Page_022_Creation::onLogMessage(const QString &message)
 void Page_022_Creation::onCreationFinished()
 {
     setComplete(true);
+}
+
+QString Page_022_Creation::createdPath() const
+{
+    return m_createdPath;
 }
