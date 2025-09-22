@@ -341,7 +341,7 @@ class Prism_ZBrush_Functions(object):
     def exportThumbnail(self, origin, filepath):
         #modify the filepath to remove the current ext and make it ends with preview.jpg
         #Create a thumbnail if it's not already done by save extended
-        if hasattr(self.core, "savec"):
+        if hasattr(self.core, "savec") and not self.core.savec is None:
             preview = self.core.savec.previewDefined
         else:
             preview = False
@@ -356,10 +356,11 @@ class Prism_ZBrush_Functions(object):
             # Load PNG
             image = QImage(thumbnailPath)
 
-            if os.path.exists(thumbnailPath):
-                # Save as JPG, with quality (0–100)
-                image.save(newThumbnailPath, "JPG", 100)
-                os.remove(thumbnailPath)
+            while not os.path.exists(thumbnailPath):
+                time.sleep(0.5)
+            # Save as JPG, with quality (0–100)
+            image.save(newThumbnailPath, "JPG", 100)
+            os.remove(thumbnailPath)
 
     def Tools(self):
         if hasattr(self, "tools_window") and self.tools_window is not None:
@@ -607,25 +608,32 @@ class ExportWindowUI(QDialog):
         self.core = core
         self.setWindowTitle("Prism - Export")
 
+
         layout = QVBoxLayout(self)
+
 
         # --- Productname + Comment in a form layout ---
         form_layout = QFormLayout()
         self.prodname_edit = QLineEdit("geo")
         form_layout.addRow("Productname:", self.prodname_edit)
 
+
         self.comment_edit = QLineEdit()
         form_layout.addRow("Comment (optional):", self.comment_edit)
 
+
         layout.addLayout(form_layout)
+
 
         # Separator line
         layout.addWidget(self._separator())
+
 
         # --- Export Geometry section ---
         self.export_geo_cb = QCheckBox("Export Geometry")
         self.export_geo_cb.setChecked(True)
         layout.addWidget(self.export_geo_cb)
+
 
         # Format
         format_layout = QHBoxLayout()
@@ -635,11 +643,13 @@ class ExportWindowUI(QDialog):
         format_layout.addWidget(self.format_combo)
         layout.addLayout(format_layout)
 
+
         # Version Up
         version_layout = QHBoxLayout()
         self.version_up_cb = QCheckBox("Version Up")
         self.version_up_cb.setChecked(True)
         version_layout.addWidget(self.version_up_cb)
+
 
         self.version_combo = QComboBox()
         #read the json file of the current scene to get the next available version
@@ -648,8 +658,10 @@ class ExportWindowUI(QDialog):
         with open(jsonPath, "r") as f:
             entity = json.load(f)
 
-        self.nextVersion = self.core.products.getNextAvailableVersion(entity, "Modeling") #always Modeling because it's for sculpt
-        version = int(self.nextVersion[1:]) -1 # remove the "v" prefix and convert to int
+
+        nextVersion = self.core.products.getNextAvailableVersion(entity, "Modeling") #always Modeling because it's for sculpt
+        version = int(nextVersion[1:]) -1 # remove the "v" prefix and convert to int
+
 
         items = []
         for i in range(version):
@@ -658,7 +670,9 @@ class ExportWindowUI(QDialog):
         self.version_combo.setEnabled(False)  # hidden if Version Up checked
         version_layout.addWidget(self.version_combo)
 
+
         layout.addLayout(version_layout)
+
 
         # Location
         location_layout = QHBoxLayout()
@@ -668,33 +682,41 @@ class ExportWindowUI(QDialog):
         location_layout.addWidget(self.location_combo)
         layout.addLayout(location_layout)
 
+
         # Separator line
         layout.addWidget(self._separator())
+
 
         # --- Export Maps section ---
         self.export_maps_cb = QCheckBox("Export Maps")
         layout.addWidget(self.export_maps_cb)
 
+
         self.udim_cb = QCheckBox("Export folders as UDIMs")
         self.udim_cb.setEnabled(False)
         layout.addWidget(self.udim_cb)
 
+
         # Spacer pushes button to bottom
         layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+
 
         # Export button
         self.export_btn = QPushButton("Export")
         layout.addWidget(self.export_btn)
+
 
         # connections
         self.export_geo_cb.toggled.connect(self.toggle_geo_options)
         self.export_maps_cb.toggled.connect(self.toggle_maps_options)
         self.version_up_cb.toggled.connect(self.toggle_version_combo)
 
+
         # init states
         self.toggle_geo_options(self.export_geo_cb.isChecked())
         self.toggle_maps_options(self.export_maps_cb.isChecked())
         self.toggle_version_combo(self.version_up_cb.isChecked())
+
 
     def _separator(self):
         """Return a horizontal line separator"""
@@ -704,23 +726,29 @@ class ExportWindowUI(QDialog):
         line.setLineWidth(1)
         return line
 
+
     def toggle_geo_options(self, checked):
         self.format_combo.setEnabled(checked)
         self.version_up_cb.setEnabled(checked)
         self.version_combo.setEnabled(checked and not self.version_up_cb.isChecked())
         self.location_combo.setEnabled(checked)
 
+
     def toggle_maps_options(self, checked):
         self.udim_cb.setEnabled(checked)
 
+
     def toggle_version_combo(self, checked):
         self.version_combo.setEnabled(not checked and self.export_geo_cb.isChecked())
+
 
 class ExportWindow(ExportWindowUI):
     def __init__(self, core, parent=None):
         super().__init__(core, parent)
         self.core = core
         self.export_btn.clicked.connect(self.export)
+
+
 
 
     @err_catcher(name=__name__)
@@ -732,17 +760,27 @@ class ExportWindow(ExportWindowUI):
             self.core.appPlugin.activate_zbrush()
             return False
 
+
         #export Geometry
         if self.export_geo_cb.isChecked():
             directory = ""
             productname = self.prodname_edit.text()
             comment = self.comment_edit.text()
             location = self.location_combo.currentText()
+           
+            #read the json file of the current scene to get the next available version
+            currentFileName = self.core.appPlugin.getCurrentFileName()
+            jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
+            with open(jsonPath, "r") as f:
+                entity = json.load(f)
+
+
             if self.version_up_cb.isChecked():
-                version =  self.nextVersion
+                version =  self.core.products.getNextAvailableVersion(entity, "Modeling")
             else:
                 version = self.version_combo.currentText()
             ext = self.format_combo.currentText()
+
 
             #read the json file of the current scene
             currentFileName = self.core.appPlugin.getCurrentFileName()
@@ -750,6 +788,7 @@ class ExportWindow(ExportWindowUI):
             with open(jsonPath, "r") as f:
                 entity = json.load(f)
             entity["ProductName"] = productname
+
 
             exportPath = self.core.products.generateProductPath(
                 task="Modeling",
@@ -760,22 +799,29 @@ class ExportWindow(ExportWindowUI):
                 location=location,
             )
 
+
             #Check what's in the export path if not new version and clear the folder
             exportPathInfo = exportPath.replace("\\", "/")
             exportPathInfo = exportPathInfo.split("/")
             exportPathInfo.pop(-1)
             exportPathInfo = '/'.join(exportPathInfo)
 
+
             if not self.version_up_cb.isChecked():
                 files = os.listdir(exportPathInfo)
                 for file in files:
                     os.remove(exportPathInfo + "/" + file)
 
-            
+            if not os.path.exists(exportPath):
+                dir = os.path.dirname(exportPath)
+                if not os.path.exists(dir):
+                    os.makedirs(dir)
+           
             #send command to zbrush
             command = "[FileNameSetNext, \"" + exportPath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Tool:Export]]\n[RoutineCall,command]"
             self.core.appPlugin.send_command_to_zbrush(command)
             self.core.appPlugin.activate_zbrush()
+
 
             #save json info
             productContext = entity
@@ -786,13 +832,16 @@ class ExportWindow(ExportWindowUI):
             productContext["sourceScene"] = self.core.getCurrentFileName()
             self.core.saveVersionInfo(exportPathInfo, productContext)
 
+
             #update master version
             while not os.path.exists(exportPath):
                 time.sleep(1)
             self.core.products.updateMasterVersion(exportPath)
 
+
         #Export Maps
         if self.export_maps_cb.isChecked():
             pass
+
 
         self.accept()
