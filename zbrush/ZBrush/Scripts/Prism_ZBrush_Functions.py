@@ -811,11 +811,6 @@ class ExportWindow(ExportWindowUI):
                 files = os.listdir(exportPathInfo)
                 for file in files:
                     os.remove(exportPathInfo + "/" + file)
-
-            if not os.path.exists(exportPath):
-                dir = os.path.dirname(exportPath)
-                if not os.path.exists(dir):
-                    os.makedirs(dir)
            
             #send command to zbrush
             command = "[FileNameSetNext, \"" + exportPath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Tool:Export]]\n[RoutineCall,command]"
