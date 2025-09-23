@@ -19,6 +19,7 @@ public:
     static QString getSubstancePainterPath();
 
     static QString getPrismPath();
+    static QString getPrismPrefsPath();
 };
 
 

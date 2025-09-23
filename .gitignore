@@ -5,10 +5,13 @@ __pycache__/
 
 # C extensions
 *.so
+*.pyc
 
+*/ExternalModules/*
 */build/*
 
 # Distribution / packaging
+
 .Python
 build/
 develop-eggs/

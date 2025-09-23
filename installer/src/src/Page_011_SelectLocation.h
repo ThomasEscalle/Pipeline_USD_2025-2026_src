@@ -18,6 +18,9 @@ public:
 
     int nextId() const override;
 
+    QString getUsername() const;
+    QString getAbbreviation() const;
+
 private slots:
     void on_btn_selectLocation_clicked();
 

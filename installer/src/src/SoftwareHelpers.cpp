@@ -376,17 +376,34 @@ QString SoftwareHelpers::getPrismPath()
     foldersToScan << QStandardPaths::writableLocation(QStandardPaths::HomeLocation).replace("\\", "/");
     foldersToScan << QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation).replace("\\", "/").replace(" (x86)", "");
 
-
-
     /// Add all the disks roots
     foreach (const QFileInfo &drive, QDir::drives()) {
         foldersToScan << drive.absolutePath().replace("\\", "/");
         foldersToScan << drive.absolutePath().replace("\\", "/") + "Program Files";
         foldersToScan << drive.absolutePath().replace("\\", "/") + "C:/Program Files (x86)";
     }
+
     // Scan the root of each disk
-    foreach (const QFileInfo &drive, QDir::drives()) {
-        QString prismPath = drive.absolutePath() + "/Prism";
+    for (auto it : foldersToScan) {
+        // Check for prism in the folder
+        QString prismPath = it + "/Prism";
+        prismPath.replace("\\", "/");
+        prismPath.replace("//" , "/");
+        if (QDir(prismPath).exists()) {
+            QString path = prismPath.replace("\\", "/");
+            path = path.replace("//", "/");
+
+
+            /// Check if there is a "Python311/Prism.exe" file in this folder
+            if (QFile::exists(path + "/Python311/Prism.exe")) {
+                return path;
+            }
+        }
+        
+        // Check for prism2 in the folder
+        prismPath = it + "/Prism2";
+        prismPath.replace("\\", "/");
+        prismPath.replace("//" , "/");
         if (QDir(prismPath).exists()) {
             QString path = prismPath.replace("\\", "/");
             path = path.replace("//", "/");
@@ -398,6 +415,26 @@ QString SoftwareHelpers::getPrismPath()
             }
         }
     }
+
+    return "";
+}
+
+QString SoftwareHelpers::getPrismPrefsPath()
+{
+    /// Prism prefs path is located in:
+    /// Documents/Prism2/Prism.json
+    /// Documents/Prism/Prism.json
+
+    QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation).replace("\\", "/");
+    QString prismPrefsPath = documentsPath + "/Prism2/Prism.json";
+    if (QFile::exists(prismPrefsPath)) {
+        return prismPrefsPath;
+    }
+    prismPrefsPath = documentsPath + "/Prism/Prism.json";
+    if (QFile::exists(prismPrefsPath)) {
+        return prismPrefsPath;
+    }
+    
 
     return "";
 }

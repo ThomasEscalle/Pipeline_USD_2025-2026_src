@@ -17,6 +17,7 @@ class USDUtils:
     def createUsdModule(self, entity, parent):
         parent.console.log("Creating USD module for: " + entity["asset"])
 
+
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
@@ -39,6 +40,7 @@ class USDUtils:
 
 
     def createUsdItem(self, entity, parent):
+        
         try:
             from pxr import Usd, UsdGeom, Kind, Sdf
         except ImportError as e:
@@ -380,13 +382,21 @@ class USDUtils:
         stage.SetDefaultPrim(xformPrim.GetPrim())
         stage.GetRootLayer().Save()
 
+        # Clear the stage to release file locks before deletion
+        stage = None
 
         result = core.products.ingestProductVersion([temp_modu_path], entity ,"Modu_Publish")
         master_path_modu = core.products.updateMasterVersion(result["createdFiles"][0])
 
         # Delete the temporary modu file
         if os.path.exists(temp_modu_path):
-            os.remove(temp_modu_path)
+            try:
+                os.remove(temp_modu_path)
+            except PermissionError as e:
+                # If we can't delete the file, log a warning but don't fail
+                print(f"Warning: Could not delete temporary file {temp_modu_path}: {e}")
+            except Exception as e:
+                print(f"Warning: Unexpected error deleting temporary file {temp_modu_path}: {e}")
 
         return {"usd_file" : master_path_modu , "product": product_path}
 
@@ -402,6 +412,7 @@ class USDUtils:
         product_path = core.products.createProduct(entity, "ModL_Publish", "global")
 
         temp_geo_path = os.path.join(assetPath, "geo_low.usd")
+        temp_geo_path = temp_geo_path.replace("\\", "/")
 
 
 
@@ -420,13 +431,22 @@ class USDUtils:
         stage.SetDefaultPrim(xformPrim.GetPrim())
         stage.GetRootLayer().Save()
 
+        # Clear the stage to release file locks
+        stage = None
+
 
         result = core.products.ingestProductVersion([temp_geo_path], entity ,"ModL_Publish")
         master_path_low = core.products.updateMasterVersion(result["createdFiles"][0])
 
         # Delete the temporary geo file
         if os.path.exists(temp_geo_path):
-            os.remove(temp_geo_path)
+            try:
+                os.remove(temp_geo_path)
+            except PermissionError as e:
+                # If we can't delete the file, log a warning but don't fail
+                print(f"Warning: Could not delete temporary file {temp_geo_path}: {e}")
+            except Exception as e:
+                print(f"Warning: Unexpected error deleting temporary file {temp_geo_path}: {e}")
 
         return {"usd_file" : master_path_low , "product": product_path}
 
@@ -441,6 +461,7 @@ class USDUtils:
 
         # Create the high-resolution geometry
         temp_geo_path = os.path.join(assetPath, "geo_high.usd")
+        temp_geo_path = temp_geo_path.replace("\\", "/")
 
         # Create a usd stage
         stage = Usd.Stage.CreateNew(temp_geo_path)
@@ -456,13 +477,21 @@ class USDUtils:
         stage.SetDefaultPrim(xformPrim.GetPrim())
         stage.GetRootLayer().Save()
 
+        # Clear the stage to release file locks
+        stage = None
 
         result = core.products.ingestProductVersion([temp_geo_path], entity ,"ModH_Publish")
         master_path_high = core.products.updateMasterVersion(result["createdFiles"][0])
 
         # Delete the temporary geo file
         if os.path.exists(temp_geo_path):
-            os.remove(temp_geo_path)
+            try:
+                os.remove(temp_geo_path)
+            except PermissionError as e:
+                # If we can't delete the file, log a warning but don't fail
+                print(f"Warning: Could not delete temporary file {temp_geo_path}: {e}")
+            except Exception as e:
+                print(f"Warning: Unexpected error deleting temporary file {temp_geo_path}: {e}")
 
         return {"usd_file" : master_path_high , "product": product_path}
 
@@ -530,13 +559,21 @@ class USDUtils:
         stage.SetDefaultPrim(over_root)
         stage.GetRootLayer().Save()
 
+        # Clear the stage to release file locks before deletion
+        stage = None
 
         result = core.products.ingestProductVersion([mtl_temp_path], entity, "Surf_Publish")
         master_path_mtl = core.products.updateMasterVersion(result["createdFiles"][0])
 
         # Delete the temporary mtl.usda file
         if os.path.exists(mtl_temp_path):
-            os.remove(mtl_temp_path)
+            try:
+                os.remove(mtl_temp_path)
+            except PermissionError as e:
+                # If we can't delete the file, log a warning but don't fail
+                print(f"Warning: Could not delete temporary file {mtl_temp_path}: {e}")
+            except Exception as e:
+                print(f"Warning: Unexpected error deleting temporary file {mtl_temp_path}: {e}")
 
         return {"usd_file": master_path_mtl, "product": product_path}
 
@@ -610,7 +647,12 @@ class USDUtils:
         # Delete the payload.usda from the json_file_parent_dir
         payload_usda_path = os.path.join(json_file_parent_dir, "payload.usda")
         if os.path.exists(payload_usda_path):
-            os.remove(payload_usda_path)
+            try:
+                os.remove(payload_usda_path)
+            except PermissionError as e:
+                print(f"Warning: Could not delete payload file {payload_usda_path}: {e}")
+            except Exception as e:
+                print(f"Warning: Unexpected error deleting payload file {payload_usda_path}: {e}")
         # Delete all the subdirectories in the json_file_parent_dir
         for item in os.listdir(json_file_parent_dir):
             item_path = os.path.join(json_file_parent_dir, item)

@@ -61,13 +61,20 @@ void Page_010_SelectComponents::createItems()
     QTreeWidgetItem* saveAsScriptItem = new QTreeWidgetItem(mayaRootItem);
     saveAsScriptItem->setText(0, "Save as script");
     saveAsScriptItem->setCheckState(0, Qt::Checked);
-    m_items["Save as script"] = saveAsScriptItem;
+    m_items["Save as script Maya"] = saveAsScriptItem;
 
     /// Add a "Shelf" item checkable
     QTreeWidgetItem* shelfItem = new QTreeWidgetItem(mayaRootItem);
     shelfItem->setText(0, "Shelf");
     shelfItem->setCheckState(0, Qt::Checked);
-    m_items["Shelf"] = shelfItem;
+    m_items["Shelf Maya"] = shelfItem;
+
+    /// Add a "Maya Asset Browser" item checkable   
+    QTreeWidgetItem* assetBrowserItem = new QTreeWidgetItem(mayaRootItem);
+    assetBrowserItem->setText(0, "Maya Asset Browser");
+    assetBrowserItem->setCheckState(0, Qt::Checked);
+    m_items["Maya Asset Browser"] = assetBrowserItem;
+    
 
 
 
@@ -76,6 +83,20 @@ void Page_010_SelectComponents::createItems()
     houdiniRootItem->setText(0, "Houdini");
     m_items["Houdini"] = houdiniRootItem;
     ui->treeWidget->addTopLevelItem(houdiniRootItem);
+
+    /// Add a "Houdini Asset browser" item checkable
+    QTreeWidgetItem* houdiniAssetBrowserItem = new QTreeWidgetItem(houdiniRootItem);
+    houdiniAssetBrowserItem->setText(0, "Houdini Asset Browser");
+    houdiniAssetBrowserItem->setCheckState(0, Qt::Checked);
+    m_items["Houdini Asset Browser"] = houdiniAssetBrowserItem;
+
+
+    /// Add a "Houdini custom nodes" item checkable
+    QTreeWidgetItem* houdiniCustomNodesItem = new QTreeWidgetItem(houdiniRootItem);
+    houdiniCustomNodesItem->setText(0, "Houdini Custom nodes");
+    houdiniCustomNodesItem->setCheckState(0, Qt::Checked);
+    m_items["Houdini custom nodes"] = houdiniCustomNodesItem;
+
 
 
     /// todo

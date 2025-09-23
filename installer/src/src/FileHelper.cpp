@@ -62,6 +62,18 @@ QString FileHelper::GetResourcesPath()
     if(!exeDir.cd("resources")) {
         exeDir.cdUp();
         exeDir.cd("resources");
+        if(!exeDir.cd("resources")) {
+            exeDir.cdUp();
+            exeDir.cd("resources");
+            if(!exeDir.cd("resources")) {
+                exeDir.cdUp();
+                exeDir.cd("resources");
+                if(!exeDir.cd("resources")) {
+                    exeDir.cdUp();
+                    exeDir.cd("resources");
+                }
+            }
+        }
     }
 
     return exeDir.absolutePath();
@@ -222,4 +234,19 @@ bool FileHelper::ReadFile(const QString &filePath, QString &content)
     content = in.readAll();
     file.close();
     return true;
+}
+
+QString FileHelper::CdUp(const QString &path, int levels)
+{
+    QDir dir(path);
+    for(int i = 0; i < levels; ++i) {
+        dir.cdUp();
+    }
+    return dir.absolutePath();
+}
+
+bool FileHelper::FileExists(const QString &path)
+{
+    QFileInfo checkFile(path);
+    return checkFile.exists() && checkFile.isFile();
 }

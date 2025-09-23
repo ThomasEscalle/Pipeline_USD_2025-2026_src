@@ -1,8 +1,8 @@
-### Command : ./pyside2-uic.exe -o S:/3D/ScriptsMaya/SaveAs/generatedUi.py S:/3D/ScriptsMaya/SaveAs/save_as.ui
-
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+import PrismInit
+from PySide2 import QtCore, QtGui, QtWidgets
 
 import sys
 import os
@@ -14,53 +14,24 @@ import maya.cmds as cmds
 from maya.OpenMayaUI import MQtUtil
 
 
-
+from SaveAs.IconLoader import loadIcon
+from SaveAs.ExecuteDepartment import ExecuteDepartment_ModL, ExecuteDepartment_ModH, ExecuteDepartment_RigL, ExecuteDepartment_RigH, ExecuteDepartment_RLO, ExecuteDepartment_FLO, ExecuteDepartment_Animation
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
     return shiboken2.wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
 
 
-
-
-
-
-
-# A dialog to ask the user for the variation name
-class AskVariation(QtWidgets.QDialog):
-    def __init__(self, parent=None):
-        super(AskVariation, self).__init__(parent)
-        self.setWindowTitle("Enter Variation Name")
-        self.setMinimumWidth(300)
-
-        # Create a vertical layout
-        layout = QtWidgets.QVBoxLayout(self)
-
-        # Create a label
-        label = QtWidgets.QLabel("Select a variation for your publish:")
-        layout.addWidget(label)
-
-        # Create a combo box
-        self.combo_box = QtWidgets.QComboBox(self)
-        self.combo_box.addItems(["var001", "var002", "var003", "var004", "var005", "var006", "var007", "var008", "var009", "var010",
-                                 "var011", "var012", "var013", "var014", "var015", "var016", "var017", "var018", "var019", "var020"])
-        layout.addWidget(self.combo_box)
-        
-        # Add a spacer
-        spacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        layout.addItem(spacer)
-        
-        # Create a button box
-        button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, self)
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
-
-        # Set the layout
-        self.setLayout(layout)
-
-
-
+# Links the department keys to their corresponding execute department class
+ExecuteDepartments_Keys = {
+    "modl" : ExecuteDepartment_ModL(),     # <- Modelisation Low
+    "modh" : ExecuteDepartment_ModH(),     # <- Modelisation High
+    "rigl" : ExecuteDepartment_RigL(),     # <- Rig Low
+    "righ" : ExecuteDepartment_RigH(),     # <- Rig High
+    "rlo"  : ExecuteDepartment_RLO(),      # <- Rough Layout
+    "flo"  : ExecuteDepartment_FLO(),      # <- Final Layout
+    "anim" : ExecuteDepartment_Animation() # <- Animation  
+}
 
 
 
@@ -131,21 +102,25 @@ def publishRLO(state, pcore):
 
 
 
-
-
 class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
-    
+
     def __init__(self, parent=maya_main_window()):
         super(SaveAsWindow, self).__init__(parent)
         self.setWindowTitle("Badger Pipeline")
-        self.setMinimumWidth(100)
+        self.setMinimumWidth(400)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+        
+        self.pcore = PrismInit.pcore
 
         # Setup the User Interface
         self.setupUi()
 
         # Setup the connections
         self.setupConnections()
+
+        # Setup the current department
+        self.setupCurrentDepartment()
 
     # Setup the User Interface
     def setupUi(self):
@@ -154,13 +129,21 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.main_layout)
 
+        # --- Menu Bar ---
+        self.menu_bar = QtWidgets.QMenuBar(self)
+
+        self.setupMenuBar()
+
+        # Ajout du menu bar en haut du layout
+        self.main_layout.setMenuBar(self.menu_bar)
+
         # Row 1: Save, Save As, Save As Comm
         row1 = QtWidgets.QHBoxLayout()
         row1.setSpacing(0)
 
         # Save button
         self.save_btn = QtWidgets.QPushButton("")
-        self.save_btn.setIcon(self.getIcon("save"))
+        self.save_btn.setIcon(loadIcon("save.png"))
         self.save_btn.setIconSize(QtCore.QSize(38, 38))
         self.save_btn.setToolTip("Save")
         self.save_btn.setFlat(True)
@@ -174,7 +157,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         # Save as with comment button
         self.saveascomm_btn = QtWidgets.QPushButton("")
-        self.saveascomm_btn.setIcon(self.getIcon("comment"))
+        self.saveascomm_btn.setIcon(loadIcon("comment.png"))
         self.saveascomm_btn.setIconSize(QtCore.QSize(38, 38))
         self.saveascomm_btn.setToolTip("Save As with a comment")
         self.saveascomm_btn.setFlat(True)
@@ -184,66 +167,57 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             row1.addWidget(btn)
         self.main_layout.addLayout(row1)
 
-
-
         # Row 2: Export Publish , Playblast
         row2 = QtWidgets.QHBoxLayout()
 
         # Export button
         self.export_btn = QtWidgets.QPushButton("Export")
-        self.export_btn.setIcon(self.getIcon("export"))
+        self.export_btn.setIcon(loadIcon("export.png"))
         self.export_btn.setIconSize(QtCore.QSize(32, 32))
         self.export_btn.setToolTip("Export")
         self.export_btn.setMinimumHeight(40)
 
         # Publish button
         self.publish_btn = QtWidgets.QPushButton("Publish")
-        self.publish_btn.setIcon(self.getIcon("publish"))
+        self.publish_btn.setIcon(loadIcon("publish.png"))
         self.publish_btn.setIconSize(QtCore.QSize(32, 32))
         self.publish_btn.setToolTip("Publish")
 
         # Playblast button
         self.playblast_btn = QtWidgets.QPushButton("Playblast")
-        self.playblast_btn.setIcon(self.getIcon("turn"))
+        self.playblast_btn.setIcon(loadIcon("turn.png"))
         self.playblast_btn.setIconSize(QtCore.QSize(32, 32))
         self.playblast_btn.setToolTip("Playblast")
-
 
         for btn in [self.export_btn,self.publish_btn, self.playblast_btn]:
             btn.setMinimumHeight(40)
             row2.addWidget(btn)
         self.main_layout.addLayout(row2)
 
-
-
-
         # Row 3: Playblast
         row3 = QtWidgets.QHBoxLayout()
 
         # Import button
         self.import_btn = QtWidgets.QPushButton("Import")
-        self.import_btn.setIcon(self.getIcon("import"))
+        self.import_btn.setIcon(loadIcon("import.png"))
         self.import_btn.setIconSize(QtCore.QSize(32, 32))
         self.import_btn.setToolTip("Import a file")
         row3.addWidget(self.import_btn)
-
-
 
         # Row 4: Stage, Window
         row4 = QtWidgets.QHBoxLayout()
 
         # Stage button
         self.stage_btn = QtWidgets.QPushButton("")
-        self.stage_btn.setIcon(self.getIcon("settings"))
+        self.stage_btn.setIcon(loadIcon("settings.png"))
         self.stage_btn.setIconSize(QtCore.QSize(32, 32))
         self.stage_btn.setToolTip("Stage")
 
         # Window button
         self.window_btn = QtWidgets.QPushButton("")
-        self.window_btn.setIcon(self.getIcon("window"))
+        self.window_btn.setIcon(loadIcon("window.png"))
         self.window_btn.setIconSize(QtCore.QSize(32, 32))
         self.window_btn.setToolTip("Window")
-
 
         for btn in [self.stage_btn, self.window_btn]:
             btn.setMinimumHeight(40)
@@ -252,6 +226,91 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         row3.addLayout(row4)
         self.main_layout.addLayout(row3)
 
+
+    # Setup the menu bar
+    def setupMenuBar(self):
+        # Add a "Department menu"
+        department_menu = self.menu_bar.addMenu("&Departement")
+
+        # Créer un QActionGroup exclusif
+        self.dept_action_group = QtWidgets.QActionGroup(self)
+        self.dept_action_group.setExclusive(True)
+
+        self.action_modeling_low = department_menu.addAction("Modeling Low")
+        self.action_modeling_low.setCheckable(True)
+        self.action_modeling_low.setToolTip("ModL")
+        self.action_modeling_low.setChecked(True)  # Set default checked
+        self.dept_action_group.addAction(self.action_modeling_low)
+
+        self.action_modeling_high = department_menu.addAction("Modeling High")
+        self.action_modeling_high.setCheckable(True)
+        self.action_modeling_high.setToolTip("ModH")
+        self.dept_action_group.addAction(self.action_modeling_high)
+
+        self.action_rig_low = department_menu.addAction("Rig Low")
+        self.action_rig_low.setCheckable(True)
+        self.action_rig_low.setToolTip("RigL")
+        self.dept_action_group.addAction(self.action_rig_low)
+
+        self.action_rig_high = department_menu.addAction("Rig High")
+        self.action_rig_high.setCheckable(True)
+        self.action_rig_high.setToolTip("RigH")
+        self.dept_action_group.addAction(self.action_rig_high)
+
+        self.action_rlo = department_menu.addAction("RLO")
+        self.action_rlo.setCheckable(True)
+        self.action_rlo.setToolTip("RLO")
+        self.dept_action_group.addAction(self.action_rlo)
+
+        self.action_flo = department_menu.addAction("FLO")
+        self.action_flo.setCheckable(True)
+        self.action_flo.setToolTip("FLO")
+        self.dept_action_group.addAction(self.action_flo)
+
+        self.action_animation = department_menu.addAction("Animation")
+        self.action_animation.setCheckable(True)
+        self.action_animation.setToolTip("Anim")
+        self.dept_action_group.addAction(self.action_animation)
+
+
+        # Add a "Help" menu
+        help_menu = self.menu_bar.addMenu("&Help")
+        help_menu.addAction("Documentation", self.show_documentation)
+
+    # Setup the current department
+    def setupCurrentDepartment(self):
+        # Get the current file path and split it
+        try:
+            filePath = self.pcore.getCurrentFileName()
+
+            filePath = filePath.replace("\\", "/")
+            splitedPath = filePath.split("/")
+
+            # Prepare the name
+            department = splitedPath[-3]
+
+            for action in self.dept_action_group.actions():
+                if action.toolTip() == department:
+                    action.setChecked(True)
+                    print("The department ID is : ", action.text())
+        except:
+            return
+        if not filePath or filePath == "":
+            return
+        
+
+
+    # Get the selected department
+    def getDepartment(self):
+        for action in self.dept_action_group.actions():
+            if action.isChecked():
+                return action.toolTip()
+        return ""
+
+    # Show the documentation
+    def show_documentation(self):
+        print("Opening documentation...")
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://thomasescalle.github.io/Pipeline_USD_2025/"))
 
     # Setup the connections
     def setupConnections(self):
@@ -274,7 +333,6 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
     def showPrismWarningMessage(self):
         msg = QMessageBox(QMessageBox.Warning, "Prism Warning", "Failed to load Prism.")
-        msg.addButton("Details", QMessageBox.YesRole)
         msg.addButton("Close", QMessageBox.RejectRole)
         msg.exec_()
 
@@ -286,22 +344,22 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     # Save As button clicked
     def saveas_btn_clicked(self):
         try:
-            pcore.saveScene()
+            self.pcore.saveScene()
         except:
             self.showPrismWarningMessage()
 
     def saveascomm_btn_clicked(self):
         try:
-            pcore.saveWithComment()
+            self.pcore.saveWithComment()
         except:
             self.showPrismWarningMessage()
 
     # Get the state manager
     def getState(self):
         # Get the state manager
-        sm = pcore.getStateManager()
-        if not pcore.fileInPipeline():
-            pcore.showFileNotInProjectWarning(title="Warning")
+        sm = self.pcore.getStateManager()
+        if not self.pcore.fileInPipeline():
+            self.pcore.showFileNotInProjectWarning(title="Warning")
             return False
 
         for state in sm.states:
@@ -312,7 +370,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             state = sm.createState("Export", stateData={"stateName": "Default Export ({product})"}, parent=parent)
             if not state:
                 msg = "Failed to create export state. Please contact the support."
-                pcore.popup(msg)
+                self.pcore.popup(msg)
                 return
 
             state.ui.initializeContextBasedSettings()
@@ -322,50 +380,22 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     # region PUBLISH
     def publish_btn_clicked(self):
 
-        # Get the state manager
-        state = self.getState()
-
-        if not state:
-            msg = "Failed to create publish state. Please contact the support."
-            pcore.popup(msg)
+        # Get the current department
+        current_department = self.getDepartment()
+        if not current_department:
+            print("No department selected.")
             return
 
-        # Get the current file path and split it
-        filePath = pcore.getCurrentFileName()
-        filePath = filePath.replace("\\", "/")
-        splitedPath = filePath.split("/")
-
-        # Prepare the name
-        department = splitedPath[-3]
-        taskName = splitedPath[-2]
-        variation = ""
-        outputType = ".usd"
-        
-        # If the department is RigL or RigH
-        if department == "RigL" or department == "RigH":
-            print("Rig department detected, asking for variation name.")
-            
-            # Export as a .ma
-            outputType = ".ma" 
-
-        if department.lower() == "rlo":
-            print("RLO department detected, asking for variation name.")
-            publishRLO(state, pcore)
+        # Get the execute department class
+        current_department = current_department.lower()
+        print("Current department is : ", current_department)
+        execute_department = ExecuteDepartments_Keys.get(current_department)
+        if not execute_department:
+            print("No execute department found.")
             return
 
-
-        # The name is : "<department>_Publish"
-        name = department + "_Publish"
-        state.ui.l_taskName.setText(name)
-        state.ui.cb_outType.setCurrentText(outputType)
-        state.ui.typeChanged(state.ui.getOutputType())
-        
-
-        try:
-            pcore.getPlugin("Maya").onShelfClickedExport()
-        except:
-            self.showPrismWarningMessage()
-
+        print("1")
+        execute_department.publish(self.pcore)
 
 
 
@@ -373,96 +403,50 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     # endregion
     # region EXPORT
     def export_btn_clicked(self):
-        sm = pcore.getStateManager()
-        
-        # Get the state manager
-        state = self.getState()
-
-        if not state:
-            msg = "Failed to create publish state. Please contact the support."
-            pcore.popup(msg)
+        # Get the current department
+        current_department = self.getDepartment()
+        if not current_department:
+            print("No department selected.")
             return
 
-        # Get the current file path and split it
-        filePath = pcore.getCurrentFileName()
-        filePath = filePath.replace("\\", "/")
-        splitedPath = filePath.split("/")
+        # Get the execute department class
+        current_department = current_department.lower()
+        print("Current department is : ", current_department)
+        execute_department = ExecuteDepartments_Keys.get(current_department)
 
-        # Prepare the name
-        department = splitedPath[-3]
-        taskName = splitedPath[-2]
-        variation = ""
-        outputType = ".usd"
-        
-        # If the department is RigL or RigH
-        if department == "RigL" or department == "RigH":
-            print("Rig department detected, asking for variation name.")
-            
-            # Export as a .ma
-            outputType = ".ma" 
+        if not execute_department:
+            print("No execute department found.")
+            return
+
+        # Call the export method from the selected execute department
+        execute_department.export(self.pcore)
 
 
-        state.ui.cb_outType.setCurrentText(outputType)
-        state.ui.typeChanged(state.ui.getOutputType())
-        
 
 
-        if not pcore.fileInPipeline():
-            pcore.showFileNotInProjectWarning(title="Warning")
-            return False
-
-        for state in sm.states:
-            if state.ui.className == "Export" and state.ui.e_name.text() == "Default Export ({product})":
-                break
-        else:
-            parent = self.getDftStateParent()
-            state = sm.createState("Export", stateData={"stateName": "Default Export ({product})"}, parent=parent)
-            if not state:
-                msg = "Failed to create export state. Please contact the support."
-                pcore.popup(msg)
-                return
-
-            state.ui.initializeContextBasedSettings()
-
-        # If we are in "Export", the default name is : "<department>_Export_<taskName>"
-        filePath = pcore.getCurrentFileName()
-        # Exemple : E:\3D\PIPELINE\USD_Uptight_2025_v001\00_Template\Uptight\03_Production\01_Assets\Chars\Vinnie\Scenefiles\ModL\v001_UVs\Vinnie_v001_UVs_v0005.ma
-        filePath = filePath.replace("\\", "/")
-        splitedPath = filePath.split("/")
-
-        department = splitedPath[-3]
-        taskName = splitedPath[-2]
-
-        name = department + "_Export_" + taskName
-        state.ui.l_taskName.setText(name)
-
-        try:
-            pcore.getPlugin("Maya").onShelfClickedExport()
-        except:
-            self.showPrismWarningMessage()
 
     def playblast_btn_clicked(self):
         try:
-            pcore.getPlugin("Maya").onShelfClickedPlayblast()
+            self.pcore.getPlugin("Maya").onShelfClickedPlayblast()
         except:
             self.showPrismWarningMessage()
 
     def import_btn_clicked(self):
         try:
-            pcore.getPlugin("Maya").onShelfClickedImport()
+            self.pcore.getPlugin("Maya").onShelfClickedImport()
         except:
             self.showPrismWarningMessage()
 
     def stage_btn_clicked(self):
         try:
-            pcore.stateManager()
+            self.pcore.stateManager()
         except:
             self.showPrismWarningMessage()
 
 
     def window_btn_clicked(self):
         try:
-            pcore.projectBrowser()
+            self.pcore.projectBrowser()
         except:
             self.showPrismWarningMessage()
 
@@ -470,7 +454,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     
     # region UTILS
     def getDftStateParent(self, create=True):
-        sm = pcore.getStateManager()
+        sm = self.pcore.getStateManager()
         if not sm:
             return
 
@@ -503,17 +487,19 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     # endregion
 
 
-
-
-
-if __name__ == "__main__":
+def main():
     try:
         window.close() # pylint: disable=E0601
         window.deleteLater()
     except:
+
         pass
     window = SaveAsWindow()
     window.run()
+
+
+if __name__ == "__main__":
+    main()
 
 
 

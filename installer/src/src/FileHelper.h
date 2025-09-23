@@ -10,7 +10,7 @@ public:
 
     /// Check if a given directory path exist
     static bool DirExists(const QString& path);
-
+    static bool FileExists(const QString& path);
     /// Join two paths
     static QString JoinPath(const QString& path1, const QString& path2);
 
@@ -36,6 +36,7 @@ public:
     /// Get the file name from a given path
     static QString GetFileNameFromPath(const QString& filePath);
 
+    static QString CdUp(const QString& path, int levels=1);
 
     /// Get the list of all the files in a given folder (non recursive)
     static QStringList GetAllFilesInFolder(const QString& folderPath);

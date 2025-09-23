@@ -13,6 +13,37 @@ public:
 
 public:
     bool install() override;
+    bool verify();
+
+
+    bool install_MainPrismPlugin();
+    bool install_SubstancePrismPlugin();
+    bool install_ZBrushPrismPlugin();
+
+
+    bool install_MayaSaveAs();
+    bool install_MayaShelf();
+    bool install_MayaAssetBrowser();
+
+    bool install_HoudiniAssetBrowser();
+    bool install_HoudiniCustomNodes();
+
+
+    QString abreviation() const;
+    void setAbreviation(const QString &newAbreviation);
+
+    QString username() const;
+    void setUsername(const QString &newUsername);
+
+
+public:
+
+    bool copyFolderRecursive(const QString &sourcePath, const QString &destPath);
+    bool copyFile(const QString& sourcePath, const QString& destPath);
+private:
+    QString m_username;
+    QString m_abreviation;
+
 };
 
 #endif // INSTALLPROCESSTOOLS_H

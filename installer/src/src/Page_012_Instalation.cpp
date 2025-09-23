@@ -4,6 +4,7 @@
 #include <QApplication>
 #include "MainWizard.h"
 #include "Page_010_SelectComponents.h"
+#include "Page_011_SelectLocation.h"
 
 Page_012_Instalation::Page_012_Instalation()
     : QWizardPage()
@@ -33,17 +34,33 @@ Page_012_Instalation::~Page_012_Instalation()
 
 void Page_012_Instalation::initializePage()
 {
-    // Récupérer les composants sélectionnés depuis la page de sélection
     MainWizard* mainWizard = qobject_cast<MainWizard*>(wizard());
     if (mainWizard) {
+        // Récupérer les composants sélectionnés depuis la page de sélection
         Page_010_SelectComponents* selectPage = qobject_cast<Page_010_SelectComponents*>(
             mainWizard->page(MainWizard::PAGE_010_SELECTCOMPONENTS));
         if (selectPage) {
             QStringList selectedComponents = selectPage->getSelectedComponents();
             m_installProcess->setSelectedComponents(selectedComponents);
         }
+
+        /// Recupere les username et abreviation de la page "011_Select_location
+        Page_011_SelectLocation* locationPage = qobject_cast<Page_011_SelectLocation*>(
+            mainWizard->page(MainWizard::PAGE_011_SELECTLOCATION));
+        if (locationPage) {
+
+            InstallProcessTools* install_tools = dynamic_cast<InstallProcessTools*>(m_installProcess);
+            QString username = locationPage->getUsername();
+            QString abbreviation = locationPage->getAbbreviation();
+            install_tools->setUsername(username);
+            install_tools->setAbreviation(abbreviation);
+        }
     }
     
+    
+
+
+
     // Démarrer l'installation
     startInstallation();
 }

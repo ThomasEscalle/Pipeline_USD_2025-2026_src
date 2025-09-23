@@ -148,7 +148,8 @@ bool InstallProcessCreate::createProjectStructure(const QString &fullProjectPath
     if(!createFolder(fullProjectPath, "08_Dev")) return false;
     // Create a 09_Communication folder
     if(!createFolder(fullProjectPath, "09_Communication")) return false;
-
+    // Create a 10_Livraison folder
+    if(!createFolder(fullProjectPath, "10_Livraison")) return false;
 
     //////// PIPELINE FOLDERS  ////////
     /// Todo latter

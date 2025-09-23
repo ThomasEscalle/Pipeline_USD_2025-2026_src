@@ -50,10 +50,10 @@ class Prism_Badger_Pipeline_Functions(object):
 
         self.MayaExportUsd = MayaExportUsd(core)
 
+
         # Import the USD packages
         if self.isStandalone():
             self.importUsdPackages()
-
 
         # Register the callbacks
 
@@ -99,6 +99,7 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
 
+
     # region Callbacks
 
 
@@ -111,6 +112,9 @@ class Prism_Badger_Pipeline_Functions(object):
             extModPath = os.path.join(self.pluginDirectory, "ExternalModules", "python3")
             extModPath = extModPath.replace("\\", "/")  # Ensure the path is in the correct format
 
+            print("Importing USD packages from: %s" % extModPath)
+
+
             os.environ["PATH"] += os.pathsep + extModPath + "/USD/bin"
             os.environ["PATH"] += os.pathsep + extModPath + "/USD/lib"
             os.environ["PYTHONPATH"]  = extModPath + "/USD/lib/python"
@@ -118,9 +122,18 @@ class Prism_Badger_Pipeline_Functions(object):
 
             sys.path.append(extModPath)
             sys.path.insert(0, extModPath + "/USD/lib/python")
+            sys.path.insert(0, extModPath + "/USD/lib/python/pxr")
+            
 
         except Exception as e:
             self.console.showMessageBoxError("Error importing USD packages", str(e))
+
+        try:
+            from pxr import Usd, UsdGeom, Sdf, Gf, Kind, UsdShade, UsdSkel, Vt, Tf, Ar
+            print("Successfully imported USD packages")
+        except Exception as e:
+            print("Error importing USD packages", str(e))
+            return
 
 
     # When we click on an entity on the left
@@ -193,6 +206,8 @@ class Prism_Badger_Pipeline_Functions(object):
         # Create the console
         self.console = ConsoleDialog(origin)
         self.console.show()
+
+
 
         # Create the Create Product dialog
         self.createProductDialog = CreateProductDialog(origin, self.core)
@@ -273,6 +288,9 @@ class Prism_Badger_Pipeline_Functions(object):
             self.projectBrowser.setWindowTitle(aniversairesTxt)
         else:
             self.projectBrowser.setWindowTitle("Prism - Badger Pipeline")
+
+
+
 
 
     def fill_links_menu(self, menu):
