@@ -1,3 +1,3 @@
-[FileNameSetNext, "C:/Mathieu/3D4/prsim_test/Test/03_Production/Assets/CHAR/SlySam/SlySam/Export/Modeling/v0009/SlySam_Modeling_v0009.obj"]
-[RoutineDef, command,[IPress, Tool:Export]]
+[RoutineDef, command, [FileNameSetNext, C:/Mathieu/3D4/prsim_test/Test/03_Production/Assets/CHAR/SlySam/SlySam/Scenefiles/mod/sculpt/SlySam_sculpt_v0010preview.png]
+[IPress, "Document:Export"]]
 [RoutineCall,command]

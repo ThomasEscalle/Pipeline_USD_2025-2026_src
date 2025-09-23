@@ -696,6 +696,12 @@ class ExportWindowUI(QDialog):
         self.udim_cb.setEnabled(False)
         layout.addWidget(self.udim_cb)
 
+        # map size
+        map_size_layout = QHBoxLayout()
+        map_size_layout.addWidget(QLabel("Map Size:"))
+        self.map_size_combo = QComboBox()
+        self.map_size_combo.addItems(["512", "1024", "2048", "4096"])
+
 
         # Spacer pushes button to bottom
         layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
@@ -799,6 +805,9 @@ class ExportWindow(ExportWindowUI):
                 location=location,
             )
 
+            #check if the exportpath exists and create it if not
+            if not os.path.exists(os.path.dirname(exportPath)):
+                os.makedirs(os.path.dirname(exportPath))
 
             #Check what's in the export path if not new version and clear the folder
             exportPathInfo = exportPath.replace("\\", "/")
@@ -836,7 +845,11 @@ class ExportWindow(ExportWindowUI):
 
         #Export Maps
         if self.export_maps_cb.isChecked():
-            pass
+            # find if there is any subtool with subdivision levels
+            #TO DO
+
+            #export maps
+            command = "[RoutineDef, command,[IPress, Zplugin:Multi Map Exporter:Create All Maps]]\n[RoutineCall,command]"
 
 
         self.accept()
