@@ -348,19 +348,23 @@ class Prism_ZBrush_Functions(object):
 
         if  not preview:
             thumbnailPath = os.path.splitext(filepath)[0] + "preview.png"
-            command = "[RoutineDef, command, [FileNameSetNext, " + thumbnailPath + "]\n[IPress, \"Document:Export\"]]\n[RoutineCall,command]"
+
+            command = "[RoutineDef, command, [FileNameSetNext, \"" + thumbnailPath + "\"]\n[IPress, \"Document:Export\"]]\n[RoutineCall,command]"
             self.send_command_to_zbrush(command)
             self.activate_zbrush()
-            newThumbnailPath = os.path.splitext(thumbnailPath)[0] + ".jpg"     #if I find a way to convert png to jpg
+
+            newThumbnailPath = os.path.splitext(thumbnailPath)[0] + ".jpg"
+            
+            for t in range(5):
+                if not os.path.exists(thumbnailPath):
+                    time.sleep(0.5)
 
             # Load PNG
             image = QImage(thumbnailPath)
-
-            while not os.path.exists(thumbnailPath):
-                time.sleep(0.5)
             # Save as JPG, with quality (0–100)
             image.save(newThumbnailPath, "JPG", 100)
             os.remove(thumbnailPath)
+            
 
     def Tools(self):
         if hasattr(self, "tools_window") and self.tools_window is not None:
