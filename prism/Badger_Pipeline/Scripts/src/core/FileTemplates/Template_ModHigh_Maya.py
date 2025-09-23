@@ -166,7 +166,10 @@ class FileTemplateModelingHighMaya(FileTemplateBase):
 
 
         # Lance le script
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
         # Add the scene to the current project
         scene = { "path": outputMayaFilePath }

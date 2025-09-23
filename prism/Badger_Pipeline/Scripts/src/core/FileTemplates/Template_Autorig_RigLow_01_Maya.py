@@ -118,7 +118,10 @@ class FileTemplateAutorigRigLow01Maya(FileTemplateBase):
         script.replaceVariable("$$CTRL_PLACEMENTS$$", ctrl_placements)
         script.replaceVariable("$$SUBDIV_LEVEL$$", "rigl")
         
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
         # Add the scene to the current project
         scene = { "path": outputMayaFilePath }

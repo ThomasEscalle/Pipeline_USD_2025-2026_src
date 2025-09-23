@@ -204,7 +204,10 @@ class FileTemplateAnimMaya(FileTemplateBase):
         script.replaceVariable("$$CREATE_BOOKMARKS$$", "True" if create_bookmarks else "False")
 
     
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
 
         # Add the scene to the current project

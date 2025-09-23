@@ -29,6 +29,8 @@ class StandaloneScriptHoudini:
         with open(self.scriptPath, 'w') as new_file:
             new_file.write(content)
 
+        
+
 
     def replaceVariable(self, variable, value):
         # Replace the variable in the script with the value
@@ -46,6 +48,7 @@ class StandaloneScriptHoudini:
         if not os.path.exists(hythonPath):
             raise FileNotFoundError(f"hython.exe not found in {hythonPath}")
 
+        print(f"Running script: {self.scriptPath} with {hythonPath}")
         # Disable the usd plugins loading
         # This is important to be able to load the mayaUsdPlugin
         cenv = os.environ.copy()

@@ -226,7 +226,10 @@ class FileTemplateRLOMaya(FileTemplateBase):
 
         script.replaceVariable("$$SHOTS$$", str(shots_in_sequence))
 
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
 
         # Add the scene to the current project

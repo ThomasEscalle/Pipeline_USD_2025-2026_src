@@ -278,7 +278,36 @@ bool InstallProcessTools::install_MayaAssetBrowser()
 bool InstallProcessTools::install_HoudiniAssetBrowser()
 {
     QString houdini_prefs_path = SoftwareHelpers::getHoudiniPrefsPath();
+    houdini_prefs_path = FileHelper::JoinPath(houdini_prefs_path , "python_panels");
 
+    // If the folder does not exist, we create it
+    if(!FileHelper::DirExists(houdini_prefs_path)) {
+        if(!QDir().mkpath(houdini_prefs_path)) {
+            logError("Failed to create the Houdini python_panels directory: " + houdini_prefs_path);
+            return false;
+        }
+    }
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    templatePath = FileHelper::CdUp(templatePath, 2);
+    templatePath = FileHelper::JoinPath(templatePath, "houdini/asset_browser_window");
+
+    /// Check if the path exists, retur if false
+    if(!FileHelper::DirExists(templatePath)) {
+        logError("The path to the houdini asset browser is not valid : " + templatePath);
+        return false;
+    }
+
+    /// Files to
+    QStringList filesToCopy = {
+        "Bp_AssetBrowser.pypanel",
+        "Bp_Install.pypanel"
+    };
+    for(auto it : filesToCopy) {
+        copyFile(templatePath + "/" + it , houdini_prefs_path + "/" + it );
+    }
+
+    
     return true;
 }
 

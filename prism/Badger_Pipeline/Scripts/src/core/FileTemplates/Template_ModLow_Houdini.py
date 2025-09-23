@@ -75,7 +75,10 @@ class FileTemplateModelingLowHoudini(FileTemplateBase):
         script.replaceVariable("$$TASK_NAME$$", task)
         script.replaceVariable("$$DEPARTMENT_NAME$$", department)
 
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
         # Add the scene to the current project
         scene = { "path": outputHoudiniFilePath }
