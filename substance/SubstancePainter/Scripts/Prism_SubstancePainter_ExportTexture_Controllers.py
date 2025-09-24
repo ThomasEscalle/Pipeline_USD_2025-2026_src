@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class TextureExportController(TextureExportUI):
     def __init__(self, core, parent):
-        super().__init__(parent)
+        super().__init__(parent, core)
         self.core = core
 
         self.edit_preset_btn.clicked.connect(self.on_edit_preset)
@@ -50,12 +50,19 @@ class TextureExportController(TextureExportUI):
             context = json.load(file)
 
         #get the task and comment
-        task = "texturing"
+        if self.usd_variant_check.isEnabled():
+            if not self.new_variant_check.isChecked():
+                variant = self.version_combo.currentText()
+                product = context["task"] + "_" + variant
+            else:
+                variant = ""
+                if self.variantVersion != 1:
+                    variant = "_var" + str(self.variantVersion).zfill(3)
+                product = context["task"] + variant
+        else:
+            product = context["task"]
+
         comment=""
-        try :
-            task = context["task"]
-        except:
-            print("There is no task in the current file data")
         try :
             comment = self.comment_edit.text()
         except:
@@ -65,7 +72,7 @@ class TextureExportController(TextureExportUI):
         extensions = self.get_texture_tree_format_bit()
 
         #get the export path 
-        version = self.core.products.getNextAvailableVersion(context, task)
+        version = self.core.products.getNextAvailableVersion(context, product)
         if not self.use_next_version.isChecked():
             if version == "v0001":
                 pass
@@ -74,7 +81,7 @@ class TextureExportController(TextureExportUI):
                 intVersion += -1
                 version = "v"+str(intVersion).zfill(4)
         exportPathFile = self.core.products.generateProductPath(
-            task=task,
+            task=product,
             entity=context,
             extension=".exr",
             comment=comment,
@@ -109,7 +116,7 @@ class TextureExportController(TextureExportUI):
 
         #customise the data to have match product's data
         productContext = context
-        productContext["product"] = context["task"]
+        productContext["product"] = product
         productContext["version"] = version
         productContext["type"] = "asset"
         productContext["comment"] = comment
@@ -128,8 +135,29 @@ class TextureExportController(TextureExportUI):
         for name in material_names :
             allTextures += exportResult[(name,"")]
 
-        #set config data
+        #before updating the master version, relocate the current master to its original folder
+        masterDataPath = exportPath.replace("\\", "/")
+        masterDataPath = masterDataPath.split("/")
+        masterDataPath.pop(-1)
+        productPath = masterDataPath
+        masterDataPath.append("master")
+        masterPath = masterDataPath
+        masterDataPath.append("versioninfo.json")
+        masterDataPath = '/'.join(masterDataPath)
+        with open(masterDataPath + ".json", 'r') as file:
+            masterData = json.load(file)
+        originalMasterDataVersion = masterData["version"]
+        #move the files
+        for file in os.listdir(exportPath):
+            if originalMasterDataVersion in file:
+                shutil.move(os.path.join(masterPath, file), os.path.join(productPath, originalMasterDataVersion, file))
+        #Update the master version
         self.updateMasterVersion(path=exportPathFile, data=productContext)
+
+        #remove file of the version folder that is currently in master to avoid double files
+        with open(masterDataPath + ".json", 'r') as file:
+            masterData = json.load(file)
+        newMasterVersion = masterData["version"]
 
         self.accept()
 
@@ -331,7 +359,7 @@ class TextureExportController(TextureExportUI):
                     self.core.setConfig("preferredFile", val=newPreferredFile, configPath=masterInfoPath)
         processedFiles = [os.path.basename(infoPath)] + [os.path.basename(b) for b in seqFiles]
         files = os.listdir(os.path.dirname(path))
-        
+
         for file in files:
             filepath = os.path.join(os.path.dirname(path), file)
             fileTargetName = os.path.basename(filepath)

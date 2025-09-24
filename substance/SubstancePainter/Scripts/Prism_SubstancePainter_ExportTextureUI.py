@@ -1,3 +1,6 @@
+import os
+import json 
+
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -31,10 +34,12 @@ ITEM_IS_SELECTABLE = _get_flag("ItemIsSelectable", 0x00000001)
 
 
 class TextureExportUI(QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, core):
         super().__init__(parent)
         self.setWindowTitle("Texture Export")
         self.resize(600, 500)
+
+        self.core = core
 
         main_layout = QVBoxLayout(self)
 
@@ -88,12 +93,74 @@ class TextureExportUI(QDialog):
         # Spacer between tree and Export button
         main_layout.addSpacerItem(QSpacerItem(0, 20, QSizePolicy.Minimum, QSizePolicy.Fixed))
 
+        # --- USD variant options ---
+        self.usd_variant_check = QCheckBox("USD variant texture")
+        version_layout = QHBoxLayout()
+        self.new_variant_check = QCheckBox("Create new variant")
+        self.new_variant_check.setChecked(True)
+        self.version_combo = QComboBox()
+        #find how many variant of texture we have in the project
+        self.getUsdVariants()
+
+        #self.version_combo.addItems(["variant1", "variant2", "variant3"])
+        version_layout.addWidget(self.new_variant_check)
+        version_layout.addWidget(self.version_combo)
+
+        main_layout.addWidget(self.usd_variant_check)
+        main_layout.addLayout(version_layout)
+
+        # connect signals
+        self.usd_variant_check.stateChanged.connect(self.update_usd_variant_state)
+        self.new_variant_check.stateChanged.connect(self.update_usd_variant_state)
+
+        # initialize states
+        self.update_usd_variant_state()
+
         # --- Export button ---
         self.export_btn = QPushButton("Export")
         main_layout.addWidget(self.export_btn)
 
         # Populate tree (stub function)
         self.populate_texture_tree()
+
+    def update_usd_variant_state(self):
+        usd_enabled = self.usd_variant_check.isChecked()
+
+        # Only enable controls if USD is enabled
+        self.new_variant_check.setEnabled(usd_enabled)
+        self.version_combo.setEnabled(usd_enabled and not self.new_variant_check.isChecked())
+
+    def getUsdVariants(self):
+        currentFileName = self.core.appPlugin.getCurrentFileName(self.core)
+        dataPath = currentFileName[:-4] + "versioninfo.json"
+        self.variantVersion = 1
+        if os.path.exists(dataPath):
+            with open(dataPath, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+        products = self.core.products.getProductNamesFromEntity(data)
+        currentProduct = data["task"] if "task" in data else ""
+        #Remove the var### suffix to get the base name
+        for letter in currentProduct[::-1]:
+            if letter.isdigit():
+                currentProduct = currentProduct[:-1]
+            else:
+                break
+        currentProduct = currentProduct[:-3] if currentProduct.endswith("var") else currentProduct
+        for prod in products:
+            prodIntact = prod
+            for letter in prod[::-1]:
+                if letter.isdigit():
+                    prod = prod[:-1]
+                else:
+                    break
+            prod = prod[:-4] if prod.endswith("_var") else prod
+            prodVar = prodIntact[len(prod)+1 :]
+            print("base name :", prod, " var suffix :", prodVar)
+            if prod == currentProduct:
+                self.version_combo.addItem(prodVar)
+                self.variantVersion += 1                
 
     def populate_texture_tree(self):
         texture_data = self.get_texture_maps()

@@ -1,6 +1,8 @@
 import os
 import traceback
 import json
+import shutil
+import time
 
 import shiboken6
 import weakref
@@ -473,7 +475,17 @@ class Prism_SubstancePainter_Functions(object):
 
     @err_catcher(name=__name__)
     def sm_import_importToApp(self, origin, doImport, update, impFileName):
-        result = substance_painter.project.create(mesh_file_path=impFileName)
+        #copy the given file into a temp folder before importing
+        tempFolder = os.path.join(os.path.dirname(__file__), "importTemp")
+        if not os.path.exists(tempFolder):
+            os.makedirs(tempFolder)
+        tempFile = os.path.join(tempFolder, os.path.basename(impFileName))
+        shutil.copy2(impFileName, tempFile)
+        print("importing file :", tempFile)
+        result = substance_painter.project.create(mesh_file_path=tempFile)
+
+        #clean the temp folder
+        shutil.rmtree(tempFolder)
         result = True
         return {"result": result, "doImport": doImport}
 
