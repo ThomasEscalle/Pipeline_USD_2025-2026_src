@@ -5,6 +5,9 @@ import ctypes
 import time
 import json
 import subprocess
+import pathlib
+import platform
+from pathlib import Path
 
 from qtpy.QtCore import *
 from qtpy.QtGui import *
@@ -75,9 +78,10 @@ class Prism_ZBrush_Functions(object):
         pluginDir = os.path.dirname(os.path.abspath(__file__))
         watchdogZBrush = os.path.join(pluginDir, "Helpers/watchdogZBrush.py")
 
-        python_exe = "C:/Program Files/Prism2/Python311/pythonw.exe"
+        python_exe = self.find_prism()
 
         subprocess.Popen([python_exe, watchdogZBrush])
+
 
     @err_catcher(name=__name__)
     def autosaveEnabled(self, origin):
@@ -92,10 +96,10 @@ class Prism_ZBrush_Functions(object):
     @err_catcher(name=__name__)
     def getCurrentFileName(self, origin=None, path=True):
         # get current scene file name
-        path = "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
-        if not os.path.exists(path):
+        tempPath = os.path.dirname(os.path.abspath(__file__)) + os.sep + "ZBrushTmp" + os.sep + "currentFileName.json"
+        if not os.path.exists(tempPath):
             return ""
-        with open(path, "r", encoding="utf-8") as f:
+        with open(tempPath, "r", encoding="utf-8") as f:
             currentFileName = f.read().strip()
         if currentFileName is None:
             return ""
@@ -554,6 +558,40 @@ class Prism_ZBrush_Functions(object):
     def Settings(self):
         print("Opening settings...")
         self.core.prismSettings()
+    
+    def find_prism(self):
+        folders_to_scan = set()
+
+        # Add Program Files and Home directories
+        program_files = os.environ.get("ProgramW6432", "C:/Program Files")
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)")
+        home_dir = str(Path.home())
+        folders_to_scan.add(program_files.replace("\\", "/"))
+        folders_to_scan.add(program_files_x86.replace("\\", "/"))
+        folders_to_scan.add(home_dir.replace("\\", "/"))
+
+        # Add all root drives (C:/, D:/, etc.)
+        if platform.system() == "Windows":
+            from string import ascii_uppercase
+            import ctypes
+            for letter in ascii_uppercase:
+                drive = f"{letter}:/"
+                if os.path.exists(drive):
+                    folders_to_scan.add(drive.replace("\\", "/"))
+                    folders_to_scan.add(os.path.join(drive, "Program Files").replace("\\", "/"))
+                    folders_to_scan.add(os.path.join(drive, "Program Files (x86)").replace("\\", "/"))
+        
+        # Scan each folder
+        for folder in folders_to_scan:
+            for prism_variant in ["Prism", "Prism2"]:
+                prism_path = os.path.join(folder, prism_variant).replace("\\", "/")
+                prism_path = prism_path.replace("//", "/")
+                if os.path.isdir(prism_path):
+                    exe_path = os.path.join(prism_path, "Python311", "pythonw.exe").replace("\\", "/")
+                    if os.path.isfile(exe_path):
+                        return exe_path
+
+        return ""
 
 
     @err_catcher(name=__name__)
@@ -598,7 +636,7 @@ class Prism_ZBrush_Functions(object):
     @err_catcher(name=__name__)
     def saveCurrentFileName(self, filename):
         currentFileName = filename.replace("\\", "/")
-        path = "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
+        path = os.path.dirname(os.path.abspath(__file__)) + os.sep + "ZBrushTmp" + os.sep + "currentFileName.json"
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
         with open(path, "w", encoding="utf-8") as f:

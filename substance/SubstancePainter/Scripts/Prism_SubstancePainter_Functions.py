@@ -53,7 +53,6 @@ class Prism_SubstancePainter_Functions(object):
 
     @err_catcher(name=__name__)
     def startup(self, origin):
-        origin.startAutosaveTimer()
         origin.messageParent = None       
         self.createMenu(origin)
 
@@ -677,6 +676,7 @@ class Prism_SubstancePainter_Functions(object):
         self._event_tokens.clear()
         # --- 6. Clear remaining references ---
         self.currentState = None
+        self.susMainWin = None
         self.plugin = None
 
 

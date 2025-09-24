@@ -9,7 +9,7 @@ class Prism_SubstancePainter_Variables(object):
         self.appShortName = "SubstancePainter"
         self.appType = "3d"
         self.hasQtParent = True
-        self.sceneFormats = [".spp"]
+        self.sceneFormats = [".spp", ".exr", ".png", ".jpg", "tiff"]
         self.appSpecificFormats = self.sceneFormats
         self.outputFormats = [".exr", ".png", ".jpg", "tiff"]
         self.appColor = [255, 255, 255]

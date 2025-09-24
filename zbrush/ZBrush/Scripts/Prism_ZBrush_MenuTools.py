@@ -37,4 +37,3 @@ if __name__ == "__main__":
     main()
 
 
-#"C:/Program Files/Prism2/Python311/python.exe" "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/Prism_ZBrush_MenuTools.py" Tools "C:/Program Files/Prism2"

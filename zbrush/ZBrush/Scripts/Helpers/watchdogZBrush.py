@@ -4,7 +4,8 @@ import os
 
 FindWindowW = ctypes.windll.user32.FindWindowW
 
-file_to_delete = "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/currentFileName.json"
+file_to_delete = os.path.dirname(os.path.abspath(__file__)) + os.sep + "ZBrushTmp" + os.sep + "currentFileName.json"
+file_to_delete = file_to_delete.replace("\\Helpers", "")
 
 def zbrush_running():
     hwnd = FindWindowW(None, "ZBrush")

@@ -73,25 +73,25 @@ class TextureExportController(TextureExportUI):
                 intVersion = int(version[1:])
                 intVersion += -1
                 version = "v"+str(intVersion).zfill(4)
-        exportPath = self.core.products.generateProductPath(
+        exportPathFile = self.core.products.generateProductPath(
             task=task,
             entity=context,
             extension=".exr",
             comment=comment,
             version=version
         )
-        exportPath = exportPath.replace("\\", "/")
+        exportPath = exportPathFile.replace("\\", "/")
         exportPath = exportPath.split("/")
         exportPath.pop(-1)
         exportPath = '/'.join(exportPath)
 
-        # Save states to scene so PB finds them
-        #self.sm.saveStatesToScene()
+        # save the texture in a temp folder before moving them to the exportPath because substance doesn't like network
+        tempPath = os.path.dirname(os.path.abspath(__file__)) + os.sep + "tempTextureExport"
 
         #export the texture
 
         #prepare the export config 
-        exportConfig = self.build_export_config(export_path=exportPath)
+        exportConfig = self.build_export_config(export_path=tempPath)
 
         print("export config : ", exportConfig)
 
@@ -103,13 +103,19 @@ class TextureExportController(TextureExportUI):
 
         print(exportResult)
 
+        #move the texture to the final location
+        for file in os.listdir(tempPath):
+            shutil.move(os.path.join(tempPath, file), os.path.join(exportPath, file))
+
         #customise the data to have match product's data
         productContext = context
         productContext["product"] = context["task"]
         productContext["version"] = version
+        productContext["type"] = "asset"
         productContext["comment"] = comment
         productContext["Identifier"] = self.identifier_edit.text()
         productContext["sourceScene"] = self.core.getCurrentFileName()
+
         
         #save the json file
         self.core.saveVersionInfo(exportPath, productContext)
@@ -121,7 +127,10 @@ class TextureExportController(TextureExportUI):
         allTextures = []
         for name in material_names :
             allTextures += exportResult[(name,"")]
-        self.updateMasterVersion(productContext, allTextures)
+
+        #set config data
+        self.updateMasterVersion(path=exportPathFile, data=productContext)
+
         self.accept()
 
     
@@ -150,7 +159,7 @@ class TextureExportController(TextureExportUI):
 
         return export_info
 
-    def build_export_config(self, export_path="C:/export"):
+    def build_export_config(self, export_path):
 
         export_lists = []
         export_parameters = []
@@ -242,124 +251,104 @@ class TextureExportController(TextureExportUI):
 
         return export_config
 
-    def updateMasterVersion(self, data, paths):
-        if not isinstance(paths, (list, tuple)):
-            paths = [paths]  # ensure it's iterable
+    def updateMasterVersion(self, data, path):
+        ext = path[-4:]
+        forcedLoc = os.getenv("PRISM_PRODUCT_MASTER_LOC")
+        if forcedLoc:
+            location = forcedLoc
+        else:
+            location = self.core.products.getLocationFromFilepath(path)
+        origVersion = data.get("version")
 
-        results = []
+        #data["type"] = self.core.paths.getEntityTypeFromPath(path)
+        masterPath = self.core.products.generateProductPath(
+            entity=data,
+            task=data.get("product"),
+            extension=ext,
+            version="master",
+            location=location,
+        )
+        print("masterPath : ", masterPath)
 
-        for path in paths:
-            forcedLoc = os.getenv("PRISM_PRODUCT_MASTER_LOC")
-            if forcedLoc:
-                location = forcedLoc
+        if masterPath:
+            print("updating master version: %s from %s" % (masterPath, path))
+        else:
+            print("failed to generate masterpath: %s %s" % (data, location))
+            msg = "Failed to generate masterpath. Please contact the support."
+            self.core.popup(msg)
+            return None
+        result = self.core.products.deleteMasterVersion(masterPath, "Failed to update master version...")
+        
+        os.makedirs(os.path.dirname(masterPath), exist_ok=True)
+        masterDrive = os.path.splitdrive(masterPath)[0]
+        drive = os.path.splitdrive(path)[0]
+        seqFiles = self.core.detectFileSequence(path)
+
+        useHL = os.getenv("PRISM_USE_HARDLINK_MASTER", None)
+
+        masterPathPadded = masterPath
+
+        for seqFile in seqFiles:
+            if len(seqFiles) > 1:
+                extData = self.core.paths.splitext(seqFile)
+                base = extData[0]
+                frameStr = "." + base[-self.core.framePadding:]
+                base, ext = self.core.paths.splitext(masterPath)
+                masterPathPadded = base + frameStr + ext
             else:
-                location = self.core.products.getLocationFromFilepath(path)
-
-            origVersion = data.get("version")
-            if not origVersion:
-                msg = "Invalid product version. Make sure the version contains valid files."
-                self.core.popup(msg)
-                continue
-
-            data["type"] = self.core.paths.getEntityTypeFromPath(path)
-            masterPath = self.core.products.generateProductPath(
-                entity=data,
-                task=data.get("product"),
-                extension=data.get("extension", ""),
-                version="master",
-                location=location,
-            )
-            if masterPath:
-                logger.debug("updating master version: %s from %s" % (masterPath, path))
-            else:
-                logger.warning("failed to generate masterpath: %s %s" % (data, location))
-                msg = "Failed to generate masterpath. Please contact the support."
-                self.core.popup(msg)
-                continue
-
-            result = self.core.products.deleteMasterVersion(masterPath, "Failed to update master version...")
-            if not result:
-                continue
-
-            os.makedirs(os.path.dirname(masterPath), exist_ok=True)
-
-            masterDrive = os.path.splitdrive(masterPath)[0]
-            drive = os.path.splitdrive(path)[0]
-
-            seqFiles = self.core.detectFileSequence(path)
-            if not seqFiles:
-                continue
-
-            useHL = os.getenv("PRISM_USE_HARDLINK_MASTER", None)
-            for seqFile in seqFiles:
-                if len(seqFiles) > 1:
-                    extData = self.core.paths.splitext(seqFile)
-                    base = extData[0]
-                    frameStr = "." + base[-self.core.framePadding:]
-                    base, ext = self.core.paths.splitext(masterPath)
-                    masterPathPadded = base + frameStr + ext
-                else:
-                    masterPathPadded = masterPath
-
-                if (
-                    platform.system() == "Windows"
-                    and drive == masterDrive
-                    and useHL
-                    and not masterDrive.startswith("\\")
-                ):
-                    self.core.createSymlink(masterPathPadded, seqFile)
-                else:
-                    shutil.copy2(seqFile, masterPathPadded)
-
-            folderPath = self.core.products.getVersionInfoPathFromProductFilepath(path)
-            infoPath = self.core.getVersioninfoPath(folderPath)
-            folderPath = self.core.products.getVersionInfoPathFromProductFilepath(masterPath)
-            masterInfoPath = self.core.getVersioninfoPath(folderPath)
-
+                masterPathPadded = masterPath
             if (
                 platform.system() == "Windows"
                 and drive == masterDrive
                 and useHL
                 and not masterDrive.startswith("\\")
             ):
-                self.core.createSymlink(masterInfoPath, infoPath)
+                self.core.createSymlink(masterPathPadded, seqFile)
             else:
-                if os.path.exists(infoPath):
-                    shutil.copy2(infoPath, masterInfoPath)
+                shutil.copy2(seqFile, masterPathPadded)
 
-            infoData = self.core.getConfig(configPath=infoPath)
-            if infoData and "preferredFile" in infoData:
-                if infoData["preferredFile"] == os.path.basename(path):
-                    newPreferredFile = os.path.basename(masterPathPadded)
-                    if newPreferredFile != infoData["preferredFile"]:
-                        self.core.setConfig("preferredFile", val=newPreferredFile, configPath=masterInfoPath)
+        folderPath = self.core.products.getVersionInfoPathFromProductFilepath(path)
+        infoPath = self.core.getVersioninfoPath(folderPath)
+        folderPath = self.core.products.getVersionInfoPathFromProductFilepath(masterPath)
+        masterInfoPath = self.core.getVersioninfoPath(folderPath)
 
-            processedFiles = [os.path.basename(infoPath)] + [os.path.basename(b) for b in seqFiles]
-            files = os.listdir(os.path.dirname(path))
-            for file in files:
-                if file in processedFiles:
-                    continue
+        if (
+            platform.system() == "Windows"
+            and drive == masterDrive
+            and useHL
+            and not masterDrive.startswith("\\")
+        ):
+            self.core.createSymlink(masterInfoPath, infoPath)
+        else:
+            if os.path.exists(infoPath):
+                shutil.copy2(infoPath, masterInfoPath)
+        infoData = self.core.getConfig(configPath=infoPath)
 
-                filepath = os.path.join(os.path.dirname(path), file)
-                fileTargetName = os.path.basename(filepath)
-                if data["product"] == "_ShotCam" and not os.path.isdir(filepath) and origVersion in fileTargetName:
-                    fileTargetName = fileTargetName.replace(origVersion, "master")
+        if infoData and "preferredFile" in infoData:
+            if infoData["preferredFile"] == os.path.basename(path):
+                newPreferredFile = os.path.basename(masterPathPadded)
+                if newPreferredFile != infoData["preferredFile"]:
+                    self.core.setConfig("preferredFile", val=newPreferredFile, configPath=masterInfoPath)
+        processedFiles = [os.path.basename(infoPath)] + [os.path.basename(b) for b in seqFiles]
+        files = os.listdir(os.path.dirname(path))
+        
+        for file in files:
+            filepath = os.path.join(os.path.dirname(path), file)
+            fileTargetName = os.path.basename(filepath)
+            if data["product"] == "_ShotCam" and not os.path.isdir(filepath) and origVersion in fileTargetName:
+                fileTargetName = fileTargetName.replace(origVersion, "master")
+            fileTargetPath = os.path.join(os.path.dirname(masterPathPadded), fileTargetName)
+            os.makedirs(os.path.dirname(fileTargetPath), exist_ok=True)
+            fileTargetPath = fileTargetPath.replace("\\", "/")
+            if os.path.isdir(filepath):
+                self.core.copyfolder(filepath, fileTargetPath)
+            else:
+                self.core.copyfile(filepath, fileTargetPath)
 
-                fileTargetPath = os.path.join(os.path.dirname(masterPathPadded), fileTargetName)
-                os.makedirs(os.path.dirname(fileTargetPath), exist_ok=True)
+        self.core.configs.clearCache(path=masterInfoPath)
+        self.core.callback(name="masterVersionUpdated", args=[masterPath])
 
-                fileTargetPath = fileTargetPath.replace("\\", "/")
-                if os.path.isdir(filepath):
-                    self.core.copyfolder(filepath, fileTargetPath)
-                else:
-                    self.core.copyfile(filepath, fileTargetPath)
-
-            self.core.configs.clearCache(path=masterInfoPath)
-            self.core.callback(name="masterVersionUpdated", args=[masterPath])
-
-            results.append(masterPath)
-
-        return results
+        return masterPath
 
 
     def cleanup(self):
