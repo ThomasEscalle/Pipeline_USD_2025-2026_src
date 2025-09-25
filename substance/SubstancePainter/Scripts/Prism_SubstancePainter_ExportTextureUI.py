@@ -157,7 +157,6 @@ class TextureExportUI(QDialog):
                     break
             prod = prod[:-4] if prod.endswith("_var") else prod
             prodVar = prodIntact[len(prod)+1 :]
-            print("base name :", prod, " var suffix :", prodVar)
             if prod == currentProduct:
                 self.version_combo.addItem(prodVar)
                 self.variantVersion += 1                

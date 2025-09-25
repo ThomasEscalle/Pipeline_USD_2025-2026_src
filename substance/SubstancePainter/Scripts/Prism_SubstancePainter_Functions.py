@@ -21,6 +21,7 @@ import substance_painter.export
 import substance_painter.resource
 
 from PrismUtils import PrismWidgets
+from PrismUtils.Products import Products
 
 from Prism_SubstancePainter_ExportTexture_Controllers import TextureExportController
 
@@ -53,10 +54,61 @@ class Prism_SubstancePainter_Functions(object):
         self.core.registerCallback("masterVersionUpdated", self.fix_master_filename)
         self._event_tokens.append("masterVersionUpdated")
 
+        self.patch_updateMasterVersion()
+
     @err_catcher(name=__name__)
     def startup(self, origin):
         origin.messageParent = None       
         self.createMenu(origin)
+    
+    @err_catcher(name=__name__)
+    def patch_updateMasterVersion(self, onlyPre=False):
+        # Only patch once
+        if getattr(Products.updateMasterVersion, "_is_patched", False):
+            print("updateMasterVersion already patched")
+            return
+
+        original = Products.updateMasterVersion
+
+        def wrapped(self, path):
+            productPath = path.replace("\\", "/")
+            productPath = productPath.split("/")
+            productPath.pop(-1)
+            productPath = '/'.join(productPath)
+            constructPath = productPath.split("/")
+            constructPath.pop(-1)
+            constructPath = "/".join(constructPath)
+            masterPath = constructPath + "/master"
+            masterPathData = masterPath + "/versioninfo.json"
+
+            # Move the current master files back into the version folder to avoid losing them
+            if os.path.exists(masterPathData) and len(os.listdir(masterPath))>5:
+                with open(masterPathData, 'r') as file:
+                    context = json.load(file)
+                oldVersion = context.get("version")
+
+                if oldVersion in os.listdir(constructPath):
+                    versionFolder = os.path.join(constructPath, oldVersion)
+                    
+                    if not os.path.exists(versionFolder):
+                        os.makedirs(versionFolder)
+                    
+                    for f in os.listdir(masterPath):
+                        if f != "versioninfo.json":
+                            shutil.move(os.path.join(masterPath, f), os.path.join(versionFolder, f))
+
+            # Call the original method
+            result = original(self, path)
+
+            #remove the file in the version folder that is now in master to avoid double files
+            if os.path.exists(productPath) and len(os.listdir(masterPath))>5:
+                for f in os.listdir(masterPath):
+                    if f != "versioninfo.json" and f in os.listdir(productPath):
+                        os.remove(os.path.join(productPath, f))
+            return result
+
+        wrapped._is_patched = True
+        Products.updateMasterVersion = wrapped
 
     @err_catcher(name=__name__)
     def createMenu(self, origin):
@@ -212,7 +264,7 @@ class Prism_SubstancePainter_Functions(object):
     def export_textures(self):
         print("Exporting textures...")
         # call your existing logic here to export texture
-        if substance_painter.project.is_open():
+        if substance_painter.project.is_open() and self.getCurrentFileName(None) != "":
             self._textureUI = TextureExportController(core=self.core, parent=substance_painter.ui.get_main_window())
             self._textureUI.show()
         else:

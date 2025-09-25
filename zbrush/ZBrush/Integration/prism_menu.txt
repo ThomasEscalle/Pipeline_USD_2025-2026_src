@@ -16,7 +16,8 @@
     [IPress,Zscript:LoadScript]
 	, 0
 	, 0.01
-	,,, 0.01
+	,880
+	,, 0.01
 ]
 
 

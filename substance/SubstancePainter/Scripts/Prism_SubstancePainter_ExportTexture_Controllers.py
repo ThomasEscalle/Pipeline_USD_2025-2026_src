@@ -38,19 +38,18 @@ class TextureExportController(TextureExportUI):
         self.preset_combo.setEnabled(state == Qt.Checked)
     
     def on_export_btn_clicked(self):
-        print("Export button clicked")
-
         #self.state = self.sm.createState("Export", setActive=True)
         #self.core.appPlugin.currentState = getattr(self.state, "state", None)
 
         #get the context
         contextPath = self.core.getCurrentFileName()[:-4] + "versioninfo.json"
         #context = self.core.getScenefileData(fileName=self.core.getCurrentFileName(path=False))
-        with open(contextPath, 'r') as file:
-            context = json.load(file)
+        if os.path.exists(contextPath):
+            with open(contextPath, 'r') as file:
+                context = json.load(file)
 
         #get the task and comment
-        if self.usd_variant_check.isEnabled():
+        if self.usd_variant_check.isChecked():
             if not self.new_variant_check.isChecked():
                 variant = self.version_combo.currentText()
                 product = context["task"] + "_" + variant
@@ -100,15 +99,11 @@ class TextureExportController(TextureExportUI):
         #prepare the export config 
         exportConfig = self.build_export_config(export_path=tempPath)
 
-        print("export config : ", exportConfig)
-
         if not os.path.exists(exportPath) :
             os.makedirs(exportPath)
 
         exportResultState = substance_painter.export.export_project_textures(exportConfig)
         exportResult = substance_painter.export.list_project_textures(exportConfig)
-
-        print(exportResult)
 
         #move the texture to the final location
         for file in os.listdir(tempPath):
@@ -139,25 +134,34 @@ class TextureExportController(TextureExportUI):
         masterDataPath = exportPath.replace("\\", "/")
         masterDataPath = masterDataPath.split("/")
         masterDataPath.pop(-1)
-        productPath = masterDataPath
+        productPath = '/'.join(masterDataPath)
+
         masterDataPath.append("master")
-        masterPath = masterDataPath
+        masterPath = '/'.join(masterDataPath)
+
         masterDataPath.append("versioninfo.json")
         masterDataPath = '/'.join(masterDataPath)
-        with open(masterDataPath + ".json", 'r') as file:
-            masterData = json.load(file)
-        originalMasterDataVersion = masterData["version"]
-        #move the files
-        for file in os.listdir(exportPath):
-            if originalMasterDataVersion in file:
+        if os.path.exists(masterDataPath):
+            with open(masterDataPath, 'r') as file:
+                masterData = json.load(file)
+            originalMasterDataVersion = masterData["version"]
+            #move the files
+            for file in os.listdir(masterPath):
                 shutil.move(os.path.join(masterPath, file), os.path.join(productPath, originalMasterDataVersion, file))
+        
         #Update the master version
         self.updateMasterVersion(path=exportPathFile, data=productContext)
 
         #remove file of the version folder that is currently in master to avoid double files
-        with open(masterDataPath + ".json", 'r') as file:
-            masterData = json.load(file)
-        newMasterVersion = masterData["version"]
+        if os.path.exists(masterDataPath):
+            with open(masterDataPath, 'r') as file:
+                masterData = json.load(file)
+            newMasterVersion = masterData["version"]
+            versionPath = productPath + os.sep + newMasterVersion
+            masterFiles = os.listdir(masterPath)
+            for file in os.listdir(versionPath):
+                if file in masterFiles and file != "versioninfo.json":
+                    os.remove(os.path.join(versionPath, file))
 
         self.accept()
 
@@ -306,8 +310,9 @@ class TextureExportController(TextureExportUI):
             self.core.popup(msg)
             return None
         result = self.core.products.deleteMasterVersion(masterPath, "Failed to update master version...")
-        
-        os.makedirs(os.path.dirname(masterPath), exist_ok=True)
+
+        if not os.path.exists(masterPath):
+            os.makedirs(os.path.dirname(masterPath), exist_ok=True)
         masterDrive = os.path.splitdrive(masterPath)[0]
         drive = os.path.splitdrive(path)[0]
         seqFiles = self.core.detectFileSequence(path)
