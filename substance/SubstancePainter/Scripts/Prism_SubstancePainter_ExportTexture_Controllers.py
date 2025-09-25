@@ -26,11 +26,9 @@ class TextureExportController(TextureExportUI):
         self.preset_check.stateChanged.connect(self.on_preset_toggled)
 
         self.export_btn.clicked.connect(self.on_export_btn_clicked)
+        self.use_next_version.stateChanged.connect(self.createVersion)
+        self.identifier_edit.currentIndexChanged.connect(self.createVersion)
 
-        #create the state
-        #self.sm = self.core.getStateManager()
-
-     
     def on_edit_preset(self):
         pass
 
@@ -49,17 +47,7 @@ class TextureExportController(TextureExportUI):
                 context = json.load(file)
 
         #get the task and comment
-        if self.usd_variant_check.isChecked():
-            if not self.new_variant_check.isChecked():
-                variant = self.version_combo.currentText()
-                product = context["task"] + "_" + variant
-            else:
-                variant = ""
-                if self.variantVersion != 1:
-                    variant = "_var" + str(self.variantVersion).zfill(3)
-                product = context["task"] + variant
-        else:
-            product = context["task"]
+        product = self.identifier_edit.currentText()
 
         comment=""
         try :
@@ -73,12 +61,8 @@ class TextureExportController(TextureExportUI):
         #get the export path 
         version = self.core.products.getNextAvailableVersion(context, product)
         if not self.use_next_version.isChecked():
-            if version == "v0001":
-                pass
-            else:
-                intVersion = int(version[1:])
-                intVersion += -1
-                version = "v"+str(intVersion).zfill(4)
+            version = self.version_comboBox.currentText()
+
         exportPathFile = self.core.products.generateProductPath(
             task=product,
             entity=context,
@@ -115,7 +99,7 @@ class TextureExportController(TextureExportUI):
         productContext["version"] = version
         productContext["type"] = "asset"
         productContext["comment"] = comment
-        productContext["Identifier"] = self.identifier_edit.text()
+        productContext["product"] = self.identifier_edit.currentText()
         productContext["sourceScene"] = self.core.getCurrentFileName()
 
         

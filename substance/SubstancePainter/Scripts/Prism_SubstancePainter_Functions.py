@@ -51,64 +51,11 @@ class Prism_SubstancePainter_Functions(object):
 
         self.susMainWin = substance_painter.ui.get_main_window()
 
-        self.core.registerCallback("masterVersionUpdated", self.fix_master_filename)
-        self._event_tokens.append("masterVersionUpdated")
-
-        self.patch_updateMasterVersion()
 
     @err_catcher(name=__name__)
     def startup(self, origin):
         origin.messageParent = None       
         self.createMenu(origin)
-    
-    @err_catcher(name=__name__)
-    def patch_updateMasterVersion(self, onlyPre=False):
-        # Only patch once
-        if getattr(Products.updateMasterVersion, "_is_patched", False):
-            print("updateMasterVersion already patched")
-            return
-
-        original = Products.updateMasterVersion
-
-        def wrapped(self, path):
-            productPath = path.replace("\\", "/")
-            productPath = productPath.split("/")
-            productPath.pop(-1)
-            productPath = '/'.join(productPath)
-            constructPath = productPath.split("/")
-            constructPath.pop(-1)
-            constructPath = "/".join(constructPath)
-            masterPath = constructPath + "/master"
-            masterPathData = masterPath + "/versioninfo.json"
-
-            # Move the current master files back into the version folder to avoid losing them
-            if os.path.exists(masterPathData) and len(os.listdir(masterPath))>5:
-                with open(masterPathData, 'r') as file:
-                    context = json.load(file)
-                oldVersion = context.get("version")
-
-                if oldVersion in os.listdir(constructPath):
-                    versionFolder = os.path.join(constructPath, oldVersion)
-                    
-                    if not os.path.exists(versionFolder):
-                        os.makedirs(versionFolder)
-                    
-                    for f in os.listdir(masterPath):
-                        if f != "versioninfo.json":
-                            shutil.move(os.path.join(masterPath, f), os.path.join(versionFolder, f))
-
-            # Call the original method
-            result = original(self, path)
-
-            #remove the file in the version folder that is now in master to avoid double files
-            if os.path.exists(productPath) and len(os.listdir(masterPath))>5:
-                for f in os.listdir(masterPath):
-                    if f != "versioninfo.json" and f in os.listdir(productPath):
-                        os.remove(os.path.join(productPath, f))
-            return result
-
-        wrapped._is_patched = True
-        Products.updateMasterVersion = wrapped
 
     @err_catcher(name=__name__)
     def createMenu(self, origin):
@@ -284,8 +231,7 @@ class Prism_SubstancePainter_Functions(object):
 
     @err_catcher(name=__name__)
     def sceneOpen(self, origin):
-        if self.core.shouldAutosaveTimerRun():
-            origin.startAutosaveTimer()
+        pass
 
     @err_catcher(name=__name__)
     def getCurrentFileName(self, origin, path=True):
@@ -527,6 +473,12 @@ class Prism_SubstancePainter_Functions(object):
 
     @err_catcher(name=__name__)
     def sm_import_importToApp(self, origin, doImport, update, impFileName):
+        #set setting before creating a project
+        Settings = substance_painter.project.Settings(
+            import_cameras=False,
+            default_texture_resolution = 4096,
+            auto_unwrap = False
+        )
         #copy the given file into a temp folder before importing
         tempFolder = os.path.join(os.path.dirname(__file__), "importTemp")
         if not os.path.exists(tempFolder):
@@ -534,7 +486,7 @@ class Prism_SubstancePainter_Functions(object):
         tempFile = os.path.join(tempFolder, os.path.basename(impFileName))
         shutil.copy2(impFileName, tempFile)
         print("importing file :", tempFile)
-        result = substance_painter.project.create(mesh_file_path=tempFile)
+        result = substance_painter.project.create(mesh_file_path=tempFile, settings=Settings)
 
         #clean the temp folder
         shutil.rmtree(tempFolder)
@@ -596,47 +548,6 @@ class Prism_SubstancePainter_Functions(object):
     def sm_createRenderPressed(self, origin):
         origin.createPressed("Render")
     
-    def fix_master_filename(self, master_path):
-        folder = os.path.dirname(master_path)
-        files = os.listdir(folder)
-
-        json_file = os.path.join(folder, "versioninfo.json")
-        if not os.path.exists(json_file):
-            print("[FixMasterName] No versioninfo.json found in:", folder)
-            return
-
-        with open(json_file, 'r') as file:
-            context = json.load(file)
-
-        version = context.get("version")
-        if not version:
-            print("[FixMasterName] No version found in versioninfo.json")
-            return
-
-        version_base = folder.replace("\\", "/").split("/")
-        version_base.pop(-1)
-        version_folder = "/".join(version_base) + "/" + version
-
-        if not os.path.exists(version_folder):
-            print("[FixMasterName] Version folder not found:", version_folder)
-            return
-
-        correct_files = os.listdir(version_folder)
-        if not correct_files:
-            print("[FixMasterName] No files in version folder:", version_folder)
-            return
-        if len(correct_files)<5:
-            return
-
-        correct_name = list(set(correct_files) - set(files))
-
-        for f in files:
-            if "master." in f:
-                old_path = os.path.join(folder, f)
-                new_path = os.path.join(folder, correct_name[0])
-                print(f"[FixMasterName] Renaming {old_path} → {new_path}")
-                os.rename(old_path, new_path)
-
     @err_catcher(name=__name__)
     def captureViewportThumbnail(self):
         """Capture the current viewport as a thumbnail image."""

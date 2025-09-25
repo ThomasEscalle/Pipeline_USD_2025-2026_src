@@ -45,16 +45,43 @@ class TextureExportUI(QDialog):
 
         # --- Top form layout ---
         form_layout = QFormLayout()
-        self.identifier_edit = QLineEdit()
-        self.identifier_edit.setText("texture")
+        self.identifier_edit = QComboBox()
+        self.identifier_edit.setEditable(True)
+        self.identifier_edit.setCurrentText("texturing")
+
+        currentFileName = self.core.appPlugin.getCurrentFileName(self.core)
+        dataPath = currentFileName[:-4] + "versioninfo.json"
+        if os.path.exists(dataPath):
+            with open(dataPath, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+        products = self.core.products.getProductNamesFromEntity(data)
+
+        for product in products:
+            #check if the product is texturing related
+            productPath = self.core.products.getProductPathFromEntity(data, product)
+            productPath = productPath.split(os.sep)
+            productPath[-1] = product
+            productPath.append(os.sep + "master" + os.sep + "versioninfo.json")
+            productPath = os.sep.join(productPath)
+            with open(productPath, 'r') as f:
+                productData = json.load(f)
+            if productData["sourceScene"].endswith(".spp"):    
+                self.identifier_edit.addItem(product)
+            else:
+                print("Skipping product ", product, " as it is not a texturing product")
+
         self.comment_edit = QLineEdit()
-        self.use_next_version = QCheckBox()
+        self.use_next_version = QCheckBox("Version Up")
+        self.version_comboBox = QComboBox()
+        self.createVersion()
         self.location_combo = QComboBox()
         self.location_combo.addItems(["Global", "Local"])
 
-        form_layout.addRow("Identifier:", self.identifier_edit)
+        form_layout.addRow("Product Name:", self.identifier_edit)
         form_layout.addRow("Comment:", self.comment_edit)
-        form_layout.addRow("Create new version:", self.use_next_version)
+        form_layout.addRow(self.use_next_version, self.version_comboBox)
         form_layout.addRow("Location:", self.location_combo)
 
         main_layout.addLayout(form_layout)
@@ -93,29 +120,6 @@ class TextureExportUI(QDialog):
         # Spacer between tree and Export button
         main_layout.addSpacerItem(QSpacerItem(0, 20, QSizePolicy.Minimum, QSizePolicy.Fixed))
 
-        # --- USD variant options ---
-        self.usd_variant_check = QCheckBox("USD variant texture")
-        version_layout = QHBoxLayout()
-        self.new_variant_check = QCheckBox("Create new variant")
-        self.new_variant_check.setChecked(True)
-        self.version_combo = QComboBox()
-        #find how many variant of texture we have in the project
-        self.getUsdVariants()
-
-        #self.version_combo.addItems(["variant1", "variant2", "variant3"])
-        version_layout.addWidget(self.new_variant_check)
-        version_layout.addWidget(self.version_combo)
-
-        main_layout.addWidget(self.usd_variant_check)
-        main_layout.addLayout(version_layout)
-
-        # connect signals
-        self.usd_variant_check.stateChanged.connect(self.update_usd_variant_state)
-        self.new_variant_check.stateChanged.connect(self.update_usd_variant_state)
-
-        # initialize states
-        self.update_usd_variant_state()
-
         # --- Export button ---
         self.export_btn = QPushButton("Export")
         main_layout.addWidget(self.export_btn)
@@ -123,43 +127,42 @@ class TextureExportUI(QDialog):
         # Populate tree (stub function)
         self.populate_texture_tree()
 
-    def update_usd_variant_state(self):
-        usd_enabled = self.usd_variant_check.isChecked()
+        #connection
+        self.use_next_version.toggled.connect(self.toggle_version_option)
 
-        # Only enable controls if USD is enabled
-        self.new_variant_check.setEnabled(usd_enabled)
-        self.version_combo.setEnabled(usd_enabled and not self.new_variant_check.isChecked())
-
-    def getUsdVariants(self):
+        #init state
+        self.toggle_version_option(self.use_next_version.isChecked())
+    
+    def toggle_version_option(self, checked):
+        self.version_comboBox.setEnabled(not checked)
+    
+    def createVersion(self):
+        #clear the combo
+        self.version_comboBox.clear()
+        #read the json file of the current scene to get the next available version
         currentFileName = self.core.appPlugin.getCurrentFileName(self.core)
-        dataPath = currentFileName[:-4] + "versioninfo.json"
-        self.variantVersion = 1
-        if os.path.exists(dataPath):
-            with open(dataPath, 'r') as f:
-                data = json.load(f)
-        else:
-            data = {}
-        products = self.core.products.getProductNamesFromEntity(data)
-        currentProduct = data["task"] if "task" in data else ""
-        #Remove the var### suffix to get the base name
-        for letter in currentProduct[::-1]:
-            if letter.isdigit():
-                currentProduct = currentProduct[:-1]
-            else:
-                break
-        currentProduct = currentProduct[:-3] if currentProduct.endswith("var") else currentProduct
+        jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
+        with open(jsonPath, "r") as f:
+            entity = json.load(f)
+
+        products = self.core.products.getProductNamesFromEntity(entity)
+        product = self.identifier_edit.currentText()
+        exists = False
         for prod in products:
-            prodIntact = prod
-            for letter in prod[::-1]:
-                if letter.isdigit():
-                    prod = prod[:-1]
-                else:
-                    break
-            prod = prod[:-4] if prod.endswith("_var") else prod
-            prodVar = prodIntact[len(prod)+1 :]
-            if prod == currentProduct:
-                self.version_combo.addItem(prodVar)
-                self.variantVersion += 1                
+            if prod == product:
+                exists = True
+                break
+        print("product :", product)
+        if exists:
+            nextVersion = self.core.products.getNextAvailableVersion(entity, product)
+            version = int(nextVersion[1:]) -1 # remove the "v" prefix and convert to int
+        else:
+            version = 1
+
+        items = []
+        for i in range(version):
+            items.append("v" + str(i+1).zfill(4))
+        self.version_comboBox.addItems(items)
 
     def populate_texture_tree(self):
         texture_data = self.get_texture_maps()

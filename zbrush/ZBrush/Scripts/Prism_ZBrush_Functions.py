@@ -656,7 +656,19 @@ class ExportWindowUI(QDialog):
 
         # --- Productname + Comment in a form layout ---
         form_layout = QFormLayout()
-        self.prodname_edit = QLineEdit("geo")
+        self.prodname_edit = QComboBox()
+        self.prodname_edit.setEditable(True)
+        self.prodname_edit.setCurrentText("geo")
+        currentFileName = self.core.appPlugin.getCurrentFileName(self.core)
+        dataPath = currentFileName[:-4] + "versioninfo.json"
+        if os.path.exists(dataPath):
+            with open(dataPath, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+        products = self.core.products.getProductNamesFromEntity(data)
+        for product in products:
+            self.prodname_edit.addItem(product)
         form_layout.addRow("Productname:", self.prodname_edit)
 
 
@@ -694,21 +706,7 @@ class ExportWindowUI(QDialog):
 
 
         self.version_combo = QComboBox()
-        #read the json file of the current scene to get the next available version
-        currentFileName = self.core.appPlugin.getCurrentFileName()
-        jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
-        with open(jsonPath, "r") as f:
-            entity = json.load(f)
-
-
-        nextVersion = self.core.products.getNextAvailableVersion(entity, "Modeling") #always Modeling because it's for sculpt
-        version = int(nextVersion[1:]) -1 # remove the "v" prefix and convert to int
-
-
-        items = []
-        for i in range(version):
-            items.append("v" + str(i+1).zfill(4))
-        self.version_combo.addItems(items)
+        self.create_version_list()
         self.version_combo.setEnabled(False)  # hidden if Version Up checked
         version_layout.addWidget(self.version_combo)
 
@@ -774,6 +772,24 @@ class ExportWindowUI(QDialog):
         line.setLineWidth(1)
         return line
 
+    def create_version_list(self):
+        #clear the combo
+        self.version_combo.clear()
+        #read the json file of the current scene to get the next available version
+        currentFileName = self.core.appPlugin.getCurrentFileName()
+        jsonPath = os.path.splitext(currentFileName)[0] + "versioninfo.json"
+        with open(jsonPath, "r") as f:
+            entity = json.load(f)
+
+
+        nextVersion = self.core.products.getNextAvailableVersion(entity, self.prodname_edit.currentText()) #always Modeling because it's for sculpt
+        version = int(nextVersion[1:]) -1 # remove the "v" prefix and convert to int
+
+
+        items = []
+        for i in range(version):
+            items.append("v" + str(i+1).zfill(4))
+        self.version_combo.addItems(items)
 
     def toggle_geo_options(self, checked):
         self.format_combo.setEnabled(checked)
@@ -795,9 +811,8 @@ class ExportWindow(ExportWindowUI):
         super().__init__(core, parent)
         self.core = core
         self.export_btn.clicked.connect(self.export)
-
-
-
+        self.version_up_cb.stateChanged.connect(self.create_version_list)
+        self.prodname_edit.currentIndexChanged.connect(self.create_version_list)
 
     @err_catcher(name=__name__)
     def export(self):
@@ -812,9 +827,12 @@ class ExportWindow(ExportWindowUI):
         #export Geometry
         if self.export_geo_cb.isChecked():
             directory = ""
-            productname = self.prodname_edit.text()
+            productname = self.prodname_edit.currentText()
             comment = self.comment_edit.text()
             location = self.location_combo.currentText()
+            task = self.prodname_edit.currentText()
+            if productname == "":
+                task = "Modeling"
            
             #read the json file of the current scene to get the next available version
             currentFileName = self.core.appPlugin.getCurrentFileName()
@@ -824,7 +842,7 @@ class ExportWindow(ExportWindowUI):
 
 
             if self.version_up_cb.isChecked():
-                version =  self.core.products.getNextAvailableVersion(entity, "Modeling")
+                version =  self.core.products.getNextAvailableVersion(entity, task)
             else:
                 version = self.version_combo.currentText()
             ext = self.format_combo.currentText()
@@ -839,7 +857,7 @@ class ExportWindow(ExportWindowUI):
 
 
             exportPath = self.core.products.generateProductPath(
-                task="Modeling",
+                task=task,
                 entity=entity,
                 extension=ext,
                 comment=comment,
@@ -871,7 +889,7 @@ class ExportWindow(ExportWindowUI):
 
             #save json info
             productContext = entity
-            productContext["product"] = "Modeling"
+            productContext["product"] = task
             productContext["version"] = version
             productContext["comment"] = comment
             productContext["ProductName"] = productname
