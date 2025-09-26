@@ -104,7 +104,7 @@ class TextureExportUI(QDialog):
         child_layout.addWidget(self.edit_preset_btn)
 
         self.res_combo = QComboBox()
-        self.res_combo.addItems(["256x256", "512x512", "1024x1024", "2048x2048", "4096x4096"])
+        self.res_combo.addItems(["256x256", "512x512", "1024x1024", "2048x2048", "4096x4096", "8192x8192"])
 
         tex_opts_layout = QFormLayout()
         tex_opts_layout.addRow(self.preset_check, child_layout)
@@ -152,7 +152,6 @@ class TextureExportUI(QDialog):
             if prod == product:
                 exists = True
                 break
-        print("product :", product)
         if exists:
             nextVersion = self.core.products.getNextAvailableVersion(entity, product)
             version = int(nextVersion[1:]) -1 # remove the "v" prefix and convert to int

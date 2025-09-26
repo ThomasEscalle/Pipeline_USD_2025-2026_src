@@ -476,8 +476,7 @@ class Prism_SubstancePainter_Functions(object):
         #set setting before creating a project
         Settings = substance_painter.project.Settings(
             import_cameras=False,
-            default_texture_resolution = 4096,
-            auto_unwrap = False
+            default_texture_resolution = 4096
         )
         #copy the given file into a temp folder before importing
         tempFolder = os.path.join(os.path.dirname(__file__), "importTemp")

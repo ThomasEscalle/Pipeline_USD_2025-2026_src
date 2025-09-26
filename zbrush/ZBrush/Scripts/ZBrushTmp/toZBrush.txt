@@ -1,3 +1,3 @@
-[FileNameSetNext, "//gandalf/3d3/Z_theatre/Top Hit tetst/03_Production/Assets/CHAR/Dakota/Scenefiles/mod/Sculpt/Dakota_Sculpt_v0010.ZPR"]
-[RoutineDef, command,[IPress, File:Open]]
+[FileNameSetNext, "//gandalf/3d3/Z_theatre/Top Hit tetst/03_Production/Assets/CHAR/Ruby/Export/geo/v0001/Ruby_geo_v0001.abc"]
+[RoutineDef, command,[IPress, Tool:Export]]
 [RoutineCall,command]

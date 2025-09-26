@@ -102,4 +102,13 @@ class Prism_PatchUpdateMaster_Functions(object):
                 old_path = os.path.join(folder, f)
                 new_path = os.path.join(folder, correct_name[0])
                 print(f"[FixMasterName] Renaming {old_path} → {new_path}")
-                os.rename(old_path, new_path)
+                try:
+                    os.rename(old_path, new_path)
+                except:
+                    print("[FixMasterName] There was a .tex still in the version folder")
+                    missingTex = os.listdir(version_folder)
+                    for tex in missingTex:
+                        if "versioninfo.json" not in tex:
+                            shutil.move(version_folder+os.sep+tex, folder+os.sep+tex)
+                            print(f"[FixMasterName] moving {version_folder+os.sep+tex} to {folder+os.sep+tex}")
+

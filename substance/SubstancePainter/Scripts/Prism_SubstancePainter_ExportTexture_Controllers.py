@@ -81,13 +81,14 @@ class TextureExportController(TextureExportUI):
         #export the texture
 
         #prepare the export config 
-        exportConfig = self.build_export_config(export_path=tempPath)
+        exportConfig = self.build_export_config(export_path=tempPath, product=product, asset=context["asset"])
 
         if not os.path.exists(exportPath) :
             os.makedirs(exportPath)
 
         exportResultState = substance_painter.export.export_project_textures(exportConfig)
         exportResult = substance_painter.export.list_project_textures(exportConfig)
+        print("export result :", exportResult)
 
         #move the texture to the final location
         for file in os.listdir(tempPath):
@@ -175,7 +176,7 @@ class TextureExportController(TextureExportUI):
 
         return export_info
 
-    def build_export_config(self, export_path):
+    def build_export_config(self, export_path, product, asset):
 
         export_lists = []
         export_parameters = []
@@ -210,6 +211,7 @@ class TextureExportController(TextureExportUI):
                 res = res.replace("1024", "10")
                 res = res.replace("2048", "11")
                 res = res.replace("4096", "12")
+                res = res.replace("8192", "13")
                 res = res.split("x")
                 res = list(map(int,res))
 
@@ -218,7 +220,7 @@ class TextureExportController(TextureExportUI):
                 # Each map has its own rootPath and parameters
                 export_parameters.append(
                     {
-                        "fileName" : f"{self.core.getCurrentFileName(path=False)[:-6]}_{material_name}_{map_name}(_$colorSpace)(.$udim)",
+                        "fileName" : f"{asset}_{product}_{material_name}_{map_name}(_$colorSpace)(.$udim)",
                         "channels": [
                             {
                             "destChannel": "R",
@@ -248,7 +250,7 @@ class TextureExportController(TextureExportUI):
                         }
                     }
                 )
-                outputMaps.append(f"{self.core.getCurrentFileName(path=False)[:-6]}_{material_name}_{map_name}(_$colorSpace)(.$udim)")
+                outputMaps.append(f"{asset}_{product}_{material_name}_{map_name}(_$colorSpace)(.$udim)")
 
             export_list["filter"] = {"outputMaps": outputMaps}
             export_lists.append(export_list)
