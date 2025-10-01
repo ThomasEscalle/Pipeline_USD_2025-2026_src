@@ -48,6 +48,8 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+RC_ICONS = rc/appico.ico
+
 FORMS += \
     ui/Page_022_Creation.ui \
     ui/Page_023_Conclusion.ui \

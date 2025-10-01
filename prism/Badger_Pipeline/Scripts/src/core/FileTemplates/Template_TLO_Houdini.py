@@ -134,7 +134,10 @@ class FileTemplateTLOHoudini(FileTemplateBase):
 
         script.replaceVariable("$$LIGHT_PATH$$", products_light_str if importReference_light else "")
 
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
 
 

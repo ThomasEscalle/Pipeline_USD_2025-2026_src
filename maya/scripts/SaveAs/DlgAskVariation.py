@@ -1,15 +1,15 @@
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import sys
 import os
 
 import maya.OpenMayaUI as omui
-import shiboken2
+
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import maya.cmds as cmds
 from maya.OpenMayaUI import MQtUtil

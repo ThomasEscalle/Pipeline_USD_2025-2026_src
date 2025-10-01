@@ -122,7 +122,10 @@ class FileTemplateMasterLightHoudini(FileTemplateBase):
         script.replaceVariable("$$REFERENCE_PATH$$", referencePathsStr if ImportReference == True else "")
         script.replaceVariable("$$IMPORT_REFERENCE$$", "True" if ImportReference == True else "False")
 
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
 
 

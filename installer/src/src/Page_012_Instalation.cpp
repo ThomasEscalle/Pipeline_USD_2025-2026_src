@@ -20,15 +20,21 @@ Page_012_Instalation::Page_012_Instalation()
 
     // Connecter les signaux de InstallProcess
     connect(m_installProcess, &InstallProcess::logMessage, 
-            this, &Page_012_Instalation::onLogMessage);
+            this, &Page_012_Instalation::onLogMessage, Qt::QueuedConnection);
     connect(m_installProcess, &InstallProcess::installationFinished, 
-            this, &Page_012_Instalation::onInstallationFinished);
+            this, &Page_012_Instalation::onInstallationFinished, Qt::QueuedConnection);
+    connect(m_installProcess, &InstallProcess::installationStarted,
+            this, [this](){ log("Starting installation..."); }, Qt::QueuedConnection);
 
 
 }
 
 Page_012_Instalation::~Page_012_Instalation()
 {
+    if (m_installProcess && m_installProcess->isRunning()) {
+        m_installProcess->quit();
+        m_installProcess->wait();
+    }
     delete ui;
 }
 
@@ -67,8 +73,10 @@ void Page_012_Instalation::initializePage()
 
 void Page_012_Instalation::startInstallation()
 {
-    // Démarrer le processus d'installation
-    m_installProcess->install();
+    // Démarrer le thread d'installation
+    if (!m_installProcess->isRunning()) {
+        m_installProcess->start();
+    }
 }
 
 void Page_012_Instalation::log(const QString &message)

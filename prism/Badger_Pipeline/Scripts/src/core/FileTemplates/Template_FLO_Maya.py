@@ -22,7 +22,7 @@ class FileTemplateFLOMaya(FileTemplateBase):
     def construct(self, parent, path, origin):
 
         # Les elements a importer pour ce template sont :
-        # - Le set dress (.USD)
+        # - Le set dress (.USD) ou le EditSetDress du RLO
         # - Les rigs des assets connectés (char et prop) (.ma ou .mb en high)
         # - Soit la caméra du RLO, soit créer une caméra rig
         # - Le temps que prend la séquence (pour créer la timeline), plus son pré-roll et post-roll 
@@ -202,8 +202,10 @@ class FileTemplateFLOMaya(FileTemplateBase):
 
         script.replaceVariable("$$CREATE_BOOKMARKS$$", "True" if create_bookmarks else "False")
 
-    
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
 
         # Add the scene to the current project

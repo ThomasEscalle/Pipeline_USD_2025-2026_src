@@ -4,6 +4,7 @@
 #include "FileHelper.h"
 #include "QDir"
 #include "QFileInfo"
+#include <QElapsedTimer>
 
 InstallProcessTools::InstallProcessTools(QObject *parent)
 {
@@ -15,12 +16,24 @@ InstallProcessTools::~InstallProcessTools()
 
 bool InstallProcessTools::install()
 {
+    // Démarrer le timer pour mesurer le temps d'installation
+    QElapsedTimer timer;
+    timer.start();
+    
+    // Réinitialiser les listes de résultats
+    m_successfulComponents.clear();
+    m_failedComponents.clear();
+    
+    log("Starting installation process...");
+    processEvents();
 
     /// Verify the installation parameters
     if(!verify())
     {
+        qint64 elapsedMs = timer.elapsed();
         logError("Installation parameters are not valid. Aborting the installation of the pipe.");
         logError("Check the logs for more information.");
+        logError(QString("Installation failed after %1 ms").arg(elapsedMs));
         emit this->installationFinished();
         return false;
     }
@@ -32,46 +45,111 @@ bool InstallProcessTools::install()
     for(auto it : selectedComponents()) {
 
         log("Installing the component : \"" + it + "\"...");
+        bool installResult = false;
 
         if(it == "Main prism plugin") {
             processEvents();
-            install_MainPrismPlugin();
+            installResult = install_MainPrismPlugin();
         }
         else if (it == "Save as script Maya") {
             processEvents();
-            install_MayaSaveAs();
+            installResult = install_MayaSaveAs();
         }
         else if (it == "Shelf Maya") {
             processEvents();
-            install_MayaShelf();
+            installResult = install_MayaShelf();
         }
         else if (it == "Maya Asset Browser") {
             processEvents();
-            install_MayaAssetBrowser();
+            installResult = install_MayaAssetBrowser();
         }
         else if (it == "Houdini Asset Browser") {
             processEvents();
-            install_HoudiniAssetBrowser();
+            installResult = install_HoudiniAssetBrowser();
         }
         else if (it == "Houdini custom nodes") {
             processEvents();
-            install_HoudiniCustomNodes();
+            installResult = install_HoudiniCustomNodes();
         }
         else if (it == "Substance painter plugin") {
             processEvents();
-            install_SubstancePrismPlugin();
+            installResult = install_SubstancePrismPlugin();
         }
         else if (it == "Zbrush prim plugin") {
             processEvents();
-            install_ZBrushPrismPlugin();
+            installResult = install_ZBrushPrismPlugin();
         }
 
-
+        // Enregistrer le résultat de l'installation
+        if(installResult) {
+            m_successfulComponents.append(it);
+            logSuccess("Component \"" + it + "\" installed successfully.");
+        } else {
+            m_failedComponents.append(it);
+            logError("Failed to install component \"" + it + "\".");
+        }
+        processEvents();
     }
 
 
+    if(!install_nameAndUsernamePrism()) {
+        m_failedComponents.append("Prism Name and username");
+        logError("Failed to install component \"Prism Name and username\".");
+    }
+    else {
+        m_successfulComponents.append(("\"Prism Name and username\""));
+    }
+
+
+    // Afficher le résumé des installations
+    log("=== Installation Summary ===");
+
+
+
+    if(!m_successfulComponents.isEmpty()) {
+        logSuccess(QString("Successfully installed (%1 components):").arg(m_successfulComponents.size()));
+        for(const QString& component : m_successfulComponents) {
+            logSuccess("  ✓ " + component);
+        }
+    }
+    
+    if(!m_failedComponents.isEmpty()) {
+        logError(QString("Failed to install (%1 components):").arg(m_failedComponents.size()));
+        for(const QString& component : m_failedComponents) {
+            logError("  ✗ " + component);
+        }
+    }
+    
+    // Calculer et afficher le temps total d'installation
+    qint64 elapsedMs = timer.elapsed();
+    double elapsedSeconds = elapsedMs / 1000.0;
+    
+    bool hasFailures = !m_failedComponents.isEmpty();
+    QString completionMessage;
+    
+    if (elapsedMs < 1000) {
+        completionMessage = QString("Installation completed in %1 ms").arg(elapsedMs);
+    } else if (elapsedSeconds < 60) {
+        completionMessage = QString("Installation completed in %1 seconds").arg(elapsedSeconds, 0, 'f', 2);
+    } else {
+        int minutes = static_cast<int>(elapsedSeconds / 60);
+        double remainingSeconds = elapsedSeconds - (minutes * 60);
+        completionMessage = QString("Installation completed in %1m %2s").arg(minutes).arg(remainingSeconds, 0, 'f', 1);
+    }
+    
+    if(hasFailures) {
+        completionMessage += QString(" (%1 successful, %2 failed)")
+                            .arg(m_successfulComponents.size())
+                            .arg(m_failedComponents.size());
+        logError(completionMessage);
+    } else {
+        completionMessage += QString(" (all %1 components successful)")
+                            .arg(m_successfulComponents.size());
+        logSuccess(completionMessage);
+    }
+
     emit this->installationFinished();
-    return true;
+    return m_failedComponents.isEmpty();
 }
 
 bool InstallProcessTools::verify()
@@ -158,12 +236,26 @@ bool InstallProcessTools::install_MainPrismPlugin()
     QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
     QString pipeline_plugin_source = FileHelper::JoinPath(rootRepoPath, "prism");
 
+    QString badger_pipeline_path = FileHelper::JoinPath(prism_plugins_path, "Badger_Pipeline");
+    if(FileHelper::DirExists(badger_pipeline_path)) {
+        /// We remove the existing Badger_Pipeline folder if it exists and replace it with the new one
+        if(!FileHelper::DeleteDir(badger_pipeline_path)) {
+            logError("Failed to remove the existing Badger_Pipeline directory: " + badger_pipeline_path);
+            return false;
+        }
+
+        log("Removed the existing Badger_Pipeline directory: " + badger_pipeline_path);
+        processEvents();
+    }
+
+
+
+
     /// Check if the pipeline path contains a "Badger_Pipeline" folder
     if(!FileHelper::DirExists(pipeline_plugin_source)) {
         logError("The path to the prism plugin source is not valid : " + pipeline_plugin_source);
         return false;
     }
-
 
     /// Copy the prism plugin to the prism plugins folder recursively
     if(!copyFolderRecursive(pipeline_plugin_source, prism_plugins_path)) {
@@ -278,7 +370,36 @@ bool InstallProcessTools::install_MayaAssetBrowser()
 bool InstallProcessTools::install_HoudiniAssetBrowser()
 {
     QString houdini_prefs_path = SoftwareHelpers::getHoudiniPrefsPath();
+    houdini_prefs_path = FileHelper::JoinPath(houdini_prefs_path , "python_panels");
 
+    // If the folder does not exist, we create it
+    if(!FileHelper::DirExists(houdini_prefs_path)) {
+        if(!QDir().mkpath(houdini_prefs_path)) {
+            logError("Failed to create the Houdini python_panels directory: " + houdini_prefs_path);
+            return false;
+        }
+    }
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    templatePath = FileHelper::CdUp(templatePath, 2);
+    templatePath = FileHelper::JoinPath(templatePath, "houdini/asset_browser_window");
+
+    /// Check if the path exists, retur if false
+    if(!FileHelper::DirExists(templatePath)) {
+        logError("The path to the houdini asset browser is not valid : " + templatePath);
+        return false;
+    }
+
+    /// Files to
+    QStringList filesToCopy = {
+        "Bp_AssetBrowser.pypanel",
+        "Bp_Install.pypanel"
+    };
+    for(auto it : filesToCopy) {
+        copyFile(templatePath + "/" + it , houdini_prefs_path + "/" + it );
+    }
+
+    
     return true;
 }
 
@@ -316,6 +437,30 @@ bool InstallProcessTools::install_HoudiniCustomNodes()
     }
     // serveur
     else {
+    }
+
+    return true;
+}
+
+bool InstallProcessTools::install_nameAndUsernamePrism()
+{
+    QString prism_prefs_path = SoftwareHelpers::getPrismPrefsPath();
+
+    QJsonObject obj = FileHelper::GetJsonObjectFromFile(prism_prefs_path);
+    if(obj.isEmpty()) {
+        logError("Failed to read the Prism preferences file: " + prism_prefs_path);
+        return false;
+    }
+
+    // We want to update the obj["globals"]["username"] and obj["globals"]["username_abbreviation"]
+    QJsonObject globalsObj = obj.value("globals").toObject();
+    globalsObj["username"] = username();
+    globalsObj["username_abbreviation"] = abreviation();
+    obj["globals"] = globalsObj;
+
+    if(!FileHelper::WriteJsonObjectToFile(prism_prefs_path, obj)) {
+        logError("Failed to write the updated Prism preferences file: " + prism_prefs_path);
+        return false;
     }
 
     return true;
@@ -384,6 +529,7 @@ bool InstallProcessTools::copyFolderRecursive(const QString &sourcePath, const Q
             return false;
         }
     }
+
 
     QFileInfoList entries = sourceDir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
     for(const QFileInfo &entry : entries) {

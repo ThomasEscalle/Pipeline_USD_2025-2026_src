@@ -1,14 +1,14 @@
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 import PrismInit
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import sys
 import os
 
 import maya.OpenMayaUI as omui
-import shiboken2
+
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import maya.cmds as cmds
 from maya.OpenMayaUI import MQtUtil
@@ -17,9 +17,10 @@ from maya.OpenMayaUI import MQtUtil
 from SaveAs.IconLoader import loadIcon
 from SaveAs.ExecuteDepartment import ExecuteDepartment_ModL, ExecuteDepartment_ModH, ExecuteDepartment_RigL, ExecuteDepartment_RigH, ExecuteDepartment_RLO, ExecuteDepartment_FLO, ExecuteDepartment_Animation
 
+
 def maya_main_window():
-    main_window_ptr = omui.MQtUtil.mainWindow()
-    return shiboken2.wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
+    # main_window_ptr = omui.MQtUtil.mainWindow()
+    return None
 
 
 # Links the department keys to their corresponding execute department class
@@ -32,6 +33,12 @@ ExecuteDepartments_Keys = {
     "flo"  : ExecuteDepartment_FLO(),      # <- Final Layout
     "anim" : ExecuteDepartment_Animation() # <- Animation  
 }
+
+
+
+
+
+
 
 
 
@@ -107,7 +114,6 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self, parent=maya_main_window()):
         super(SaveAsWindow, self).__init__(parent)
         self.setWindowTitle("Badger Pipeline")
-        self.setMinimumWidth(400)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
         
@@ -144,21 +150,21 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # Save button
         self.save_btn = QtWidgets.QPushButton("")
         self.save_btn.setIcon(loadIcon("save.png"))
-        self.save_btn.setIconSize(QtCore.QSize(38, 38))
+        self.save_btn.setIconSize(QtCore.QSize(24, 24))
         self.save_btn.setToolTip("Save")
         self.save_btn.setFlat(True)
 
         # Save as button
         self.saveas_btn = QtWidgets.QPushButton("")
-        self.saveas_btn.setIcon(self.getIcon("saveas"))
-        self.saveas_btn.setIconSize(QtCore.QSize(38, 38))
+        self.saveas_btn.setIcon(loadIcon("saveas.png"))
+        self.saveas_btn.setIconSize(QtCore.QSize(24, 24))
         self.saveas_btn.setToolTip("Save As")
         self.saveas_btn.setFlat(True)
 
         # Save as with comment button
         self.saveascomm_btn = QtWidgets.QPushButton("")
         self.saveascomm_btn.setIcon(loadIcon("comment.png"))
-        self.saveascomm_btn.setIconSize(QtCore.QSize(38, 38))
+        self.saveascomm_btn.setIconSize(QtCore.QSize(24, 24))
         self.saveascomm_btn.setToolTip("Save As with a comment")
         self.saveascomm_btn.setFlat(True)
 
@@ -173,20 +179,20 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # Export button
         self.export_btn = QtWidgets.QPushButton("Export")
         self.export_btn.setIcon(loadIcon("export.png"))
-        self.export_btn.setIconSize(QtCore.QSize(32, 32))
+        self.export_btn.setIconSize(QtCore.QSize(24, 24))
         self.export_btn.setToolTip("Export")
         self.export_btn.setMinimumHeight(40)
 
         # Publish button
         self.publish_btn = QtWidgets.QPushButton("Publish")
         self.publish_btn.setIcon(loadIcon("publish.png"))
-        self.publish_btn.setIconSize(QtCore.QSize(32, 32))
+        self.publish_btn.setIconSize(QtCore.QSize(24, 24))
         self.publish_btn.setToolTip("Publish")
 
         # Playblast button
         self.playblast_btn = QtWidgets.QPushButton("Playblast")
         self.playblast_btn.setIcon(loadIcon("turn.png"))
-        self.playblast_btn.setIconSize(QtCore.QSize(32, 32))
+        self.playblast_btn.setIconSize(QtCore.QSize(24, 24))
         self.playblast_btn.setToolTip("Playblast")
 
         for btn in [self.export_btn,self.publish_btn, self.playblast_btn]:
@@ -200,7 +206,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # Import button
         self.import_btn = QtWidgets.QPushButton("Import")
         self.import_btn.setIcon(loadIcon("import.png"))
-        self.import_btn.setIconSize(QtCore.QSize(32, 32))
+        self.import_btn.setIconSize(QtCore.QSize(24, 24))
         self.import_btn.setToolTip("Import a file")
         row3.addWidget(self.import_btn)
 
@@ -210,13 +216,13 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # Stage button
         self.stage_btn = QtWidgets.QPushButton("")
         self.stage_btn.setIcon(loadIcon("settings.png"))
-        self.stage_btn.setIconSize(QtCore.QSize(32, 32))
+        self.stage_btn.setIconSize(QtCore.QSize(24, 24))
         self.stage_btn.setToolTip("Stage")
 
         # Window button
         self.window_btn = QtWidgets.QPushButton("")
         self.window_btn.setIcon(loadIcon("window.png"))
-        self.window_btn.setIconSize(QtCore.QSize(32, 32))
+        self.window_btn.setIconSize(QtCore.QSize(24, 24))
         self.window_btn.setToolTip("Window")
 
         for btn in [self.stage_btn, self.window_btn]:
@@ -233,7 +239,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         department_menu = self.menu_bar.addMenu("&Departement")
 
         # Créer un QActionGroup exclusif
-        self.dept_action_group = QtWidgets.QActionGroup(self)
+        self.dept_action_group = QtGui.QActionGroup(self)
         self.dept_action_group.setExclusive(True)
 
         self.action_modeling_low = department_menu.addAction("Modeling Low")
@@ -272,6 +278,15 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.action_animation.setToolTip("Anim")
         self.dept_action_group.addAction(self.action_animation)
 
+        # Add a "View" menu
+        view_menu = self.menu_bar.addMenu("&View")
+        
+        self.action_pro_mode = view_menu.addAction("Pro Mode")
+        self.action_pro_mode.setCheckable(True)
+        self.action_pro_mode.setChecked(False)
+        self.action_pro_mode.setToolTip("Hide basic save buttons for advanced users")
+        self.action_pro_mode.setShortcut(QtGui.QKeySequence("Ctrl+P"))
+        self.action_pro_mode.triggered.connect(self.toggle_pro_mode)
 
         # Add a "Help" menu
         help_menu = self.menu_bar.addMenu("&Help")
@@ -290,7 +305,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             department = splitedPath[-3]
 
             for action in self.dept_action_group.actions():
-                if action.toolTip() == department:
+                if action.toolTip().lower() == department.lower():
                     action.setChecked(True)
                     print("The department ID is : ", action.text())
         except:
@@ -311,6 +326,19 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def show_documentation(self):
         print("Opening documentation...")
         QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://thomasescalle.github.io/Pipeline_USD_2025/"))
+
+    # Toggle pro mode - hide/show basic save buttons
+    def toggle_pro_mode(self, checked):
+        """Hide or show the basic save buttons based on pro mode state"""
+        # Hide/show the save buttons when pro mode is toggled
+        self.save_btn.setVisible(not checked)
+        self.saveas_btn.setVisible(not checked)
+        self.saveascomm_btn.setVisible(not checked)
+        
+        if checked:
+            print("Pro Mode activated - basic save buttons hidden")
+        else:
+            print("Pro Mode deactivated - basic save buttons visible")
 
     # Setup the connections
     def setupConnections(self):
@@ -389,7 +417,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # Get the execute department class
         current_department = current_department.lower()
         print("Current department is : ", current_department)
-        execute_department = ExecuteDepartments_Keys.get(current_department)
+        execute_department = ExecuteDepartments_Keys.get(current_department.lower())
         if not execute_department:
             print("No execute department found.")
             return
@@ -412,7 +440,7 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # Get the execute department class
         current_department = current_department.lower()
         print("Current department is : ", current_department)
-        execute_department = ExecuteDepartments_Keys.get(current_department)
+        execute_department = ExecuteDepartments_Keys.get(current_department.lower())
 
         if not execute_department:
             print("No execute department found.")

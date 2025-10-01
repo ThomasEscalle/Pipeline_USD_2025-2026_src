@@ -161,7 +161,10 @@ class FileTemplateRigHighMaya(FileTemplateBase):
         script.replaceVariable("DO_IMPORT_NAMESPACE", "True" if doImportNamespace else "False")
         script.replaceVariable("IMPORT_NAMESPACE", importNamespace)
         
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
         # Add the scene to the current project
         scene = { "path": outputMayaFilePath }

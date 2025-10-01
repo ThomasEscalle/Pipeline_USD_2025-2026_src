@@ -19,8 +19,11 @@ importNamespace = "IMPORT_NAMESPACE"      # <-- Namespace to use for importing
 createRiggingGroups = "CREATE_RIGGING_GROUPS"
 
 # Hierarchy de groupes :
-# - char_chaise_rigl_grp
-#     - char_chaise_rigl_geo
+# - chaise
+#     - Asset_root
+#       - geo
+#         - render
+#            - <Les geos viennent ici, sans leurs groupes parent.. A voir comment gerer les references ?? > 
 #     - GlobalMove_01
 #          - Joints_01
 #          - CTRLs_01
@@ -59,12 +62,15 @@ def build_template():
         imported_nodes = result if result else []
 
     # Crée les groupes standards
-    group_name = typeAsset + "_" + assetName + "_rigl_grp"
+    group_name = assetName
     grp = cmds.group(empty=True, name=group_name)
 
     if createRiggingGroups == "True":
         # Crées les groupes standards
-        grp_geo = cmds.group(empty=True, name=typeAsset + "_" + assetName + "_rigl_geo")
+        grp_asset_root = cmds.group(empty=True, name="Asset_root")
+        grp_geo = cmds.group(empty=True, name="geo")
+        grp_render = cmds.group(empty=True, name="proxy")  # Proxy because we are in Riggin 'LOW'
+
         grp_globalMove = cmds.group(empty=True, name="GlobalMove_01")
         grp_joints = cmds.group(empty=True, name="Joints_01")
         grp_ctrls = cmds.group(empty=True, name="CTRLs_01")
@@ -75,7 +81,10 @@ def build_template():
         grp_extraNodesToHide = cmds.group(empty=True, name="ExtraNodes_To_Hide_01")
 
         # Parent les groupes
-        cmds.parent(grp_geo, grp)
+        
+        cmds.parent(grp_asset_root, grp)
+        cmds.parent(grp_geo, grp_asset_root)
+        cmds.parent(grp_render, grp_geo)
         cmds.parent(grp_globalMove, grp)
         cmds.parent(grp_joints, grp_globalMove)
         cmds.parent(grp_ctrls, grp_globalMove)
@@ -97,7 +106,7 @@ def build_template():
             top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
             for node in top_level_transforms:
                 try:
-                    cmds.parent(node, grp_geo)
+                    cmds.parent(node, grp_render)
                 except Exception:
                     pass
 

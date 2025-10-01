@@ -24,14 +24,20 @@ Page_022_Creation::Page_022_Creation()
 
     // Connecter les signaux de InstallProcessCreate
     connect(m_createProcess, &InstallProcess::logMessage, 
-            this, &Page_022_Creation::onLogMessage);
+            this, &Page_022_Creation::onLogMessage, Qt::QueuedConnection);
     connect(m_createProcess, &InstallProcess::installationFinished, 
-            this, &Page_022_Creation::onCreationFinished);
+            this, &Page_022_Creation::onCreationFinished, Qt::QueuedConnection);
+    connect(m_createProcess, &InstallProcess::installationStarted,
+            this, [this](){ log("Starting project creation..."); }, Qt::QueuedConnection);
 
 }
 
 Page_022_Creation::~Page_022_Creation()
 {
+    if (m_createProcess && m_createProcess->isRunning()) {
+        m_createProcess->quit();
+        m_createProcess->wait();
+    }
     delete ui;
 }
 
@@ -63,9 +69,10 @@ void Page_022_Creation::initializePage()
 
 void Page_022_Creation::startCreation()
 {
-    // Démarrer le processus de création
-    m_createProcess->install();
-
+    // Démarrer le thread de création
+    if (!m_createProcess->isRunning()) {
+        m_createProcess->start();
+    }
 }
 
 void Page_022_Creation::log(const QString &message)

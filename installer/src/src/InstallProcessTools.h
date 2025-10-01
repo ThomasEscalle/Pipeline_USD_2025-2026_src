@@ -29,6 +29,8 @@ public:
     bool install_HoudiniCustomNodes();
 
 
+    bool install_nameAndUsernamePrism();
+
     QString abreviation() const;
     void setAbreviation(const QString &newAbreviation);
 
@@ -43,6 +45,8 @@ public:
 private:
     QString m_username;
     QString m_abreviation;
+    QStringList m_successfulComponents;
+    QStringList m_failedComponents;
 
 };
 

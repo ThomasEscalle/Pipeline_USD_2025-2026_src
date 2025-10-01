@@ -256,6 +256,45 @@ def build_template():
 
 
 
+    ###################################################
+    ###################################################
+    ####    I M P O R T    D E S    R I G S     #######
+    ###################################################
+    ###################################################
+
+    # Import the characters rigs
+    rigs_eval_chars = eval(rigs_chars_paths)
+    for rig_path in rigs_eval_chars:
+        if os.path.exists(rig_path):
+
+            imported_nodes = cmds.file(rig_path, reference=True, returnNewNodes=True, namespace ="chars")
+
+            if imported_nodes is None:
+                imported_nodes = []
+
+            # Parent the top level transform nodes to the characters_grp
+            top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
+            for node in top_level_transforms:
+                cmds.parent(node, characters_grp)
+
+    # Import the props rigs
+    rigs_eval_props = eval(rigs_props_paths)
+    for rig_path in rigs_eval_props:
+        if os.path.exists(rig_path):
+            imported_nodes = cmds.file(rig_path, reference=True, returnNewNodes=True, namespace ="props")
+            if imported_nodes is None:
+                imported_nodes = []
+
+            # Parent the top level transform nodes to the props_grp
+            top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
+            for node in top_level_transforms:
+                cmds.parent(node, props_grp)
+
+
+
+    ###################################################
+
+
     cmds.file(rename=outputPath)
     cmds.file(save=True, type='mayaAscii')
 

@@ -38,7 +38,6 @@ aniversaires = [
     { "nom" : "Joffrey" ,          "aniversaire" : "02/03/2003" },
     { "nom" : "Lucie" ,            "aniversaire" : "25/03/2002" },
     { "nom" : "Chelsea" ,          "aniversaire" : "21/03/2004" },
-    { "nom" : "Mathilde" ,         "aniversaire" : "10/10/2002" },
     { "nom" : "Michel" ,           "aniversaire" : "20/04/2003" },
     { "nom" : "Altay" ,            "aniversaire" : "12/10/2003" },
     { "nom" : "Marie-Lou" ,        "aniversaire" : "13/07/2004" },

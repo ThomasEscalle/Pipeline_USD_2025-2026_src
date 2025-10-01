@@ -82,7 +82,7 @@ def build_sceneCleaning_subnet():    # Get the ouput0 node of the sceneCleaning 
     graftstages.setPosition(hou.Vector2(0, -2))
     graftstages.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
     graftstages.setParms({
-        "destpath" : f"/setD_{assetName}",
+        "destpath" : f"/SetDress",
     })
 
     # Create a "null" node called "OUT_SCENE_CLEANING"

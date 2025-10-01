@@ -17,6 +17,7 @@ number_of_frames_str = "$$NUMBER_OF_FRAMES$$"
 first_frame_str = "$$FIRST_FRAME$$"
 
 set_dress_path = "$$SET_DRESS_PATH$$"      # This is a string representation of a list of paths but that should only contain one item
+save_path_edit_setD = "$$SAVE_PATH_EDIT_SETD$$"  # Path where to save the RLO_Edit_SetD_Publish.usda file
 rigs_chars_paths = "$$RIGS_CHARS_PATHS$$"  # This is a string representation of a list of paths
 rigs_props_paths = "$$RIGS_PROPS_PATHS$$"  # This is a string representation of a list of paths
 
@@ -77,6 +78,65 @@ def getRandomColor():
    color = random.choice(colors)
    color_tuple = (int(color[1:3], 16) / 255, int(color[3:5], 16) / 255, int(color[5:7], 16) / 255)
    return color_tuple
+
+
+
+def createOverrideLayer(asset_name, asset_path , prim_path):
+        """
+        Create a Maya USD layer with an override layer, referencing an asset. 
+        This is used to non-destructively make edits (or add references to new sub-assets)
+        without modifying the original USD layer.
+        Args:
+            asset_name (str): The name of the asset.
+            asset_path (str): The filepath to the USD layer for the asset.
+        Returns:
+            tuple: The mayaUsdProxyShape node and layer created in it.
+        """
+        import mayaUsd.ufe as mayaUsdUfe #import this at runtime because otherwise maya crashes on startup
+
+        node = cmds.createNode('mayaUsdProxyShape', name=asset_name)
+        node_long = cmds.ls(node, long=True)[0]
+        
+        stage = mayaUsdUfe.getStage(node_long)
+
+        # Create a new versioned override layer
+        override_path = save_path_edit_setD
+        
+        layer = stage.CreateNew(override_path)
+        asset_sdf_path = "/"+asset_name
+
+        # Reference the asset at the root of the override layer
+        xform = layer.DefinePrim(asset_sdf_path, 'Xform')
+        xform.GetReferences().AddReference(asset_path , primPath = prim_path)
+        layer.SetDefaultPrim(layer.GetPrimAtPath(asset_sdf_path))
+        layer.GetRootLayer().Save()
+        
+        cmds.setAttr(node + ".filePath", override_path, type="string")
+        cmds.connectAttr("time1.outTime", node + ".time")
+        return node, layer
+
+
+def findLatestOverrideVersion(asset_name):
+    """
+    Find the latest version of the USD override for the given asset name.
+    """
+    usd_overrides_path = os.path.join(os.path.dirname(cmds.file(q=True, sn=True)), "usd_overrides")
+    try:
+        if(not os.path.exists(usd_overrides_path)):
+            os.mkdir(usd_overrides_path)
+        
+        current_versions = [x for x in os.listdir(usd_overrides_path) if asset_name+"_override" in x]
+
+        max_version = 0
+        for path in current_versions:
+            max_version = max(max_version, int(path.split(".usd")[-2][-3:]))
+
+        return max_version
+
+    except Exception as e:
+        print(e)
+
+
 
 
 # Set the color of a given object
@@ -156,7 +216,7 @@ def is_top_level_transform(node):
 # Main function to build the template
 def build_template():
     cmds.file(new=True, force=True)
-
+    cmds.file(rename=outputPath)
 
     # Make sure the AbcImport plugin is loaded
     if not cmds.pluginInfo("AbcImport", query=True, loaded=True):
@@ -294,20 +354,18 @@ def build_template():
     ####################################################################
 
     # Import the set dress as a usd reference in the usd layer editor
-    shape_node = cmds.createNode('mayaUsdProxyShape')
-    shape_node = cmds.rename(shape_node, "usd_setDress")
-    
     setDress_path_valid = eval(set_dress_path)
-    if len(setDress_path_valid) > 0:
-        stdPath = setDress_path_valid[0]
-        cmds.setAttr('{}.filePath'.format(shape_node), stdPath, type='string')
-    
-    # Get the transform node of the shape
-    transform_node_usd = cmds.listRelatives(shape_node, parent=True)[0]
-    cmds.parent(transform_node_usd, set_grp)
-    # Scale the set_grp by 100 to convert from meters to centimeters
-    cmds.setAttr(set_grp + ".scale", 100, 100, 100)
-    
+    data = createOverrideLayer("SetDress", setDress_path_valid[0], "/SetDress")
+
+    proxy_shape_node = data[0]
+    transform_proxy_node = cmds.listRelatives(proxy_shape_node, parent=True)[0]
+    cmds.parent(transform_proxy_node, set_grp)
+    setColor(proxy_shape_node, "#D4D400")  # RGB values for yellow
+    # Set the scale of the group to 100
+    cmds.setAttr(set_grp + ".scaleX", 100)
+    cmds.setAttr(set_grp + ".scaleY", 100)
+    cmds.setAttr(set_grp + ".scaleZ", 100)
+
 
     ####################################################################
     ####################################################################

@@ -170,8 +170,11 @@ class FileTemplateLightHoudini(FileTemplateBase):
 
         script.replaceVariable("$$MASTER_LIGHT_PATH$$", products_masterLight_str.replace("\\", "/") if importReference_MasterLight else "")
         script.replaceVariable("$$ASSEMBLY_PATH$$", products_assembly_str.replace("\\", "/") if importReference_Assembly else "")
-
-        script.run()
+        
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
 
 
 

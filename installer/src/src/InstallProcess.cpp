@@ -39,3 +39,18 @@ void InstallProcess::logSuccess(const QString &message)
 {
     emit(this->logMessage("<font color='green'>SUCCESS: </font>" + message ));
 }
+
+void InstallProcess::run()
+{
+    emit installationStarted();
+    
+    bool success = install();
+    
+    if (success) {
+        logSuccess("Installation completed successfully!");
+    } else {
+        logError("Installation failed!");
+    }
+    
+    emit installationFinished();
+}

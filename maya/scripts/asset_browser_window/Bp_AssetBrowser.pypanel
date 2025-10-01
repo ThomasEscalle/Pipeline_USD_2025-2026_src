@@ -1,4 +1,12 @@
-import PrismInit
+<?xml version="1.0" encoding="UTF-8"?>
+<pythonPanelDocument>
+  <!-- This file contains definitions of Python interfaces and the
+ interfaces menu.  It should not be hand-edited when it is being
+ used by the application.  Note, that two definitions of the
+ same interface or of the interfaces menu are not allowed
+ in a single file. -->
+  <interface name="Bp_AssetBrowser" label="Bp_AssetBrowser" icon="MISC_python" showNetworkNavigationBar="true" help_url="">
+    <script><![CDATA[import PrismInit
 
 from PySide2 import QtWidgets, QtGui, QtCore
 import hou
@@ -36,7 +44,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         self.core = core
         self.setObjectName("Navigator")
         
-        # Référence vers le widget parent pour accéder aux méthodes de bookmarks
+        # RÃ©fÃ©rence vers le widget parent pour accÃ©der aux mÃ©thodes de bookmarks
         self.parent_widget = None
         
         # Configurer le menu contextuel
@@ -95,7 +103,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         self.bookmarks_title.setSizeHint(QtCore.QSize(0, 40))
         self.addItem(self.bookmarks_title)
 
-        # Crées les bookmarks
+        # CrÃ©es les bookmarks
         for color in colors.keys():
             color_item = QtWidgets.QListWidgetItem(color)
             color_item.setIcon(self.core.getPlugin("Badger_Pipeline").getIcon("collection_" + color + ".png"))
@@ -111,11 +119,11 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         self.items_list_widget = items_list_widget
 
     def set_parent_widget(self, parent_widget):
-        """Définit le widget parent pour accéder aux méthodes de bookmarks"""
+        """DÃ©finit le widget parent pour accÃ©der aux mÃ©thodes de bookmarks"""
         self.parent_widget = parent_widget
 
     def refresh_bookmarks(self):
-        """Rafraîchit l'affichage des bookmarks"""
+        """RafraÃ®chit l'affichage des bookmarks"""
         if not self.parent_widget:
             return
          
@@ -133,7 +141,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         menu = QtWidgets.QMenu(self)
         
         if item_data.get("type") == "bookmark_asset":
-            # Menu pour un asset bookmarké
+            # Menu pour un asset bookmarkÃ©
             entity = item_data.get("entity")
             color = item_data.get("color")
             
@@ -158,7 +166,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         if self.parent_widget:
             success = self.parent_widget.remove_from_bookmark(entity, color)
             if success:
-                QtWidgets.QMessageBox.information(self, "Bookmark", f"Asset supprimé des bookmarks {color}")
+                QtWidgets.QMessageBox.information(self, "Bookmark", f"Asset supprimÃ© des bookmarks {color}")
 
     def clear_color_bookmarks(self, color):
         """Vide tous les bookmarks d'une couleur"""
@@ -168,7 +176,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         reply = QtWidgets.QMessageBox.question(
             self, 
             "Confirmer", 
-            f"Êtes-vous sûr de vouloir supprimer tous les bookmarks {color} ?",
+            f"Ãtes-vous sÃ»r de vouloir supprimer tous les bookmarks {color} ?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
         )
         
@@ -194,7 +202,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         else:
             folder_path = ""
             
-        # Naviguer vers le dossier approprié
+        # Naviguer vers le dossier appropriÃ©
         self.items_list_widget.set_current_path(folder_path)
 
     def on_nav_item_clicked(self, item):
@@ -204,7 +212,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
             self.items_list_widget.set_filter("")
             self.items_list_widget.set_current_path(item.text())
         
-        # Gérer les clics sur les bookmarks
+        # GÃ©rer les clics sur les bookmarks
         item_data = item.data(QtCore.Qt.UserRole)
         print(item_data)
         if item_data and item_data.get("type") == "bookmark_color":
@@ -235,7 +243,7 @@ class ItemsListWidget(QtWidgets.QListWidget):
         self._current_path = ""
         self._filter = ""
 
-        # Référence vers le widget parent pour accéder aux méthodes de bookmarks
+        # RÃ©fÃ©rence vers le widget parent pour accÃ©der aux mÃ©thodes de bookmarks
         self.parent_widget = None
 
         # Configurer le menu contextuel
@@ -276,7 +284,7 @@ class ItemsListWidget(QtWidgets.QListWidget):
                 self._current_path = ""
             self.fill_assets()
         else:
-            # Déjà à la racine
+            # DÃ©jÃ  Ã  la racine
             pass
 
     # Fill the database with assets from the core
@@ -341,25 +349,9 @@ class ItemsListWidget(QtWidgets.QListWidget):
                 asset_name = asset_splited[0]
                 asset_path = ""
 
-            # Collecte des dossiers enfants directs uniquement
-            if asset_path and asset_path != self._current_path:
-                # Normaliser les chemins pour éviter les problèmes de séparateurs
-                normalized_asset_path = asset_path.replace("\\", "/")
-                normalized_current_path = self._current_path.replace("\\", "/")
-                
-                # Vérifier si asset_path est un enfant direct de current_path
-                if normalized_current_path == "":
-                    # À la racine, prendre le premier niveau
-                    first_level = normalized_asset_path.split("/")[0]
-                    if first_level not in folders:
-                        folders.append(first_level)
-                elif normalized_asset_path.startswith(normalized_current_path + "/"):
-                    # Extraire le niveau enfant direct
-                    relative_path = normalized_asset_path[len(normalized_current_path) + 1:]
-                    child_folder = relative_path.split("/")[0]
-                    child_path = normalized_current_path + "/" + child_folder
-                    if child_path not in folders:
-                        folders.append(child_path)
+            # Collecte des dossiers
+            if asset_path and asset_path not in folders and self._current_path in asset_path and asset_path != self._current_path:
+                folders.append(asset_path)
 
 
             # Filtrage par current_path
@@ -382,11 +374,9 @@ class ItemsListWidget(QtWidgets.QListWidget):
             item.setText(name)
             item.setIcon(self.core.getPlugin("Badger_Pipeline").getIcon("folder.png"))
             item.setWhatsThis("folder")
-            # Stocker le chemin complet du dossier dans les données de l'item
-            item.setData(QtCore.Qt.UserRole, {"type": "folder", "full_path": folder})
             self.addItem(item)
 
-        # Création des assets
+        # CrÃ©ation des assets
         for asset in filtered_assets:
             item = QtWidgets.QListWidgetItem(asset['asset_path'])
             name = asset['asset_path'].split("/")[-1].split("\\")[-1]
@@ -430,23 +420,10 @@ class ItemsListWidget(QtWidgets.QListWidget):
     # When an item is double clicked
     # @todo : Create the corresponding houdini node
     def onItemDoubleClicked(self, item):
-        # Vérifie si l'item est un dossier via whatsThis
+        # VÃ©rifie si l'item est un dossier via whatsThis
         if item.whatsThis() == "folder":
-            # Récupérer le chemin complet depuis les données de l'item
-            item_data = item.data(QtCore.Qt.UserRole)
-            if item_data and item_data.get("type") == "folder":
-                folder_path = item_data.get("full_path")
-                if folder_path:
-                    self.set_current_path(folder_path)
-                    return
-            
-            # Fallback vers l'ancienne méthode si les données ne sont pas disponibles
             folder_name = item.text()
-            if self._current_path:
-                new_path = self._current_path + "/" + folder_name
-            else:
-                new_path = folder_name
-            self.set_current_path(new_path)
+            self.set_current_path(folder_name)
             return
         
 
@@ -489,7 +466,7 @@ class ItemsListWidget(QtWidgets.QListWidget):
                     current_context.layoutChildren()
 
     def set_parent_widget(self, parent_widget):
-        """Définit le widget parent pour accéder aux méthodes de bookmarks"""
+        """DÃ©finit le widget parent pour accÃ©der aux mÃ©thodes de bookmarks"""
         self.parent_widget = parent_widget
 
     def show_context_menu(self, position):
@@ -498,7 +475,7 @@ class ItemsListWidget(QtWidgets.QListWidget):
         if not item or item.whatsThis() != "asset":
             return
 
-        # Récupérer l'entité depuis le tooltip
+        # RÃ©cupÃ©rer l'entitÃ© depuis le tooltip
         try:
             entity = json.loads(item.toolTip())
         except:
@@ -506,13 +483,13 @@ class ItemsListWidget(QtWidgets.QListWidget):
 
         menu = QtWidgets.QMenu(self)
         
-        # Vérifier si l'asset est déjà bookmarké
+        # VÃ©rifier si l'asset est dÃ©jÃ  bookmarkÃ©
         current_bookmark_color = None
         if self.parent_widget:
             current_bookmark_color = self.parent_widget.is_bookmarked(entity)
 
         if current_bookmark_color:
-            # Si déjà bookmarké, proposer de le supprimer
+            # Si dÃ©jÃ  bookmarkÃ©, proposer de le supprimer
             remove_action = menu.addAction(f"Supprimer du bookmark {current_bookmark_color}")
             remove_action.triggered.connect(partial(self.remove_from_bookmark, entity, current_bookmark_color))
             menu.addSeparator()
@@ -523,18 +500,18 @@ class ItemsListWidget(QtWidgets.QListWidget):
         for color_name, color_value in colors.items():
             action = bookmark_menu.addAction(color_name)
             
-            # Créer une icône colorée pour chaque couleur
+            # CrÃ©er une icÃ´ne colorÃ©e pour chaque couleur
             pixmap = QtGui.QPixmap(16, 16)
             pixmap.fill(QtGui.QColor(color_value))
             icon = QtGui.QIcon(pixmap)
             action.setIcon(icon)
             
-            # Si l'asset est déjà dans cette couleur, griser l'option
+            # Si l'asset est dÃ©jÃ  dans cette couleur, griser l'option
             if self.parent_widget:
                 bookmarks = self.parent_widget.get_bookmarks()
                 if entity in bookmarks.get(color_name, []):
                     action.setEnabled(False)
-                    action.setText(f"{color_name} (déjà ajouté)")
+                    action.setText(f"{color_name} (dÃ©jÃ  ajoutÃ©)")
 
             
             action.triggered.connect(partial(self.add_to_bookmark, entity, color_name))
@@ -542,22 +519,22 @@ class ItemsListWidget(QtWidgets.QListWidget):
         menu.exec_(self.mapToGlobal(position))
 
     def add_to_bookmark(self, entity, color):
-        """Ajoute l'entité aux bookmarks"""
+        """Ajoute l'entitÃ© aux bookmarks"""
         if self.parent_widget:
             success = self.parent_widget.add_to_bookmark(entity, color)
             if success:
-                QtWidgets.QMessageBox.information(self, "Bookmark", f"Asset ajouté aux bookmarks {color}")
+                QtWidgets.QMessageBox.information(self, "Bookmark", f"Asset ajoutÃ© aux bookmarks {color}")
             else:
-                QtWidgets.QMessageBox.warning(self, "Bookmark", f"Asset déjà présent dans les bookmarks {color}")
+                QtWidgets.QMessageBox.warning(self, "Bookmark", f"Asset dÃ©jÃ  prÃ©sent dans les bookmarks {color}")
 
     def remove_from_bookmark(self, entity, color):
-        """Supprime l'entité des bookmarks"""
+        """Supprime l'entitÃ© des bookmarks"""
         if self.parent_widget:
             success = self.parent_widget.remove_from_bookmark(entity, color)
             if success:
-                QtWidgets.QMessageBox.information(self, "Bookmark", f"Asset supprimé des bookmarks {color}")
+                QtWidgets.QMessageBox.information(self, "Bookmark", f"Asset supprimÃ© des bookmarks {color}")
             else:
-                QtWidgets.QMessageBox.warning(self, "Bookmark", f"Asset non trouvé dans les bookmarks {color}")
+                QtWidgets.QMessageBox.warning(self, "Bookmark", f"Asset non trouvÃ© dans les bookmarks {color}")
                     
 
 # The main widget that contains the navigator and the items list
@@ -581,7 +558,7 @@ class ProjectBrowserWidget(QtWidgets.QWidget):
         self.mode_menu = QtWidgets.QMenu(self)
         self.action_list = self.mode_menu.addAction("Liste")
         self.action_grid = self.mode_menu.addAction("Grille")
-        # Les items sont créés plus bas, donc on connecte après
+        # Les items sont crÃ©Ã©s plus bas, donc on connecte aprÃ¨s
 
         # Up button
         self.up_button = QtWidgets.QPushButton("", self)
@@ -617,12 +594,12 @@ class ProjectBrowserWidget(QtWidgets.QWidget):
         splitter.setStretchFactor(1, 1)
         main_layout.addWidget(splitter)
 
-        # Connect mode actions après création de self.items
+        # Connect mode actions aprÃ¨s crÃ©ation de self.items
         self.action_list.triggered.connect(lambda: self.items.toggle_mode('list'))
         self.action_grid.triggered.connect(lambda: self.items.toggle_mode('grid'))
         self.mode_button.setMenu(self.mode_menu)
 
-        # Connect bouton up à go_up
+        # Connect bouton up Ã  go_up
         self.up_button.clicked.connect(lambda: self.items.go_up())
         # Connect clear button
         self.clear_button.clicked.connect(self.search_bar.clear)
@@ -677,32 +654,32 @@ class ProjectBrowserWidget(QtWidgets.QWidget):
             json.dump(data, f, indent=4)
 
     def add_to_bookmark(self, entity, color):
-        """Ajoute une entité aux bookmarks d'une couleur donnée"""
+        """Ajoute une entitÃ© aux bookmarks d'une couleur donnÃ©e"""
         bookmarks = self.get_bookmarks()
         
-        # Vérifier si l'entité n'est pas déjà dans cette couleur
+        # VÃ©rifier si l'entitÃ© n'est pas dÃ©jÃ  dans cette couleur
         if entity not in bookmarks.get(color, []):
             bookmarks.setdefault(color, []).append(entity)
             self.save_bookmarks(bookmarks)
-            # Rafraîchir l'affichage des bookmarks
+            # RafraÃ®chir l'affichage des bookmarks
             self.navigator.refresh_bookmarks()
             return True
         return False
 
     def remove_from_bookmark(self, entity, color):
-        """Supprime une entité des bookmarks d'une couleur donnée"""
+        """Supprime une entitÃ© des bookmarks d'une couleur donnÃ©e"""
         bookmarks = self.get_bookmarks()
         
         if color in bookmarks and entity in bookmarks[color]:
             bookmarks[color].remove(entity)
             self.save_bookmarks(bookmarks)
-            # Rafraîchir l'affichage des bookmarks
+            # RafraÃ®chir l'affichage des bookmarks
             self.navigator.refresh_bookmarks()
             return True
         return False
 
     def is_bookmarked(self, entity):
-        """Vérifie si une entité est dans les bookmarks et retourne la couleur, sinon None"""
+        """VÃ©rifie si une entitÃ© est dans les bookmarks et retourne la couleur, sinon None"""
         bookmarks = self.get_bookmarks()
         for color, entities in bookmarks.items():
             if entity in entities:
@@ -719,4 +696,8 @@ def createInterface():
 
     except Exception as e:
         print(f"Error initializing PrismInit: {e}")
-        return QtWidgets.QLabel("Error initializing PrismInit")
+        return QtWidgets.QLabel("Error initializing PrismInit")]]></script>
+    <includeInToolbarMenu menu_position="202" create_separator="false"/>
+    <help><![CDATA[]]></help>
+  </interface>
+</pythonPanelDocument>

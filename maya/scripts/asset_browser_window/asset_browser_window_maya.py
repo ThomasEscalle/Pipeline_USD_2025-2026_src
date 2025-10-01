@@ -1,9 +1,9 @@
 import PrismInit
 
-from PySide2 import QtWidgets, QtGui, QtCore
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 import os
 import json
@@ -11,17 +11,13 @@ from functools import partial
 
 
 import maya.OpenMayaUI as omui
-import shiboken2
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import maya.cmds as cmds
 from maya.OpenMayaUI import MQtUtil
+import ufe
 
 def maya_main_window():
-    main_window_ptr = omui.MQtUtil.mainWindow()
-    return shiboken2.wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
-
-
-
+    return None
 
 # Define some colors for bookmarks
 colors = {
@@ -116,7 +112,6 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         for color in colors.keys():
             color_item = QtWidgets.QListWidgetItem(color)
             color_item.setIcon(self.core.getPlugin("Badger_Pipeline").getIcon("collection_" + color + ".png"))
-            # color_item.setBackground(QtGui.QColor(colors[color]))
             color_item.setData(QtCore.Qt.UserRole, {"type": "bookmark_color", "color": color})
             self.addItem(color_item)
 
@@ -358,9 +353,25 @@ class ItemsListWidget(QtWidgets.QListWidget):
                 asset_name = asset_splited[0]
                 asset_path = ""
 
-            # Collecte des dossiers
-            if asset_path and asset_path not in folders and self._current_path in asset_path and asset_path != self._current_path:
-                folders.append(asset_path)
+            # Collecte des dossiers enfants directs uniquement
+            if asset_path and asset_path != self._current_path:
+                # Normaliser les chemins pour éviter les problèmes de séparateurs
+                normalized_asset_path = asset_path.replace("\\", "/")
+                normalized_current_path = self._current_path.replace("\\", "/")
+                
+                # Vérifier si asset_path est un enfant direct de current_path
+                if normalized_current_path == "":
+                    # À la racine, prendre le premier niveau
+                    first_level = normalized_asset_path.split("/")[0]
+                    if first_level not in folders:
+                        folders.append(first_level)
+                elif normalized_asset_path.startswith(normalized_current_path + "/"):
+                    # Extraire le niveau enfant direct
+                    relative_path = normalized_asset_path[len(normalized_current_path) + 1:]
+                    child_folder = relative_path.split("/")[0]
+                    child_path = normalized_current_path + "/" + child_folder
+                    if child_path not in folders:
+                        folders.append(child_path)
 
 
             # Filtrage par current_path
@@ -383,6 +394,8 @@ class ItemsListWidget(QtWidgets.QListWidget):
             item.setText(name)
             item.setIcon(self.core.getPlugin("Badger_Pipeline").getIcon("folder.png"))
             item.setWhatsThis("folder")
+            # Stocker le chemin complet du dossier dans les données de l'item
+            item.setData(QtCore.Qt.UserRole, {"type": "folder", "full_path": folder})
             self.addItem(item)
 
         # Création des assets
@@ -408,7 +421,7 @@ class ItemsListWidget(QtWidgets.QListWidget):
     # Switch to list mode
     def set_list_mode(self):
         self.setViewMode(QtWidgets.QListView.ListMode)
-        self.setIconSize(QtCore.QSize(32, 32))
+        self.setIconSize(QtCore.QSize(24, 24))
         self.setGridSize(QtCore.QSize(36, 36))
         self._view_mode = 'list'
 
@@ -431,11 +444,95 @@ class ItemsListWidget(QtWidgets.QListWidget):
     def onItemDoubleClicked(self, item):
         # Vérifie si l'item est un dossier via whatsThis
         if item.whatsThis() == "folder":
+            # Récupérer le chemin complet depuis les données de l'item
+            item_data = item.data(QtCore.Qt.UserRole)
+            if item_data and item_data.get("type") == "folder":
+                folder_path = item_data.get("full_path")
+                if folder_path:
+                    self.set_current_path(folder_path)
+                    return
+            
+            # Fallback vers l'ancienne méthode si les données ne sont pas disponibles
             folder_name = item.text()
-            self.set_current_path(folder_name)
+            if self._current_path:
+                new_path = self._current_path + "/" + folder_name
+            else:
+                new_path = folder_name
+            self.set_current_path(new_path)
             return
         
-         # Todo
+
+        # The item is an asset. Create a corresponding houdini node
+        asset = json.loads(item.toolTip())
+        products = self.core.products.getProductsFromEntity(asset)
+        for product in products:
+            if "USD_Asset" in product["product"]:
+                product_path = product["path"]
+                product_path = product_path.replace("\\", "/")
+                product_path = os.path.join(product_path, "asset.usda")
+
+                # Check if the file exists
+                if not os.path.exists(product_path):
+                    QtWidgets.QMessageBox.warning(self, "File Not Found", f"The USD file does not exist:\n{product_path}")
+                    return
+
+                # Create the asset_name
+                asset_name = asset['asset_path'].split("/")[-1].split("\\")[-1]
+                print("Asset name:", asset_name)
+
+                # Create a "assetreference" node named after the asset's name
+                print("Importing asset:", product_path)
+                print(product)
+
+                # Get the maya selection
+                import mayaUsd.ufe as mayaUsdUfe
+    
+                # Find all mayaUsdProxyShape nodes in the scene
+                usd_nodes = cmds.ls(type="mayaUsdProxyShape")
+                
+                if not usd_nodes:
+                    print("No USD stages found in the scene")
+                    return None, None
+                
+                # Get the first node and its stage
+                first_node = usd_nodes[0]
+                node_long = cmds.ls(first_node, long=True)[0]
+
+                selection = ufe.GlobalSelection.get()
+                selected_path = ""
+                # Itérer sur les éléments sélectionnés
+                for item in selection:
+                    path = item.path()
+                    if("/" in str(path)):
+                        # Take everything after the first "/" (/ included : /SetDress/AAA -> SetDress)
+                        selected_path = str(path).split("/", 1)[1]
+                        
+
+                        break
+
+                try:
+                    stage = mayaUsdUfe.getStage(node_long)
+
+                    # Check if there is a selected path
+                    if selected_path:
+                        path = "/" + selected_path + "/" + asset_name
+                    else:
+                        path = "/SetDress/" + asset_name
+                    # If the prim already exist, we add a number at the end
+                    if stage.GetPrimAtPath(path).IsValid():
+                        i = 1
+                        while stage.GetPrimAtPath(path + str(i)).IsValid():
+                            i += 1
+                        path = path + str(i)
+                    xform = stage.DefinePrim(path, "Xform")
+                    xform.GetReferences().AddReference(product_path)
+
+                    print(f"Found USD stage: {first_node}")
+                    return stage, first_node
+                except Exception as e:
+                    print(f"Error getting stage from node {first_node}: {e}")
+                    return None, None
+
 
     def set_parent_widget(self, parent_widget):
         """Définit le widget parent pour accéder aux méthodes de bookmarks"""
@@ -511,17 +608,16 @@ class ItemsListWidget(QtWidgets.QListWidget):
 
 # The main widget that contains the navigator and the items list
 class ProjectBrowserWidget(MayaQWidgetDockableMixin, QtWidgets.QDialog):
-    def __init__(self, core , parent=maya_main_window()):
-        super().__init__(parent)
+    def __init__(self, core , parent=None):
+        super(ProjectBrowserWidget, self).__init__(parent)
         self.core = core
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
-        self.setWindowTitle("Badger Asset Browser")
-        self.resize(800, 600)
+        self.setWindowTitle("Asset Browser")
 
         # Layout principal vertical
         main_layout = QtWidgets.QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        main_layout.setContentsMargins(8, 8, 8 ,8)
 
         # --- Search bar + mode button ---
         search_layout = QtWidgets.QHBoxLayout()
@@ -586,9 +682,12 @@ class ProjectBrowserWidget(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # Initialiser les bookmarks
         self.navigator.refresh_bookmarks()
 
-        # Set w
-
         print("Bookmarks loaded:", self.get_bookmarks())
+
+    # Show window with docking ability
+    def run(self):
+        self.show(dockable=True)
+
 
     def on_up_clicked(self):
         # Navigue vers le dossier parent dans ItemsListWidget
@@ -664,14 +763,10 @@ class ProjectBrowserWidget(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             if entity in entities:
                 return color
         return None
-    
-    # Show window with docking ability
-    def run(self):
-        self.show(dockable=True)
 
 
 # Create and return the main interface widget
-# Entry point for Maya
+# Entry point used by Houdini
 def createInterface():
     try:
         core = PrismInit.pcore
@@ -681,12 +776,6 @@ def createInterface():
         print(f"Error initializing PrismInit: {e}")
         return QtWidgets.QLabel("Error initializing PrismInit")
     
-
 if __name__ == "__main__":
-    try:
-        window.close() # pylint: disable=E0601
-        window.deleteLater()
-    except:
-        pass
     window = createInterface()
     window.run()

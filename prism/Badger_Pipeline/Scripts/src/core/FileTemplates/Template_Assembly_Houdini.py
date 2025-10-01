@@ -140,9 +140,10 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
 
         script.replaceVariable("$$SETDRESS_FILEPATH$$", products_setDress_str.replace("\\", "/"))
 
-
-        script.run()
-
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
         # Add the scene to the current project
         scene = { "path": outputHoudiniFilePath }
         origin.createSceneFromPreset(scene)

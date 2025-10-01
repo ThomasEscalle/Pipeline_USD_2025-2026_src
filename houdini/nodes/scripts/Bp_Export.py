@@ -1,6 +1,7 @@
 import PrismInit
 import os
 import json
+import time
 from PySide2.QtCore import QStandardPaths
 core = PrismInit.pcore
 
@@ -72,11 +73,16 @@ exportPath = core.products.generateProductPath(
     location="global",
 )
 
+exportPath = exportPath.replace("\\\\", "/") # Houdini does not like backslashes
+
+print("Exporting USD to: " + exportPath)
+
 # Get the directory path of the export path
 exportPathInfo = os.path.dirname(exportPath)
-
+print("Exporting USD to directory: " + exportPathInfo)
 # If the directory does not exist, create it
 if not os.path.exists(exportPathInfo):
+    print("Creating directory: " + exportPathInfo)
     os.makedirs(exportPathInfo)
 # Otherwize, we remove all the files in the directory
 else:
@@ -109,4 +115,5 @@ core.products.updateMasterVersion(exportPath)
 
 # Notify the user that the export is done
 hou.ui.displayMessage("Exported USD to:\n" + exportPath, severity=hou.severityType.Message)
+
 

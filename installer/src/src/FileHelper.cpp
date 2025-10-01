@@ -199,6 +199,52 @@ QStringList FileHelper::GetAllFilesAndFoldersInFolderRecursive(const QString &fo
     return itemList;
 }
 
+QJsonObject FileHelper::GetJsonObjectFromFile(const QString &filePath)
+{
+    /// Open a json object from a file.
+    QFile file(filePath);
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file for reading:" << filePath;
+        return QJsonObject();
+    }
+    QByteArray data = file.readAll();
+    file.close();
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if(doc.isNull() || !doc.isObject())
+    {
+        qDebug() << "Failed to parse JSON from file:" << filePath;
+        return QJsonObject();
+    }
+    return doc.object();
+}
+
+bool FileHelper::WriteJsonObjectToFile(const QString &filePath, const QJsonObject &obj)
+{
+    QJsonDocument doc(obj);
+    QByteArray data = doc.toJson();
+
+    QFile file(filePath);
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file for writing:" << filePath;
+        return false;
+    }
+
+    qint64 bytesWritten = file.write(data);
+    if(bytesWritten == -1)
+    {
+        qDebug() << "Failed to write JSON data to file:" << filePath;
+        file.close();
+        return false;
+    }
+
+    file.flush();
+    file.close();
+    return true;
+}
+
 
 QString FileHelper::GetFileNameFromPath(const QString &filePath)
 {
@@ -249,4 +295,13 @@ bool FileHelper::FileExists(const QString &path)
 {
     QFileInfo checkFile(path);
     return checkFile.exists() && checkFile.isFile();
+}
+
+bool FileHelper::DeleteDir(const QString &path)
+{
+    QDir dir(path);
+    if(!dir.exists()) {
+        return true; // Directory does not exist, consider it deleted
+    }
+    return dir.removeRecursively();
 }

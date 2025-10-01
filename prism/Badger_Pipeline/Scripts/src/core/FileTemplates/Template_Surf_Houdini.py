@@ -149,7 +149,12 @@ class FileTemplateSurfHoudini(FileTemplateBase):
         script.replaceVariable("$$IMPORT_REFERENCE$$", "True" if ImportReference == True else "False" )
         script.replaceVariable("$$REFERENCE_PATH$$", referencePathsStr if ImportReference else "")
 
-        script.run()
+        try:
+            script.run()
+        except Exception as e:
+            print(e)
+        
+        
 
         # Add the scene to the current project
         scene = { "path": outputHoudiniFilePath }

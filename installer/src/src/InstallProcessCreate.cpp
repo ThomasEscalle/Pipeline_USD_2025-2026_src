@@ -215,6 +215,8 @@ bool InstallProcessCreate::createProjectStructure(const QString &fullProjectPath
     if(!createFolder(prodPath, "01_Assets/Modules")) return false;
     // Create a 01_Assets/Props folder
     if(!createFolder(prodPath, "01_Assets/Props")) return false;
+    /// Create a 01_Assets/Enviros folder
+    if(!createFolder(prodPath, "01_Assets/Enviros")) return false;
     // Create a 02_Shots folder
     if(!createFolder(prodPath, "02_Shots")) return false;
 
@@ -289,6 +291,18 @@ bool InstallProcessCreate::createProjectStructure(const QString &fullProjectPath
     if(!createFolder(commPath, "03_Festivals")) return false;
     // 04_Bandes_annonces folder
     if(!createFolder(commPath, "04_Bandes_annonces")) return false;
+
+
+    /////// LIVRAISON FOLDERS  ////////
+    QString livPath = FileHelper::JoinPath(fullProjectPath, "10_Livraison");
+    // 01_Affiche_et_Vignettes
+    if(!createFolder(livPath, "01_Affiche_et_Vignettes")) return false;
+    // 02_Teaser
+    if(!createFolder(livPath, "02_Teaser")) return false;
+    // 03_FFE
+    if(!createFolder(livPath, "03_FFE")) return false;
+    // 04_Archivage
+    if(!createFolder(livPath, "04_Archivage")) return false;
 
     return true;
 }

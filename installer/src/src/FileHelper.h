@@ -2,6 +2,7 @@
 #define FILEHELPER_H
 
 #include <QObject>
+#include <QJsonObject>
 
 class FileHelper : public QObject
 {
@@ -16,7 +17,7 @@ public:
 
     /// Create a directory from a given path
     static bool CreateDir(const QString& path);
-
+    static bool DeleteDir(const QString& path);
 
     /// Read the content of a text file
     static QString ReadFile(const QString& filePath);
@@ -57,7 +58,8 @@ public:
     static QStringList GetAllFilesAndFoldersInFolderRecursive(const QString& folderPath);
     
 
-
+    static QJsonObject GetJsonObjectFromFile(const QString& filePath);
+    static bool WriteJsonObjectToFile(const QString& filePath, const QJsonObject& obj);
 
 
 public:
