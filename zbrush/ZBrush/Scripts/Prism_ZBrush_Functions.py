@@ -137,7 +137,7 @@ class Prism_ZBrush_Functions(object):
         # load scenefile
         self.saveCurrentFileName(filepath.replace("\\", "/"))
         ext = os.path.splitext(filepath)[1]
-        if ext == ".zpr":
+        if ext == ".zpr" or ext == ".ZPR":
             command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, File:Open]]\n[RoutineCall,command]"
         else:
             command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Tool:Load Tool]]\n[RoutineCall,command]"
@@ -413,7 +413,7 @@ class Prism_ZBrush_Functions(object):
         btn_save_comment = QPushButton("Save Extended")
         btn_save_comment.clicked.connect(lambda: self.SaveComment())
         layout.addWidget(btn_save_comment)
-        btn_import = QPushButton("Import : Append")
+        btn_import = QPushButton("Import")
         btn_import.clicked.connect(lambda: self.Import())
         layout.addWidget(btn_import)
         btn_export = QPushButton("Export")
@@ -592,12 +592,23 @@ class Prism_ZBrush_Functions(object):
             self.send_command_to_zbrush(command)
             self.activate_zbrush()
             return False
-        dataPath = oldFilePath[:-4] + "versioninfo.json"
+        #remove the extention of the old file path
+        for letter in oldFilePath[::-1]:
+            if letter == ".":
+                oldFilePath.pop(-1)
+                break
+            else:
+                oldFilePath.pop(-1)
+
+        dataPath = oldFilePath + "versioninfo.json"
         if os.path.exists(dataPath):
             with open(dataPath, 'r') as f:
                 data = json.load(f)
         else:
-            data = {}
+            "[RoutineDef,command,[Note, \"The metadata isn't available.\", 5]]\n[RoutineCall,command]"
+            self.send_command_to_zbrush(command)
+            self.activate_zbrush()
+            return False
 
         resolvedMediaPath = self.core.projects.getResolvedProjectStructurePath("renderVersions", data)
 
