@@ -399,7 +399,11 @@ class ItemsListWidget(QtWidgets.QListWidget):
     # Switch to list mode
     def set_list_mode(self):
         self.setViewMode(QtWidgets.QListView.ListMode)
+<<<<<<< HEAD
         self.setIconSize(QtCore.QSize(24, 24))
+=======
+        self.setIconSize(QtCore.QSize(32, 32))
+>>>>>>> 7d00a3614ea11d2b6998262d369daf216a0d9759
         self.setGridSize(QtCore.QSize(36, 36))
         self._view_mode = 'list'
 
