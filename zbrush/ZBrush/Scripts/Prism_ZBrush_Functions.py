@@ -8,6 +8,7 @@ import subprocess
 import pathlib
 import platform
 from pathlib import Path
+import shutil
 
 from qtpy.QtCore import *
 from qtpy.QtGui import *
@@ -112,8 +113,12 @@ class Prism_ZBrush_Functions(object):
     @err_catcher(name=__name__)
     def saveScene(self, origin, filepath, details={}):
         # save scenefile
+        ext = os.path.splitext(filepath)[1]
         self.saveCurrentFileName(filepath.replace("\\", "/"))
-        command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, File:Save as]]\n[RoutineCall,command]"
+        if ext == ".zpr":
+            command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, File:Save as]]\n[RoutineCall,command]"
+        elif ext == ".ztl":    
+            command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Tool:Save As]]\n[RoutineCall,command]"
         self.send_command_to_zbrush(command)
         self.activate_zbrush()
 
@@ -131,7 +136,11 @@ class Prism_ZBrush_Functions(object):
     def openScene(self, origin, filepath, force=False):
         # load scenefile
         self.saveCurrentFileName(filepath.replace("\\", "/"))
-        command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, File:Open]]\n[RoutineCall,command]"
+        ext = os.path.splitext(filepath)[1]
+        if ext == ".zpr":
+            command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, File:Open]]\n[RoutineCall,command]"
+        else:
+            command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Tool:Load Tool]]\n[RoutineCall,command]"
         self.send_command_to_zbrush(command)
         self.activate_zbrush()
 
@@ -367,7 +376,8 @@ class Prism_ZBrush_Functions(object):
             image = QImage(thumbnailPath)
             # Save as JPG, with quality (0–100)
             image.save(newThumbnailPath, "JPG", 100)
-            os.remove(thumbnailPath)
+            if os.path.exists(thumbnailPath):
+                os.remove(thumbnailPath)
             
 
     def Tools(self):
@@ -380,6 +390,20 @@ class Prism_ZBrush_Functions(object):
         self.toolsWindow = QWidget()
         self.toolsWindow.setWindowTitle("Prism")
         layout = QVBoxLayout()
+        extentionLayout = QFormLayout()
+        self.ztlCheckBox = QCheckBox(".ztl")
+        self.zprCheckBox = QCheckBox(".zpr")
+        self.zprCheckBox.setChecked(True)
+        def on_ztl_checked(state):
+            if state:
+                self.zprCheckBox.setChecked(False)
+        def on_zpr_checked(state):
+            if state:
+                self.ztlCheckBox.setChecked(False)
+        self.ztlCheckBox.stateChanged.connect(on_ztl_checked)
+        self.zprCheckBox.stateChanged.connect(on_zpr_checked)
+        extentionLayout.addRow(self.ztlCheckBox, self.zprCheckBox)
+        layout.addLayout(extentionLayout)
         btn_save_version = QPushButton("Save")
         btn_save_version.clicked.connect(lambda: self.Save())
         layout.addWidget(btn_save_version)
@@ -398,6 +422,9 @@ class Prism_ZBrush_Functions(object):
         btn_project_browser = QPushButton("Project Browser")
         btn_project_browser.clicked.connect(lambda: self.ProjectBrowser())
         layout.addWidget(btn_project_browser)
+        btn_turntable = QPushButton("Turntable")
+        btn_turntable.clicked.connect(lambda: self.Turntable())
+        layout.addWidget(btn_turntable)
         btn_settings = QPushButton("Settings")
         btn_settings.clicked.connect(lambda: self.Settings())
         layout.addWidget(btn_settings)
@@ -414,7 +441,7 @@ class Prism_ZBrush_Functions(object):
 
     def ProjectBrowser(self):
         if self.pb is not None:
-            self.pb.show()   # if hidden, show it
+            self.pb.show()
             self.pb.raise_()
             self.pb.activateWindow()
             return self.pb
@@ -452,7 +479,10 @@ class Prism_ZBrush_Functions(object):
             self.activate_zbrush()
             return False
         
-        ext = os.path.splitext(oldFilePath)[1][1:]  # get extension without dot
+        if self.zprCheckBox.isChecked():
+            ext = "zpr"
+        else:
+            ext = "ztl"
         version = int(oldFilePath[-8:-4])
         newVersion = version + 1
         filePath = oldFilePath[:-8] + str(newVersion).zfill(4) + "." + ext
@@ -554,6 +584,62 @@ class Prism_ZBrush_Functions(object):
         self.export_window.show()
 
         return self.state
+    
+    def Turntable(self):
+        oldFilePath = self.getCurrentFileName()
+        if oldFilePath == "":
+            command = "[RoutineDef,command,[Note, \"Please use Project Browser to create a new file before using 'Save Version' in Prism.\", 5]]\n[RoutineCall,command]"
+            self.send_command_to_zbrush(command)
+            self.activate_zbrush()
+            return False
+        dataPath = oldFilePath[:-4] + "versioninfo.json"
+        if os.path.exists(dataPath):
+            with open(dataPath, 'r') as f:
+                data = json.load(f)
+        else:
+            data = {}
+
+        version = self.core.mediaProducts.getHighestMediaVersion(data)
+
+        resolvedMediaPath = self.core.projects.getResolvedProjectStructurePath("renderVersions", data)
+        tempPath = os.path.dirname(os.path.abspath(__file__)) + os.sep + "ZBrushTmp" + os.sep + "temp.mpg"
+
+        path = resolvedMediaPath.replace("@identifier@", "sculpt")
+        path = path.replace("@version@", version)
+        path += os.sep + data["asset"] + "_sculpt_" + version + ".mpg"
+        if not os.path.exists(path):
+            os.makedirs(os.path.dirname(os.path.abspath(path)))
+        command = "[FileNameSetNext, \"" + tempPath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Movie:Doc]\n[ISet, Movie:Title Image :FadeIn Time, 0]\n[ISet, Movie:Title Image :FadeOut Time, 0]\n[ISet, Movie:Overlay Image:Opacity, 0]\n[IPress, Movie:Turntable]\n[IPress, Movie:Export]\n]\n[RoutineCall,command]"
+        self.send_command_to_zbrush(command)
+        self.activate_zbrush()
+
+        pathmov = os.pat.splitext(tempPath)[0] + ".mov"
+        self.convert_mpg_to_mov(tempPath, pathmov)
+        #move the file back into
+        shutil.move(pathmov, path)
+    
+    def convert_mpg_to_mov(self, input_path, output_path):
+        if not os.path.exists(input_path):
+            print("Input file does not exist.")
+            return
+
+        # Basic FFmpeg command
+        command = [
+            "ffmpeg",
+            "-i", input_path,
+            "-c:v", "libx264",     # video codec
+            "-preset", "fast",     # encoding speed
+            "-crf", "23",          # quality (lower is better)
+            "-c:a", "aac",         # audio codec
+            "-b:a", "128k",        # audio bitrate
+            output_path
+        ]
+
+        try:
+            subprocess.run(command, check=True)
+            print("Conversion successful!")
+        except subprocess.CalledProcessError as e:
+            print("FFmpeg failed:", e)
 
     def Settings(self):
         print("Opening settings...")
@@ -845,6 +931,8 @@ class ExportWindow(ExportWindowUI):
                 version =  self.core.products.getNextAvailableVersion(entity, task)
             else:
                 version = self.version_combo.currentText()
+                if version == "":
+                    version = "v0001"
             ext = self.format_combo.currentText()
 
 
