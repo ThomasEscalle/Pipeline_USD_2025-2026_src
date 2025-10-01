@@ -599,47 +599,31 @@ class Prism_ZBrush_Functions(object):
         else:
             data = {}
 
-        version = self.core.mediaProducts.getHighestMediaVersion(data)
-
         resolvedMediaPath = self.core.projects.getResolvedProjectStructurePath("renderVersions", data)
-        tempPath = os.path.dirname(os.path.abspath(__file__)) + os.sep + "ZBrushTmp" + os.sep + "temp.mpg"
 
         path = resolvedMediaPath.replace("@identifier@", "sculpt")
-        path = path.replace("@version@", version)
-        path += os.sep + data["asset"] + "_sculpt_" + version + ".mpg"
-        if not os.path.exists(path):
+        path = path.replace("3dRender", "2dRender")
+        path = path[:-6]
+        currentVersions = os.listdir(path)
+        versionInt = len(currentVersions)
+        version = "v" + str(versionInt+1).zfill(4)
+        path += os.sep + version
+        path += os.sep + data["asset"] + "_sculpt_" + version
+
+        if not os.path.exists(os.path.dirname(os.path.abspath(path))):
             os.makedirs(os.path.dirname(os.path.abspath(path)))
-        command = "[FileNameSetNext, \"" + tempPath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Movie:Doc]\n[ISet, Movie:Title Image :FadeIn Time, 0]\n[ISet, Movie:Title Image :FadeOut Time, 0]\n[ISet, Movie:Overlay Image:Opacity, 0]\n[IPress, Movie:Turntable]\n[IPress, Movie:Export]\n]\n[RoutineCall,command]"
-        self.send_command_to_zbrush(command)
-        self.activate_zbrush()
+        
+        self.path = path
 
-        pathmov = os.pat.splitext(tempPath)[0] + ".mov"
-        self.convert_mpg_to_mov(tempPath, pathmov)
-        #move the file back into
-        shutil.move(pathmov, path)
-    
-    def convert_mpg_to_mov(self, input_path, output_path):
-        if not os.path.exists(input_path):
-            print("Input file does not exist.")
-            return
-
-        # Basic FFmpeg command
-        command = [
-            "ffmpeg",
-            "-i", input_path,
-            "-c:v", "libx264",     # video codec
-            "-preset", "fast",     # encoding speed
-            "-crf", "23",          # quality (lower is better)
-            "-c:a", "aac",         # audio codec
-            "-b:a", "128k",        # audio bitrate
-            output_path
-        ]
-
-        try:
-            subprocess.run(command, check=True)
-            print("Conversion successful!")
-        except subprocess.CalledProcessError as e:
-            print("FFmpeg failed:", e)
+        if hasattr(self, "turntableWin"):
+            self.turntableWin.show()
+            self.turntableWin.raise_()
+            self.turntableWin.activateWindow()
+            return True
+        self.turntableWin = TurntableWindow(self.toolsWindow, self.core)
+        self.turntableWin.show()
+        self.turntableWin.raise_()
+        self.turntableWin.activateWindow()
 
     def Settings(self):
         print("Opening settings...")
@@ -1000,4 +984,68 @@ class ExportWindow(ExportWindowUI):
             command = "[RoutineDef, command,[IPress, Zplugin:Multi Map Exporter:Create All Maps]]\n[RoutineCall,command]"
 
 
+        self.accept()
+
+class TurntableWindow(QDialog):
+    def __init__(self, parent, core):
+        super().__init__(parent)
+        self.setWindowTitle("Turntable Options")
+        self.core = core
+        self.path = self.core.appPlugin.path
+        self.setup_ui()
+
+    def setup_ui(self):
+        # Layouts
+        main_layout = QVBoxLayout()
+        padding_layout = QHBoxLayout()
+
+        # Padding label and spinbox
+        padding_label = QLabel("Padding:")
+        self.padding_input = QSpinBox()
+        self.padding_input.setRange(0, 360)
+        self.padding_input.setValue(45)  # Default value
+
+        padding_layout.addWidget(padding_label)
+        padding_layout.addWidget(self.padding_input)
+
+        # Turntable button
+        self.turntable_button = QPushButton("Turntable")
+        self.turntable_button.clicked.connect(self.on_turntable_clicked)
+
+        # Add widgets to main layout
+        main_layout.addLayout(padding_layout)
+        main_layout.addWidget(self.turntable_button)
+
+        self.setLayout(main_layout)
+    
+    def on_turntable_clicked(self):
+        command = f"[VarSet, padding, {self.padding_input.value()}]\n[VarSet, gTotalFrames, 360/padding]\n[VarSet, fileName, \"{self.path}\"]\n[VarSet, ext, \".png\"]\n[VarSet, gFrameCount, 0]\n\n[RoutineDef, command,\n[VarSet, path, fileName]\n\n[Loop, gTotalFrames+1,\n[VarSet, curAngle, padding]\n[VarSet, n, 0]\n[Loop, [SubToolGetCount],\n[SubToolSelect, n]\n[VarSet, n, n+1]\n[IModSet, Tool:Deformation:Rotate, 2]   // Y axis only\n[ISet, Tool:Deformation:Rotate, curAngle]\n]\n\n// Force redraw / update\n[IUpdate, 1]\n\n// Export image\n[VarSet, frame, gFrameCount/padding]\n[VarSet, fill, 4-[StrLength, frame]]\n[VarSet, strFill, ""]\n[Loop, fill,\n[VarSet, strFill, [StrMerge, strFill, \"0\"]]\n]\n[VarSet, path, [StrMerge, fileName, \"_\", strFill, frame, ext]]\n[FileNameSetNext, path]\n[IPress, Document:Export]\n\n[VarSet, gFrameCount, gFrameCount + padding]\n]\n]\n[RoutineCall, command]"
+        self.core.appPlugin.send_command_to_zbrush(command)
+        self.core.appPlugin.activate_zbrush()
+
+        for i in range(int(360/self.padding_input.value())+1):
+            print("i :", i)
+            thumbnailPath = self.path + "_" + str((i)).zfill(4) + ".png"
+            newThumbnailPath = self.path + "_" + str((i)).zfill(4) + ".jpg"
+
+            # Wait until file exists (up to e.g. 1 seconds)
+            for attempt in range(5):
+                if os.path.exists(thumbnailPath):
+                    break
+                time.sleep(0.2)
+
+            if os.path.exists(thumbnailPath):
+                print("it exists for i :", i)
+                # Load PNG
+                image = QImage(thumbnailPath).copy()
+                # Save as JPG, with quality (0–100)
+                image.save(newThumbnailPath, "JPG", 100)
+                try:
+                    os.remove(thumbnailPath)
+                except PermissionError:
+                    time.sleep(0.2)
+                    try:
+                        os.remove(thumbnailPath)
+                    except PermissionError:
+                        print("not the rigth way to do it")
         self.accept()

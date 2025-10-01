@@ -1,9 +1,37 @@
-[FileNameSetNext, "C:/Mathieu/3D4/Pipe/repository/Pipeline_USD_2025-2026_src/zbrush/ZBrush/Scripts/ZBrushTmp/temp.mpg"]
-[RoutineDef, command,[IPress, Movie:Doc]
-[ISet, Movie:Title Image :FadeIn Time, 0]
-[ISet, Movie:Title Image :FadeOut Time, 0]
-[ISet, Movie:Overlay Image:Opacity, 0]
-[IPress, Movie:Turntable]
-[IPress, Movie:Export]
+[VarSet, padding, 45]
+[VarSet, gTotalFrames, 360/padding]
+[VarSet, fileName, "C:\Users\3D5\Desktop\desktop\03_Production\Assets\CHAR\Rby\Renders\2dRender\sculpt\v0010\Rby_sculpt_v0010"]
+[VarSet, ext, ".png"]
+[VarSet, gFrameCount, 0]
+
+[RoutineDef, command,
+[VarSet, path, fileName]
+
+[Loop, gTotalFrames+1,
+[VarSet, curAngle, padding]
+[VarSet, n, 0]
+[Loop, [SubToolGetCount],
+[SubToolSelect, n]
+[VarSet, n, n+1]
+[IModSet, Tool:Deformation:Rotate, 2]   // Y axis only
+[ISet, Tool:Deformation:Rotate, curAngle]
 ]
-[RoutineCall,command]
+
+// Force redraw / update
+[IUpdate, 1]
+
+// Export image
+[VarSet, frame, gFrameCount/padding]
+[VarSet, fill, 4-[StrLength, frame]]
+[VarSet, strFill, ]
+[Loop, fill,
+[VarSet, strFill, [StrMerge, strFill, "0"]]
+]
+[VarSet, path, [StrMerge, fileName, "_", strFill, frame, ext]]
+[FileNameSetNext, path]
+[IPress, Document:Export]
+
+[VarSet, gFrameCount, gFrameCount + padding]
+]
+]
+[RoutineCall, command]
