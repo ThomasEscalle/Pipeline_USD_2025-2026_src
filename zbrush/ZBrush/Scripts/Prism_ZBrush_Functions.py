@@ -115,9 +115,9 @@ class Prism_ZBrush_Functions(object):
         # save scenefile
         ext = os.path.splitext(filepath)[1]
         self.saveCurrentFileName(filepath.replace("\\", "/"))
-        if ext == ".zpr":
+        if ext == ".zpr" or ext == ".ZPR":
             command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, File:Save as]]\n[RoutineCall,command]"
-        elif ext == ".ztl":    
+        elif ext == ".ztl" or ext == ".ZTL":    
             command = "[FileNameSetNext, \"" + filepath.replace("\\", "/") + "\"]\n[RoutineDef, command,[IPress, Tool:Save As]]\n[RoutineCall,command]"
         self.send_command_to_zbrush(command)
         self.activate_zbrush()
@@ -413,7 +413,7 @@ class Prism_ZBrush_Functions(object):
         btn_save_comment = QPushButton("Save Extended")
         btn_save_comment.clicked.connect(lambda: self.SaveComment())
         layout.addWidget(btn_save_comment)
-        btn_import = QPushButton("Import")
+        btn_import = QPushButton("Import : Append")
         btn_import.clicked.connect(lambda: self.Import())
         layout.addWidget(btn_import)
         btn_export = QPushButton("Export")
