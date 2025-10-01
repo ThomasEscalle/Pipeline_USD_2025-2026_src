@@ -1,6 +1,6 @@
 [VarSet, padding, 45]
 [VarSet, gTotalFrames, 360/padding]
-[VarSet, fileName, "C:\Users\3D5\Desktop\desktop\03_Production\Assets\CHAR\Rby\Renders\2dRender\sculpt\v0010\Rby_sculpt_v0010"]
+[VarSet, fileName, "C:\Users\3D5\Desktop\desktop\03_Production\Assets\CHAR\Rby\Renders\2dRender\sculpt\v0002\Rby_sculpt_v0002"]
 [VarSet, ext, ".png"]
 [VarSet, gFrameCount, 0]
 

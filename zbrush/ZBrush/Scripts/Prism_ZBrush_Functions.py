@@ -1019,6 +1019,8 @@ class TurntableWindow(QDialog):
         self.setLayout(main_layout)
     
     def on_turntable_clicked(self):
+        if self.path == None:
+            self.path = self.core.appPlugin.path
         command = f"[VarSet, padding, {self.padding_input.value()}]\n[VarSet, gTotalFrames, 360/padding]\n[VarSet, fileName, \"{self.path}\"]\n[VarSet, ext, \".png\"]\n[VarSet, gFrameCount, 0]\n\n[RoutineDef, command,\n[VarSet, path, fileName]\n\n[Loop, gTotalFrames+1,\n[VarSet, curAngle, padding]\n[VarSet, n, 0]\n[Loop, [SubToolGetCount],\n[SubToolSelect, n]\n[VarSet, n, n+1]\n[IModSet, Tool:Deformation:Rotate, 2]   // Y axis only\n[ISet, Tool:Deformation:Rotate, curAngle]\n]\n\n// Force redraw / update\n[IUpdate, 1]\n\n// Export image\n[VarSet, frame, gFrameCount/padding]\n[VarSet, fill, 4-[StrLength, frame]]\n[VarSet, strFill, ""]\n[Loop, fill,\n[VarSet, strFill, [StrMerge, strFill, \"0\"]]\n]\n[VarSet, path, [StrMerge, fileName, \"_\", strFill, frame, ext]]\n[FileNameSetNext, path]\n[IPress, Document:Export]\n\n[VarSet, gFrameCount, gFrameCount + padding]\n]\n]\n[RoutineCall, command]"
         self.core.appPlugin.send_command_to_zbrush(command)
         self.core.appPlugin.activate_zbrush()
@@ -1048,4 +1050,5 @@ class TurntableWindow(QDialog):
                         os.remove(thumbnailPath)
                     except PermissionError:
                         print("not the rigth way to do it")
+        self.path = None
         self.accept()
