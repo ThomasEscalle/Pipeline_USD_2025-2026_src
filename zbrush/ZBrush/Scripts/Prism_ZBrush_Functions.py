@@ -595,17 +595,18 @@ class Prism_ZBrush_Functions(object):
         #remove the extention of the old file path
         for letter in oldFilePath[::-1]:
             if letter == ".":
-                oldFilePath.pop(-1)
+                oldFilePath = oldFilePath[:-1]
                 break
             else:
-                oldFilePath.pop(-1)
+                oldFilePath = oldFilePath[:-1]
 
         dataPath = oldFilePath + "versioninfo.json"
+        print("dtata path :", dataPath)
         if os.path.exists(dataPath):
             with open(dataPath, 'r') as f:
                 data = json.load(f)
         else:
-            "[RoutineDef,command,[Note, \"The metadata isn't available.\", 5]]\n[RoutineCall,command]"
+            command = "[RoutineDef,command,[Note, \"The metadata isn't available.\", 5]]\n[RoutineCall,command]"
             self.send_command_to_zbrush(command)
             self.activate_zbrush()
             return False
@@ -615,14 +616,16 @@ class Prism_ZBrush_Functions(object):
         path = resolvedMediaPath.replace("@identifier@", "sculpt")
         path = path.replace("3dRender", "2dRender")
         path = path[:-6]
+        if not os.path.exists(path):
+            os.makedirs(path)
         currentVersions = os.listdir(path)
         versionInt = len(currentVersions)
         version = "v" + str(versionInt+1).zfill(4)
         path += os.sep + version
         path += os.sep + data["asset"] + "_sculpt_" + version
-
         if not os.path.exists(os.path.dirname(os.path.abspath(path))):
             os.makedirs(os.path.dirname(os.path.abspath(path)))
+
         
         self.path = path
 
@@ -1032,7 +1035,7 @@ class TurntableWindow(QDialog):
     def on_turntable_clicked(self):
         if self.path == None:
             self.path = self.core.appPlugin.path
-        command = f"[VarSet, padding, {self.padding_input.value()}]\n[VarSet, gTotalFrames, 360/padding]\n[VarSet, fileName, \"{self.path}\"]\n[VarSet, ext, \".png\"]\n[VarSet, gFrameCount, 0]\n\n[RoutineDef, command,\n[VarSet, path, fileName]\n\n[Loop, gTotalFrames+1,\n[VarSet, curAngle, padding]\n[VarSet, n, 0]\n[Loop, [SubToolGetCount],\n[SubToolSelect, n]\n[VarSet, n, n+1]\n[IModSet, Tool:Deformation:Rotate, 2]   // Y axis only\n[ISet, Tool:Deformation:Rotate, curAngle]\n]\n\n// Force redraw / update\n[IUpdate, 1]\n\n// Export image\n[VarSet, frame, gFrameCount/padding]\n[VarSet, fill, 4-[StrLength, frame]]\n[VarSet, strFill, ""]\n[Loop, fill,\n[VarSet, strFill, [StrMerge, strFill, \"0\"]]\n]\n[VarSet, path, [StrMerge, fileName, \"_\", strFill, frame, ext]]\n[FileNameSetNext, path]\n[IPress, Document:Export]\n\n[VarSet, gFrameCount, gFrameCount + padding]\n]\n]\n[RoutineCall, command]"
+        command = f"[VarSet, padding, {self.padding_input.value()}]\n[VarSet, gTotalFrames, 360/padding]\n[VarSet, fileName, \"{self.path}\"]\n[VarSet, ext, \".png\"]\n[VarSet, gFrameCount, 0]\n\n[RoutineDef, command,\n[VarSet, path, fileName]\n\n[Loop, gTotalFrames,\n[VarSet, curAngle, padding]\n[VarSet, n, 0]\n[Loop, [SubToolGetCount],\n[SubToolSelect, n]\n[VarSet, n, n+1]\n[IModSet, Tool:Deformation:Rotate, 2]   // Y axis only\n[ISet, Tool:Deformation:Rotate, curAngle]\n]\n\n// Force redraw / update\n[IUpdate, 1]\n\n// Export image\n[VarSet, frame, gFrameCount/padding]\n[VarSet, fill, 4-[StrLength, frame]]\n[VarSet, strFill, ""]\n[Loop, fill,\n[VarSet, strFill, [StrMerge, strFill, \"0\"]]\n]\n[VarSet, path, [StrMerge, fileName, \"_\", strFill, frame, ext]]\n[FileNameSetNext, path]\n[IPress, Document:Export]\n\n[VarSet, gFrameCount, gFrameCount + padding]\n]\n]\n[RoutineCall, command]"
         self.core.appPlugin.send_command_to_zbrush(command)
         self.core.appPlugin.activate_zbrush()
 
