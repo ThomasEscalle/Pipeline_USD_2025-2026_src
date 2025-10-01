@@ -116,29 +116,6 @@ def createOverrideLayer(asset_name, asset_path , prim_path):
         return node, layer
 
 
-def findLatestOverrideVersion(asset_name):
-    """
-    Find the latest version of the USD override for the given asset name.
-    """
-    usd_overrides_path = os.path.join(os.path.dirname(cmds.file(q=True, sn=True)), "usd_overrides")
-    try:
-        if(not os.path.exists(usd_overrides_path)):
-            os.mkdir(usd_overrides_path)
-        
-        current_versions = [x for x in os.listdir(usd_overrides_path) if asset_name+"_override" in x]
-
-        max_version = 0
-        for path in current_versions:
-            max_version = max(max_version, int(path.split(".usd")[-2][-3:]))
-
-        return max_version
-
-    except Exception as e:
-        print(e)
-
-
-
-
 # Set the color of a given object
 def setColor(obj, color ):
 

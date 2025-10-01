@@ -190,6 +190,8 @@ class FileTemplateRLOMaya(FileTemplateBase):
             camera_file_path = ""
 
 
+        ###############################################################
+        ###############################################################
 
         # Create a new product on the current entity named "RLO_Edit_SetD_Publish"
         product = origin.core.products.createProduct(current_entity , "RLO_Edit_SetD_Publish",location="global" )
@@ -200,13 +202,16 @@ class FileTemplateRLOMaya(FileTemplateBase):
         save_path_edit_setD = version["versionPath"]
         save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
 
-        versionInfo = origin.core.getConfig(configPath=version) or {}
+        versionInfo = origin.core.getConfig(configPath=version+ "/versioninfo.json") or {}
         versionInfo["extension"] = ".usda"
-        origin.core.setConfig(data=versionInfo, configPath=version)
-
+        origin.core.setConfig(data=versionInfo, configPath=version+ "/versioninfo.json")
 
         save_path_edit_setD = os.path.join(save_path_edit_setD, "RLO_Edit_SetD_Publish.usda")
         save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
+
+
+        ###############################################################
+        ###############################################################
 
 
 
@@ -221,6 +226,8 @@ class FileTemplateRLOMaya(FileTemplateBase):
         task = origin.getCurrentTask()
         department = origin.getCurrentDepartment()
 
+
+        
         ###################################################################
         ################### CREATE THE SCENE ##############################
         ###################################################################
