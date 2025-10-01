@@ -721,7 +721,7 @@ class ExecuteDepartment_Animation(ExecuteDepartment):
             # Prepare the name
             department = splitedPath[-3]
             taskName = splitedPath[-2]
-            outputType = ".ma"
+            outputType = ".usd"
 
             # The name is : "<department>_Publish"
             name = "Anim_Cam_Publish"
