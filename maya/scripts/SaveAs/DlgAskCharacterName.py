@@ -2,6 +2,8 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
+import PrismInit
+
 from PySide6 import QtCore, QtGui, QtWidgets
 
 import sys
@@ -21,17 +23,40 @@ class DlgAskCharacterName(QtWidgets.QDialog):
     def __init__(self, character_options=None):
         super().__init__()
         
-        self.charcter_options = character_options
+        self.charcter_options = character_options if character_options else []
+
+        # Get the current file path and split it
+        self.pcore = PrismInit.pcore
+        filePath = self.pcore.getCurrentFileName()
+        filePath = filePath.replace("\\", "/")
+        splitedPath = filePath.split("/")
+        # Get the entity data
+        entity = self.pcore.getScenefileData(filePath)
+        connected_entities = self.pcore.entities.getConnectedEntities(entity)
+        for ent in connected_entities:
+            entity_name = ent.get("asset_path")
+            entity_name = entity_name.replace("\\", "/")
+            entity_name = entity_name.split("/")[-1]
+            if entity_name not in self.charcter_options:
+                self.charcter_options.append(entity_name)
+
 
         # Par défaut en mode auto, sauf si pas d'options disponibles
         self.mode = "auto"
         if not (self.charcter_options and len(self.charcter_options) > 0):
             self.mode = "manual"
 
+
+
+
         self.setupUi()
 
 
     def setupUi(self):
+
+
+
+
         self.setWindowTitle("c'est qui ?") 
         self.layout = QtWidgets.QVBoxLayout(self)
 

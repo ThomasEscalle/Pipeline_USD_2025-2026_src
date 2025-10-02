@@ -55,9 +55,14 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
 
         # Ici, on vas recuperer le setdress de l'entitée master du shot courant.
         importReference_SetDress = True
-        master_entity = self.getCurrentShotMaster(current_entity, origin)
-        setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
 
+        master_entity = self.getCurrentShotMaster(current_entity, origin)
+        edit_setDress_Files = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc"], origin, ["FLO_Edit_SetD_Publish"], onlyOne=True)
+        if len(edit_setDress_Files) > 0 :
+            setDress_Files = edit_setDress_Files
+        else :
+            setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD_Publish"], onlyOne=True)
+        
         
 
 

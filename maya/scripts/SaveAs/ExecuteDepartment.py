@@ -511,7 +511,7 @@ class ExecuteDepartment_RLO(ExecuteDepartment):
         ################################
         if user_selection == "characters":
             # Avec des options (mode combobox disponible)
-            data = ["Character_A", "Character_B", "Character_C"]  # Todo: fetch characters from scene
+            data = []  # Todo: fetch characters from scene
             dialog = DlgAskCharacterName(data)
             if dialog.exec() == QtWidgets.QDialog.Rejected:
                 return
@@ -627,7 +627,7 @@ class ExecuteDepartment_FLO(ExecuteDepartment):
         ################################
         if user_selection == "characters":
             # Avec des options (mode combobox disponible)
-            data = ["Character_A", "Character_B", "Character_C"]  # Todo: fetch characters from scene
+            data = []  # Todo: fetch characters from scene
             dialog = DlgAskCharacterName(data)
             if dialog.exec() == QtWidgets.QDialog.Rejected:
                 return
@@ -746,7 +746,7 @@ class ExecuteDepartment_Animation(ExecuteDepartment):
         ################################
         if user_selection == "characters":
             # Avec des options (mode combobox disponible)
-            data = ["Character_A", "Character_B", "Character_C"]  # Todo: fetch characters from scene
+            data = []  # Todo: fetch characters from scene
             dialog = DlgAskCharacterName(data)
             if dialog.exec() == QtWidgets.QDialog.Rejected:
                 return

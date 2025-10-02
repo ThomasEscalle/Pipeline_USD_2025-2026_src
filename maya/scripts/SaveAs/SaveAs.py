@@ -308,6 +308,9 @@ class SaveAsWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 if action.toolTip().lower() == department.lower():
                     action.setChecked(True)
                     print("The department ID is : ", action.text())
+
+                    # Set the window title to include the department
+                    self.setWindowTitle(f"Badger Pipeline - {action.text()}")
         except:
             return
         if not filePath or filePath == "":

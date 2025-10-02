@@ -64,8 +64,12 @@ class FileTemplateFLOMaya(FileTemplateBase):
         ##
         importReference_SetDress = True
         master_entity = self.getCurrentShotMaster(current_entity, origin)
-        setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"], onlyOne=True)
-
+        edit_setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["RLO_Edit_SetD_Publish"], onlyOne=True)
+        if len(edit_setDress_Files) > 0 :
+            setDress_Files = edit_setDress_Files
+        else :
+            setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD_Publish"], onlyOne=True)
+        
 
         # On vas récupérer tous les assets connectés a l'entitée courante.
         # [
