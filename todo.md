@@ -1,12 +1,5 @@
 ## Todo
 
-- [X] : Améliorer la recherche des .exe de Maya, houdini, et nuke en reprennant le code des pluggins.
-- [X] : Faire en sorte que les .usd des assets soient contenues dans le repertoire de l'asset.
-- [X] : Implementer le systeme de variants dans l'USD
-- [ ] : Implementer le dialog d'edition des variants
-- [ ] : Implementer dans le dialog settings de la création de scene les filtres.
-- [ ] : Restructurer le site et faire un essai de vidéo tutoriel.
-
 
 ## Notes de Hugo :
 

@@ -349,7 +349,6 @@ class ItemsListWidget(QtWidgets.QListWidget):
                 asset_name = asset_splited[0]
                 asset_path = ""
 
-<<<<<<< HEAD
             # Collecte des dossiers enfants directs uniquement
             if asset_path and asset_path != self._current_path:
                 # Normaliser les chemins pour Ã©viter les problÃ¨mes de sÃ©parateurs
@@ -369,11 +368,6 @@ class ItemsListWidget(QtWidgets.QListWidget):
                     child_path = normalized_current_path + "/" + child_folder
                     if child_path not in folders:
                         folders.append(child_path)
-=======
-            # Collecte des dossiers
-            if asset_path and asset_path not in folders and self._current_path in asset_path and asset_path != self._current_path:
-                folders.append(asset_path)
->>>>>>> 7d00a3614ea11d2b6998262d369daf216a0d9759
 
 
             # Filtrage par current_path
@@ -396,11 +390,8 @@ class ItemsListWidget(QtWidgets.QListWidget):
             item.setText(name)
             item.setIcon(self.core.getPlugin("Badger_Pipeline").getIcon("folder.png"))
             item.setWhatsThis("folder")
-<<<<<<< HEAD
             # Stocker le chemin complet du dossier dans les donnÃ©es de l'item
             item.setData(QtCore.Qt.UserRole, {"type": "folder", "full_path": folder})
-=======
->>>>>>> 7d00a3614ea11d2b6998262d369daf216a0d9759
             self.addItem(item)
 
         # CrÃ©ation des assets
@@ -426,11 +417,7 @@ class ItemsListWidget(QtWidgets.QListWidget):
     # Switch to list mode
     def set_list_mode(self):
         self.setViewMode(QtWidgets.QListView.ListMode)
-<<<<<<< HEAD
         self.setIconSize(QtCore.QSize(24, 24))
-=======
-        self.setIconSize(QtCore.QSize(32, 32))
->>>>>>> 7d00a3614ea11d2b6998262d369daf216a0d9759
         self.setGridSize(QtCore.QSize(36, 36))
         self._view_mode = 'list'
 
@@ -453,7 +440,6 @@ class ItemsListWidget(QtWidgets.QListWidget):
     def onItemDoubleClicked(self, item):
         # VÃ©rifie si l'item est un dossier via whatsThis
         if item.whatsThis() == "folder":
-<<<<<<< HEAD
             # RÃ©cupÃ©rer le chemin complet depuis les donnÃ©es de l'item
             item_data = item.data(QtCore.Qt.UserRole)
             if item_data and item_data.get("type") == "folder":
@@ -469,10 +455,6 @@ class ItemsListWidget(QtWidgets.QListWidget):
             else:
                 new_path = folder_name
             self.set_current_path(new_path)
-=======
-            folder_name = item.text()
-            self.set_current_path(folder_name)
->>>>>>> 7d00a3614ea11d2b6998262d369daf216a0d9759
             return
         
 

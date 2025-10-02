@@ -215,7 +215,10 @@ class MayaExportUsd:
         command += "exportInstances=1;"
         command += "exportVisibility=1;"
         command += "mergeTransformAndShape=1;"
-        command += "stripNamespaces=0;"
+        if namespaces:
+            command += "stripNamespaces=0;"
+        else:
+            command += "stripNamespaces=1;"
         command += "worldspace=0;"
         command += "\" -type \"USD Export\" "
 

@@ -49,16 +49,7 @@ def build_template():
     # Importe la référence si elle existe
     imported_nodes = []
     if importReference == "True" and importReferencePath and importReferencePath != "[]" and importReferencePath != '""':
-        if importMethod == "Reference":
-            if doImportNamespace == "True":
-                result = cmds.file(importReferencePath, reference=True, namespace=importNamespace, returnNewNodes=True)
-            else:
-                result = cmds.file(importReferencePath, i=True, returnNewNodes=True)
-        else:
-            if doImportNamespace == "True":
-                result = cmds.file(importReferencePath, i=True, namespace=importNamespace, returnNewNodes=True)
-            else:
-                result = cmds.file(importReferencePath, i=True, returnNewNodes=True)
+        result = cmds.file(importReferencePath, i=True, returnNewNodes=True)
         imported_nodes = result if result else []
 
     # Crée les groupes standards
@@ -96,7 +87,6 @@ def build_template():
         cmds.parent(grp_extraNodesToHide, grp_extraNodes)
 
         # Si on a importé une référence, on met les nodes importés dans grp_geo
-        # Todo:s faire en sorte d'aller chercher les "Sous nodes" pour les parenter et non les groupes en top level
         if importReference == "True" and imported_nodes:
             # On ne veut reparenter que les transform nodes de top-level
             import maya.api.OpenMaya as om2
@@ -107,9 +97,22 @@ def build_template():
                 return not parents
             top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
             for node in top_level_transforms:
+
+                """  Au lieux de faire cette méthode, on vas lister les enfants de node, et les reparenter a grp_render
                 try:
                     cmds.parent(node, grp_render)
                 except Exception:
+                    pass
+                """
+
+                try:
+                    children = cmds.listRelatives(node, children=True, fullPath=True) or []
+                    for child in children:
+                        cmds.parent(child, grp_render)
+                    # After reparenting children, delete the empty parent node
+                    cmds.delete(node)
+                except Exception:
+                    print("Error while deleting node:", node)
                     pass
 
     # Set the outliner color of the root group to blue

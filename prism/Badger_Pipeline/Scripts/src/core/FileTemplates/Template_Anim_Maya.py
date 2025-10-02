@@ -187,9 +187,9 @@ class FileTemplateAnimMaya(FileTemplateBase):
         save_path_edit_setD = version["versionPath"]
         save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
 
-        versionInfo = origin.core.getConfig(configPath=version+ "/versioninfo.json") or {}
+        versionInfo = origin.core.getConfig(configPath=save_path_edit_setD+ "/versioninfo.json") or {}
         versionInfo["extension"] = ".usda"
-        origin.core.setConfig(data=versionInfo, configPath=version+ "/versioninfo.json")
+        origin.core.setConfig(data=versionInfo, configPath=save_path_edit_setD+ "/versioninfo.json")
 
         save_path_edit_setD = os.path.join(save_path_edit_setD, "Anim_Edit_SetD_Publish.usda")
         save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
