@@ -75,7 +75,11 @@ void Page_010_SelectComponents::createItems()
     assetBrowserItem->setCheckState(0, Qt::Checked);
     m_items["Maya Asset Browser"] = assetBrowserItem;
     
-
+    /// Add a "Maya shot manager" item checkable
+    QTreeWidgetItem* shotManagerItem = new QTreeWidgetItem(mayaRootItem);
+    shotManagerItem->setText(0, "Maya shot manager");
+    shotManagerItem->setCheckState(0, Qt::Checked);
+    m_items["Maya shot manager"] = shotManagerItem;
 
 
     /// Create a root tree widget for "Houdini"

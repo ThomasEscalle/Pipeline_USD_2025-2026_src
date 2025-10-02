@@ -63,6 +63,10 @@ bool InstallProcessTools::install()
             processEvents();
             installResult = install_MayaAssetBrowser();
         }
+        else if( it == "Maya shot manager") {
+            processEvents();
+            installResult = install_MayaShotManager();
+        }
         else if (it == "Houdini Asset Browser") {
             processEvents();
             installResult = install_HoudiniAssetBrowser();
@@ -363,9 +367,113 @@ bool InstallProcessTools::install_MayaShelf()
 bool InstallProcessTools::install_MayaAssetBrowser()
 {
     QString maya_prefs_path = SoftwareHelpers::getMayaPrefsPath();
+    QString script_path = FileHelper::JoinPath(maya_prefs_path , "scripts");
+
+    // Check if there is a "asset_browser_window" folder, if not create it
+    QString asset_browser_path = FileHelper::JoinPath(script_path, "asset_browser_window");
+    if(!FileHelper::DirExists(asset_browser_path)) {
+        if(!QDir().mkpath(asset_browser_path)) {
+            logError("Failed to create the Maya asset_browser_window directory: " + asset_browser_path);
+            return false;
+        }
+    }
+    else {
+        /// We remove the existing asset_browser_window folder if it exists and replace it with the new one
+        if(FileHelper::DirExists(asset_browser_path)) {
+            QDir dir(asset_browser_path);
+            if(!dir.removeRecursively()) {
+                logError("Failed to remove the existing Maya asset_browser_window directory: " + asset_browser_path);
+                return false;
+            }
+
+            log("Removed the existing Maya asset_browser_window directory: " + asset_browser_path);
+            processEvents();
+
+            /// Create the asset_browser_window folder
+            if(!QDir().mkpath(asset_browser_path)) {
+                logError("Failed to create the Maya asset_browser_window directory: " + asset_browser_path);
+                return false;
+            }
+
+        }
+    }
+
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
+    QString maya_asset_browser_template = FileHelper::JoinPath(rootRepoPath, "maya/scripts/asset_browser_window");
+
+    /// Check if the maya_asset_browser_template path exists
+    if(!FileHelper::DirExists(maya_asset_browser_template)) {
+        logError("The path to the maya asset_browser_window is not valid : " + maya_asset_browser_template);
+        return false;
+    }
+
+    /// Copy the asset_browser_window folder to the Maya scripts folder recursively
+    if(!copyFolderRecursive(maya_asset_browser_template, asset_browser_path)) {
+        logError("Failed to copy the asset_browser_window folder from : " + maya_asset_browser_template + " to " + asset_browser_path);
+        return false;
+    }
+
+
+    log("Maya prefs path: " + maya_prefs_path);
+    return true;
+}
+
+bool InstallProcessTools::install_MayaShotManager()
+{
+    QString maya_prefs_path = SoftwareHelpers::getMayaPrefsPath();
+
+    QString shot_manager_path = FileHelper::JoinPath(maya_prefs_path, "scripts/shot_manager");
+    // Check if the shot_manager_path exists, if not create it
+    if(!FileHelper::DirExists(shot_manager_path)) {
+        if(!QDir().mkpath(shot_manager_path)) {
+            logError("Failed to create the Maya shot_manager directory: " + shot_manager_path);
+            return false;
+        }
+    }
+    else {
+        /// We remove the existing shot_manager folder if it exists and replace it with the new one
+        if(FileHelper::DirExists(shot_manager_path)) {
+            QDir dir(shot_manager_path);
+            if(!dir.removeRecursively()) {
+                logError("Failed to remove the existing Maya shot_manager directory: " + shot_manager_path);
+                return false;
+            }
+
+            log("Removed the existing Maya shot_manager directory: " + shot_manager_path);
+            processEvents();
+
+            /// Create the shot_manager folder
+            if(!QDir().mkpath(shot_manager_path)) {
+                logError("Failed to create the Maya shot_manager directory: " + shot_manager_path);
+                return false;
+            }
+
+        }
+    }
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
+    QString maya_shot_manager_template = FileHelper::JoinPath(rootRepoPath, "maya/scripts/shot_manager");
+    /// Check if the maya_shot_manager_template path exists
+    if(!FileHelper::DirExists(maya_shot_manager_template)) {
+        logError("The path to the maya shot_manager is not valid : " + maya_shot_manager_template);
+        return false;
+    }
+
+    /// Copy the shot_manager folder to the Maya scripts folder recursively
+    if(!copyFolderRecursive(maya_shot_manager_template, shot_manager_path)) {
+        logError("Failed to copy the shot_manager folder from : " + maya_shot_manager_template + " to " + shot_manager_path);
+        return false;
+    }
+    
+
 
     return true;
 }
+
+
 
 bool InstallProcessTools::install_HoudiniAssetBrowser()
 {

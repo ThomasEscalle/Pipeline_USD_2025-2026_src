@@ -24,6 +24,7 @@ public:
     bool install_MayaSaveAs();
     bool install_MayaShelf();
     bool install_MayaAssetBrowser();
+    bool install_MayaShotManager();
 
     bool install_HoudiniAssetBrowser();
     bool install_HoudiniCustomNodes();
