@@ -37,6 +37,8 @@ shot_length = int("$$SHOT_LENGTH$$")
 shot_preroll = int("$$SHOT_PREROLL$$")
 shot_postroll = int("$$SHOT_POSTROLL$$")
 
+camera_filepath = "$$CAMERA_FILEPATH$$"
+
 set_dress_filepath = "$$SETDRESS_FILEPATH$$"
 
 
@@ -96,7 +98,7 @@ def build_assembly_subnet():
             reference_node = set_dress_subnet.createNode("reference", "Set_Dress_Reference")
             reference_node.setPosition(in_set_dress.position() + hou.Vector2(0, -2))
             reference_node.parm("filepath1").set(set_dress_filepath.replace("\\", "/"))
-            reference_node.parm("primpath1").set(f"/{assetName}/Set_Dress")
+            reference_node.parm("primpath1").set(f"/Set_Dress_grp")
             reference_node.setComment(f"Reference the Set Dress USD:\n{set_dress_filepath}")
             reference_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
@@ -145,6 +147,54 @@ def build_assembly_subnet():
     camera_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
     camera_subnet.setPosition(fx_subnet.position() + hou.Vector2(0, -2))
     camera_subnet.setComment("Import the Camera elements here")
+
+    def build_camera_subnet():
+        # Get the ouput0 node of the camera subnet
+        cam_output0 = camera_subnet.node("output0")
+        # Get the input0 node of the camera subnet
+        cam_inputs = camera_subnet.indirectInputs()
+        cam_input_stage = cam_inputs[0] if cam_inputs else None
+
+        # Create a "Null" node called "IN_CAMERA"
+        in_camera = camera_subnet.createNode("null", "IN_CAMERA")
+        in_camera.setPosition(hou.Vector2(0, 0))
+
+        # Create a "reference" node to import the camera USD
+        if camera_filepath and os.path.isfile(camera_filepath):
+            cam_reference_node = camera_subnet.createNode("reference", "Camera_Reference")
+            cam_reference_node.setPosition(in_camera.position() + hou.Vector2(0, -2))
+            cam_reference_node.parm("filepath1").set(camera_filepath.replace("\\", "/"))
+            cam_reference_node.parm("primpath1").set(f"/Camera_grp")
+            cam_reference_node.setComment(f"Reference the Camera USD:\n{camera_filepath}")
+            cam_reference_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+
+            # Add a transform node to transform from cm to m
+            transform_node = camera_subnet.createNode("xform", "Transform_cm_to_m")
+            transform_node.setPosition(cam_reference_node.position() + hou.Vector2(0, -2))
+            transform_node.parm("scale").set(0.01)  # Scale down by a factor of 100 (cm to m)
+            transform_node.parm("primpattern").set("/Camera_grp")
+            transform_node.setComment("Transform from cm to m")
+            transform_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+
+            # Connect the nodes together
+            cam_reference_node.setInput(0, in_camera, 0)
+            transform_node.setInput(0, cam_reference_node, 0)
+            cam_output0.setInput(0, transform_node, 0)
+
+        else:
+            # If no valid camera filepath is provided, connect IN_CAMERA directly to output0
+            cam_output0.setInput(0, in_camera, 0)
+
+        # Place the input and output nodes
+        cam_input_stage.setPosition(hou.Vector2(0, 2))
+        cam_output0.setPosition(hou.Vector2(0, -4))
+
+        # Connect the nodes together
+        in_camera.setInput(0, cam_input_stage, 0)
+
+        pass
+
+    build_camera_subnet()
 
     # Create a "Null" node called "OUT_ASSEMBLY"
     out_assembly = assembly_subnet.createNode("null", "OUT_ASSEMBLY")

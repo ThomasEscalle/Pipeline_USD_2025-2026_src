@@ -57,6 +57,9 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
         importReference_SetDress = True
 
         master_entity = self.getCurrentShotMaster(current_entity, origin)
+        
+        # On cherche d'abord un éventuel setdress éditable sur le shot courant.
+        # Si on en trouve pas, on prend celui du master.
         edit_setDress_Files = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc"], origin, ["FLO_Edit_SetD_Publish"], onlyOne=True)
         if len(edit_setDress_Files) > 0 :
             setDress_Files = edit_setDress_Files
@@ -64,6 +67,12 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
             setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD_Publish"], onlyOne=True)
         
         
+
+
+        # On vas chercher la camera qui a été publish dans le shot au moment de l'animation
+        camera_file = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc", ".abc"], origin, ["Anim_Cam_Publish"], onlyOne=True)
+
+
 
 
         # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
@@ -78,6 +87,17 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
                     ]
                 },
                 "items" : setDress_Files,
+                "select_only_one_file": True
+            },
+            {
+                "type" : "folder",
+                "name" : "Camera",
+                "settings" : {
+                    "accepted_files" : [
+                        "usd", "usda", "usdc", "abc"
+                    ]
+                },
+                "items" : camera_file,
                 "select_only_one_file": True
             }
         ]
@@ -103,15 +123,27 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
 
         # Get the items results
         items = dialog.getResult()
-        items_setDress = items.get("Set Dress", [])
 
         # On recupere les products associés aux items
+        items_setDress = items.get("Set Dress", [])
         products_setDress = self.getPreferedFilePathsFromProductList(items_setDress, origin)
         # Si il y'a plus d'un set dress, on prend que le premier.
         if len(products_setDress) > 1 :
             products_setDress = [products_setDress[0]]
 
         products_setDress_str = str(products_setDress[0]) if len(products_setDress) > 0 else ""
+
+
+        # On recupere les products associés aux items
+        products_camera = dialog.getResult().get("Camera", [])
+        products_camera = self.getPreferedFilePathsFromProductList(products_camera, origin)
+        # Si il y'a plus d'un camera, on prend que le premier.
+        if len(products_camera) > 1 :
+            products_camera = [products_camera[0]]
+
+        products_camera_str = str(products_camera[0]) if len(products_camera) > 0 else ""
+
+
 
 
 
@@ -142,6 +174,8 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
         script.replaceVariable("$$SHOT_LENGTH$$", str(shot_length))
         script.replaceVariable("$$SHOT_PREROLL$$", str(shot_preroll))
         script.replaceVariable("$$SHOT_POSTROLL$$", str(shot_postroll))
+
+        script.replaceVariable("$$CAMERA_FILEPATH$$", products_camera_str.replace("\\", "/"))
 
         script.replaceVariable("$$SETDRESS_FILEPATH$$", products_setDress_str.replace("\\", "/"))
 

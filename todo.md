@@ -8,11 +8,11 @@
 4. 🟢 Verification des exports anims / cam / editSetD du FLO
 5. 🟢 Verification des exports anims / cam / editSetD de l'anim
 
-6. Import des editsetd correctement
+6. 🟢 Import des editsetd correctement
 
 6. Importation du ghost de du FLO dans l'animation
 
-7. Import des animations et des 
+7. Import des animations et 🟡 des cameras dans le assembly
 
 8. Fix les autorigs pour avoir les nomenclatures nécessaires à l'application de l'anim sur les assets
 
