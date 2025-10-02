@@ -18,7 +18,8 @@ shot_length = "$$SHOT_LENGTH$$"  # This is an integer
 shot_preroll = "$$SHOT_PREROLL$$"  # This is an integer
 shot_postroll = "$$SHOT_POSTROLL$$"  # This is an integer
 
-
+camera_rig_path = "$$CAMERA_RIG_PATH$$"                # This is a path to the camera rig ma file
+import_camera_from_rlo = "$$IMPORT_CAMERA_FROM_RLO$$"  # "True" or "False", if False, we import the camera from the camera_rig_path
 
 set_dress_path = "$$SET_DRESS_PATH$$"      # This is a string representation of a list of paths but that should only contain one item
 save_path_edit_setD = "$$SAVE_PATH_EDIT_SETD$$"  # This is a path to the folder where the EditSetDress.usda should be saved
@@ -27,6 +28,8 @@ rigs_props_paths = "$$RIGS_PROPS_PATHS$$"  # This is a string representation of 
 
 create_bookmarks = "$$CREATE_BOOKMARKS$$"  # "True" or "False"
 
+shot_str = "$$SHOT$$"  # This is entity of the shot, as json object
+shot = eval(shot_str)
 
 
 # Create a bookmark in the timeline
@@ -259,7 +262,55 @@ def build_template():
 
 
 
+    ####################################################################
+    ####################################################################
+    ####    I M P O R T    C A M E R A S       #########################
+    ####################################################################
+    ####################################################################
 
+    if import_camera_from_rlo == "True":
+        pass
+    else:
+        created_cameras = []
+
+        # Import the camera rig
+        imported_nodes = cmds.file(camera_rig_path, i=True, returnNewNodes=True)
+        if imported_nodes is None:
+            imported_nodes = []
+            
+        # Parent the top level transform nodes to the cam_grp
+        top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
+        for node in top_level_transforms:
+            # Skip if the node is not a transform
+            # Create a parent node with the shot name _grp
+            parent_node = cmds.group(empty=True, name="cam_" + shot['shot'] + "_grp")
+
+            # Put the node under the parent node and rename it to shot name + original name
+            node = cmds.rename(node, shot['shot'] + "_" + node)
+            cmds.parent(node, parent_node)
+
+            cmds.parent(parent_node, cam_grp)
+
+            # Iterate over the children of the node to find the camera and set its color and rename it's transform node
+            childrens = cmds.listRelatives(node, allDescendents=True, fullPath=True)
+            if childrens is not None:
+                for child in childrens:
+                    if cmds.objectType(child) == "camera":
+                        # Get the transform node of the camera
+                        transform = cmds.listRelatives(child, parent=True, fullPath=True)[0]
+                        created_cameras.append({"shot": shot['shot'], "transform": transform})
+        
+        # Iterate over the created cameras and rename them to shot name + _cam
+        # We need to do this in a second time
+        for cam in created_cameras:
+            cmds.rename(cam['transform'], cam['shot'] + "_cam")
+
+
+
+
+    ####################################################################
+    ####################################################################
+    ####################################################################
 
 
 

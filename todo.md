@@ -1,5 +1,31 @@
 ## Todo
 
+1. FLO : import des cameras du RLO, ou création d'une cam 'normale'
+2. Anim : Import des cameras du FLO, ou création d'une cam 'normale'
+
+3. Creation du script select character, relié a prism pour les connected entities
+
+4. Verification des exports anims / cam / editSetD du FLO
+5. Verification des exports anims / cam / editSetD de l'anim
+
+6. Importation du ghost de du FLO dans l'animation
+
+7. Import des animations et des 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Notes de Hugo :
 

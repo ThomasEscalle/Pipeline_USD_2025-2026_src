@@ -60,9 +60,12 @@ class FileTemplateAnimMaya(FileTemplateBase):
 
     
         # Ici, on vas recuperer le setdress de l'entitée master du shot courant.
+        ## 
+        # Todo : recuperer le EditSetDress du FLO si il existe, sinon le SetDress.
+        ##
         importReference_SetDress = True
         master_entity = self.getCurrentShotMaster(current_entity, origin)
-        setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
+        setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"], onlyOne=True)
 
 
         # On vas récupérer tous les assets connectés a l'entitée courante.
@@ -204,6 +207,9 @@ class FileTemplateAnimMaya(FileTemplateBase):
         assetName = origin.getCurrentEntity()["sequence"] + "_" + origin.getCurrentEntity()["shot"]
         task = origin.getCurrentTask()
         department = origin.getCurrentDepartment()
+        shot_str = str(current_entity)
+        shot_str = shot_str.replace("\\", "/")
+        shot_str = shot_str.replace("\\\\", "/")
 
         ###################################################################
         ################### CREATE THE SCENE ##############################
@@ -216,12 +222,15 @@ class FileTemplateAnimMaya(FileTemplateBase):
         script.replaceVariable("$$TASK$$", task)
         script.replaceVariable("$$DEPARTMENT$$", department)
 
+        script.replaceVariable("$$SHOT$$", shot_str)   # Infos about the current shot, as string dictionary
+
         script.replaceVariable("$$SHOT_RANGE$$", str(shot_range))
         script.replaceVariable("$$SHOT_LENGTH$$", str(shot_length))
         script.replaceVariable("$$SHOT_PREROLL$$", str(shot_preroll))
         script.replaceVariable("$$SHOT_POSTROLL$$", str(shot_postroll))
 
         script.replaceVariable("$$CAMERA_RIG_PATH$$", camera_file_path)
+        script.replaceVariable("$$IMPORT_CAMERA_FROM_FLO$$", "False")
 
         script.replaceVariable("$$SET_DRESS_PATH$$", products_setDress_str)
         script.replaceVariable("$$SAVE_PATH_EDIT_SETD$$", save_path_edit_setD)
