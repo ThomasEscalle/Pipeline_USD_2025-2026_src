@@ -32,7 +32,7 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
 
         # Current entity
         current_entity = origin.getCurrentEntity()
-
+        connected_entities = origin.core.entities.getConnectedEntities(origin.getCurrentEntity())
 
         shot_details = self.getShotDetails(current_entity, origin)  # {'range': [1001, 1005], 'length': 5, 'metadata': {'preroll': {'value': '5', 'show': True}, 'postroll': {'value': '5', 'show': True}}}
         shot_range = shot_details.get("range", [1001, 1100])
@@ -164,10 +164,19 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
         for i in range(len(products_character_animations_files)):
             print("Character Animation File Selected : ", products_character_animations_files[i])
             products_character_animations[i]["product_file_path"] = products_character_animations_files[i]
-            
+
+            for entity in connected_entities:
+                # print(" - Connected Entity : ", entity)
+                # {'type': 'asset', 'asset_path': 'Chars\\Albert'}
+                product = products_character_animations[i]["product"]
+                product = product.replace("\\", "/")
+                product = product.replace("Anim_Char_", "")
+                product = product.replace("_Publish", "")
+
+                if product in entity["asset_path"]:
+                    products_character_animations[i]["connected_entity"] = entity
+                    break
         products_character_animations_str = str(products_character_animations) if len(products_character_animations) > 0 else ""
-
-
 
 
 
