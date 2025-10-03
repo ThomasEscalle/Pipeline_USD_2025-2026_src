@@ -66,6 +66,7 @@ class MayaExportUsd:
         pass
 
     def onCbOutTypeValueChanged(self):
+        print("State is now:", self.state)
         # If the new value is ".usda" or ".usdc", update the UI accordingly
         if self.state.cb_outType.currentText() == ".usd":
             self.exportFormat.setVisible(True)

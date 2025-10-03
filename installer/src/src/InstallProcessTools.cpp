@@ -536,7 +536,8 @@ bool InstallProcessTools::install_HoudiniCustomNodes()
         /// Copy the file "lop_Thomas.BP_Export.1.0.hdanc"
         QStringList filesToCopy = {
             "lop_Thomas.Bp_AssetReference.1.0.hdanc",
-            "lop_Thomas.BP_Export.1.0.hdanc"
+            "lop_Thomas.BP_Export.1.0.hdanc",
+            "lop_Thomas.BP_Anim_Import.1.0.hdanc"
         };
         for(auto it : filesToCopy) {
             copyFile(houdini_otls_path_template + "/" + it , houdini_otls_path + "/" + it );
