@@ -378,6 +378,44 @@ def build_template():
 
 
     ###################################################
+    
+    ###################################################
+
+
+    
+    ###################################################
+    ####    I M P O R T    F L O    A N I M S     #####
+    ###################################################
+    ###################################################
+    flo_animations_paths_eval = eval(flo_animations_paths)
+    if len(flo_animations_paths_eval) > 0:
+        # Create a 'ghosts_grp' group empty
+        ghosts_grp_name = "Ghosts_grp"
+        ghosts_grp = cmds.group(empty=True, name=ghosts_grp_name)
+        setColor(ghosts_grp, "#0099FF")  # RGB values for magenta
+
+
+        # Because the flo are animated usd caches, we have to create a new mayaUsdProxyShape, and append all of them as subLayers
+        flo_proxy_shape_node = cmds.createNode('mayaUsdProxyShape', name="FLO_Anims")
+        transform_flo_proxy_node = cmds.listRelatives(flo_proxy_shape_node, parent=True)[0]
+        cmds.parent(transform_flo_proxy_node, ghosts_grp)
+        
+        # Try to get the "time" node , and connect it to the "time" attribute of the proxy shape
+        try:
+            cmds.connectAttr("time1.outTime", flo_proxy_shape_node + ".time")
+        except:
+            pass
+
+        print("PROXY:", flo_proxy_shape_node)
+
+        import mayaUsd.ufe as mayaUsdUfe #import this at runtime because otherwise maya crashes on startup
+        flo_proxy_shape_node_long = cmds.ls(flo_proxy_shape_node, long=True)[0]
+        flo_stage = mayaUsdUfe.getStage(flo_proxy_shape_node_long)
+
+        for anim_path in flo_animations_paths_eval:
+            if os.path.exists(anim_path):
+                flo_stage.GetRootLayer().subLayerPaths.append(anim_path)
+
 
 
     cmds.file(rename=outputPath)
