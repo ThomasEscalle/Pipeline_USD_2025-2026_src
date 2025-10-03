@@ -10,11 +10,11 @@
 
 6. 🟢 Import des editsetd correctement
 
-6. Importation du ghost de du FLO dans l'animation (obligé de passer par le USD pluggin)
+6. 🟢 Importation du ghost de du FLO dans l'animation (obligé de passer par le USD pluggin)
 
 7. Import des animations et 🟡 des cameras dans le assembly
 
-8. Fix les autorigs pour avoir les nomenclatures nécessaires à l'application de l'anim sur les assets
+8. 🟢 Fix les autorigs pour avoir les nomenclatures nécessaires à l'application de l'anim sur les assets
 
 
 

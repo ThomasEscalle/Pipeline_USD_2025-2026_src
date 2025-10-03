@@ -17,8 +17,11 @@ import maya.api.OpenMaya as om2
 # - Create the necessary nodes for autorigging
 
 # Hierarchy de groupes :
-# - char_chaise_righ_grp
-#     - char_chaise_righ_geo
+# - chaise
+#     - Asset_root
+#       - geo
+#         - render
+#            - <Les geos viennent ici, sans leurs groupes parent.. A voir comment gerer les references ?? > 
 #     - GlobalMove_01
 #          - Joints_01
 #          - CTRLs_01
@@ -115,11 +118,17 @@ def build():
     imported_nodes = result if result else []
 
     # Crée les groupes standards
-    group_name = asset_type + "_" + asset_name + "_" +subdiv_level +"_grp"
+    group_name = asset_name
     grp = cmds.group(empty=True, name=group_name)
 
     # Crées les groupes standards
-    grp_geo = cmds.group(empty=True, name= asset_type + "_" + asset_name + "_" +subdiv_level +"_geo")
+    grp_asset_root = cmds.group(empty=True, name="Asset_root")
+    grp_geo = cmds.group(empty=True, name="geo")
+    if subdiv_level == "righ":
+        grp_render = cmds.group(empty=True, name="render")
+    else:
+        grp_render = cmds.group(empty=True, name="proxy")  # Proxy because we are in Riggin 'LOW'
+
     grp_globalMove = cmds.group(empty=True, name="GlobalMove_01")
     grp_joints = cmds.group(empty=True, name="Joints_01")
     grp_ctrls = cmds.group(empty=True, name="CTRLs_01")
@@ -130,7 +139,9 @@ def build():
     grp_extraNodesToHide = cmds.group(empty=True, name="ExtraNodes_To_Hide_01")
 
     # Parent les groupes
-    cmds.parent(grp_geo, grp)
+    cmds.parent(grp_asset_root, grp)
+    cmds.parent(grp_geo, grp_asset_root)
+    cmds.parent(grp_render, grp_geo)
     cmds.parent(grp_globalMove, grp)
     cmds.parent(grp_joints, grp_globalMove)
     cmds.parent(grp_ctrls, grp_globalMove)
@@ -147,7 +158,6 @@ def build():
 
 
 
-    # On ne veut reparenter que les transform nodes de top-level
     def is_top_level_transform(node):
         if not cmds.objectType(node, isType='transform'):
             return False
@@ -157,8 +167,13 @@ def build():
     top_level_transforms = [n for n in imported_nodes if is_top_level_transform(n)]
     for node in top_level_transforms:
         try:
-            cmds.parent(node, grp_geo)
+            children = cmds.listRelatives(node, children=True, fullPath=True) or []
+            for child in children:
+                cmds.parent(child, grp_render)
+            # After reparenting children, delete the empty parent node
+            cmds.delete(node)
         except Exception:
+            print("Error while deleting node:", node)
             pass
 
 
