@@ -65,14 +65,14 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
             setDress_Files = edit_setDress_Files
         else :
             setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD_Publish"], onlyOne=True)
-        
-        
 
 
         # On vas chercher la camera qui a été publish dans le shot au moment de l'animation
         camera_file = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc", ".abc"], origin, ["Anim_Cam_Publish"], onlyOne=True)
 
 
+        # Recuperer les animations des personnages "anims"
+        # Todo
 
 
         # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
