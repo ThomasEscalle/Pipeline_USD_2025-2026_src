@@ -3,6 +3,8 @@
 
 #include <QFileDialog>
 #include <QDir>
+#include <QAction>
+#include <QDebug>
 
 #include "MainWizard.h"
 
@@ -18,12 +20,26 @@ Page_011_SelectLocation::Page_011_SelectLocation()
     setSubTitle(tr("Please select the desired options for the installation."));
     setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/ICON_64.png"));
 
+    // Add a "Autofill action" to autofill the fields
+    QAction *autofillAction = new QAction(tr("Autofill"), this);
+    autofillAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_A));
+    connect(autofillAction, &QAction::triggered, this, &Page_011_SelectLocation::autofillFields);
+    addAction(autofillAction);
+
     setCommitPage(true);
 }
 
 Page_011_SelectLocation::~Page_011_SelectLocation()
 {
     delete ui;
+}
+
+void Page_011_SelectLocation::autofillFields()
+{
+    qDebug()<<"Autofill";
+    // Example autofill logic
+    ui->le_username->setText("Thomas");
+    ui->le_abreviation->setText("Tho");
 }
 
 int Page_011_SelectLocation::nextId() const

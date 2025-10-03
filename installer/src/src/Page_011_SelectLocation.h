@@ -23,7 +23,7 @@ public:
 
 private slots:
     void on_btn_selectLocation_clicked();
-
+    void autofillFields();
 private:
     Ui::Page_011_SelectLocation *ui;
 };
