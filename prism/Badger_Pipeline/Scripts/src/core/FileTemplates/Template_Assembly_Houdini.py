@@ -175,7 +175,14 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
 
                 if product in entity["asset_path"]:
                     products_character_animations[i]["connected_entity"] = entity
-                    break
+                    
+                    # 1. Recuperer la liste de products dans l'entitée connectée.
+                    
+                    # 2. Trouver le product qui s'appelle "USD_Asset"
+
+                    # 3. 
+
+        # To str
         products_character_animations_str = str(products_character_animations) if len(products_character_animations) > 0 else ""
 
 
