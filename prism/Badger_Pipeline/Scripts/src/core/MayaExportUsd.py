@@ -108,6 +108,8 @@ class MayaExportUsd:
             # Import cmds
             import maya.cmds as cmds
 
+            if self.state.cb_outType.currentText() != ".usd":
+                return
             
             # this function will be executed before the export started
             print("Pre Export called")

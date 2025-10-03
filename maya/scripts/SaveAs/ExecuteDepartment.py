@@ -38,31 +38,30 @@ def saveUSDOverrideEdits(product_name, file_name):
         stage = mayaUsdUfe.getStage(cmds.ls(n, long=True)[0])
         overrideLayer = stage.GetRootLayer()
 
-        if(overrideLayer.dirty ):
+        # if(overrideLayer.dirty ):
 
-            pcore = PrismInit.pcore
-            current_file_name = pcore.getCurrentFileName()
-            current_entity = pcore.entities.getScenefileData(current_file_name , getEntityFromPath=True)         
-            product = pcore.products.createProduct(current_entity , product_name,location="global" )  # <-- Make sure the product exists
-            version = pcore.products.ingestProductVersion(files=[], entity=current_entity,product=product_name, location="global") # <-- Create a new version
+        pcore = PrismInit.pcore
+        current_file_name = pcore.getCurrentFileName()
+        current_entity = pcore.entities.getScenefileData(current_file_name , getEntityFromPath=True)         
+        product = pcore.products.createProduct(current_entity , product_name,location="global" )  # <-- Make sure the product exists
+        version = pcore.products.ingestProductVersion(files=[], entity=current_entity,product=product_name, location="global") # <-- Create a new version
 
+        save_path_edit_setD = version["versionPath"]
+        save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
 
-            save_path_edit_setD = version["versionPath"]
-            save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
+        versionInfo = pcore.getConfig(configPath=save_path_edit_setD + "/versioninfo.json") or {}
+        versionInfo["extension"] = ".usda"
+        pcore.setConfig(data=versionInfo, configPath=save_path_edit_setD + "/versioninfo.json")
 
-            versionInfo = pcore.getConfig(configPath=save_path_edit_setD + "/versioninfo.json") or {}
-            versionInfo["extension"] = ".usda"
-            pcore.setConfig(data=versionInfo, configPath=save_path_edit_setD + "/versioninfo.json")
+        save_path_edit_setD = os.path.join(save_path_edit_setD, file_name)
+        save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
 
-            save_path_edit_setD = os.path.join(save_path_edit_setD, file_name)
-            save_path_edit_setD = save_path_edit_setD.replace("\\", "/")
+        override_path = save_path_edit_setD
+        overrideLayer.Export(override_path)
+        cmds.setAttr(n + ".filePath", override_path, type="string")
+        print(n + " USD layer was dirty - saved new version of overrides")
 
-            override_path = save_path_edit_setD
-            overrideLayer.Export(override_path)
-            cmds.setAttr(n + ".filePath", override_path, type="string")
-            print(n + " USD layer was dirty - saved new version of overrides")
-
-            pcore.products.updateMasterVersion(save_path_edit_setD)
+        pcore.products.updateMasterVersion(save_path_edit_setD)
 
             
 # Base class for execute department

@@ -38,6 +38,7 @@ class FileTemplateAnimMaya(FileTemplateBase):
 
         # Current entity
         current_entity = origin.getCurrentEntity()
+        master_entity = self.getCurrentShotMaster(current_entity, origin)
         shot_details = self.getShotDetails(current_entity, origin)  # {'range': [1001, 1005], 'length': 5, 'metadata': {'preroll': {'value': '5', 'show': True}, 'postroll': {'value': '5', 'show': True}}}
 
         shot_range = shot_details.get("range", [1001, 1100])
@@ -59,19 +60,24 @@ class FileTemplateAnimMaya(FileTemplateBase):
                 shot_postroll = 0
 
     
-        # Ici, on vas recuperer le setdress de l'entitée master du shot courant.
-        ## 
-        # Todo : recuperer le EditSetDress du FLO si il existe, sinon le SetDress.
-        ##
+        # Recupere le setdress a importer
+        # On cherche d'abord un Edit_SetD_Publish, si il n'existe pas, on prend le SetD_Publish du master.
         importReference_SetDress = True
-        master_entity = self.getCurrentShotMaster(current_entity, origin)
-
         edit_setDress_Files = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc"], origin, ["FLO_Edit_SetD_Publish"], onlyOne=True)
         if len(edit_setDress_Files) > 0 :
             setDress_Files = edit_setDress_Files
         else :
             setDress_Files = self.getMatchingProductsFromEntity(master_entity, [".usd", ".usda" , ".usdc"], origin, ["SetD_Publish"], onlyOne=True)
         
+
+        # Recupere la caméra a importer
+        importCameraFromFLO = False
+        cameraFromFlo = self.getMatchingProductsFromEntity(current_entity, [".ma", ".mb"], origin, ["FLO_Cam_Publish"], onlyOne=True)
+        
+
+        # Recupere les Animations du FLO   FLO_Char_Albert_Publish
+        floAnims = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc"], origin, ["FLO_Char_" , "_Publish"])
+
 
         # On vas récupérer tous les assets connectés a l'entitée courante.
         # [
@@ -108,6 +114,18 @@ class FileTemplateAnimMaya(FileTemplateBase):
             },
             {
                 "type" : "folder",
+                "name" : "Camera from FLO",
+                "settings" : {
+                    "accepted_files" : [
+                        "ma",
+                        "mb"
+                    ]
+                },
+                "items" : cameraFromFlo,
+                "select_only_one_file": True
+            },
+            {
+                "type" : "folder",
                 "name" : "Rigs (Characters)",
                 "settings" : {
                     "accepted_files" : [
@@ -126,6 +144,16 @@ class FileTemplateAnimMaya(FileTemplateBase):
                 },
                 "items" : rigs_props
             },
+            {
+                "type" : "folder",
+                "name" : "Animations from FLO",
+                "settings" : {
+                    "accepted_files" : [
+                        "usd", "usda", "usdc"
+                    ]
+                },
+                "items" : floAnims
+            }
         ]
         settings = [
         ]
@@ -149,13 +177,16 @@ class FileTemplateAnimMaya(FileTemplateBase):
         # Get the items results
         items = dialog.getResult()
         items_setDress = items.get("Set Dress", [])
+        items_camera_from_flo = items.get("Camera from FLO", [])
         items_rigs_chars = items.get("Rigs (Characters)", [])
         items_rigs_props = items.get("Rigs (Props)", [])
+        items_flo_anims = items.get("Animations from FLO", [])
 
         # On recupere les products associés aux items
         products_setDress = self.getPreferedFilePathsFromProductList(items_setDress, origin)
         products_rigs_chars = self.getPreferedFilePathsFromProductList(items_rigs_chars, origin)
         products_rigs_props = self.getPreferedFilePathsFromProductList(items_rigs_props, origin)
+        products_flo_anims = self.getPreferedFilePathsFromProductList(items_flo_anims, origin)
 
         # Si il y'a plus d'un set dress, on prend que le premier.
         if len(products_setDress) > 1 :
@@ -164,7 +195,7 @@ class FileTemplateAnimMaya(FileTemplateBase):
         products_setDress_str = str(products_setDress)
         products_rigs_chars_str = str(products_rigs_chars)
         products_rigs_props_str = str(products_rigs_props)
-
+        products_flo_anims_str = str(products_flo_anims)
 
         # Get the camera rig path
         project_pipeline_path = origin.core.projects.getResolvedProjectStructurePath("pipeline" , context = {})
@@ -173,6 +204,14 @@ class FileTemplateAnimMaya(FileTemplateBase):
         # Check if the camera file exists
         if not os.path.exists(camera_file_path):
             camera_file_path = ""
+        if len(items_camera_from_flo) > 0 :
+            camera_file_paths = self.getPreferedFilePathsFromProductList(items_camera_from_flo, origin)
+            if len(camera_file_paths) > 0 :
+                camera_file_path = camera_file_paths[0]
+            else :
+                # We keep the default camera rig
+                pass
+        camera_file_path = str(camera_file_path)
 
 
         # Get the settings results from the dialog
@@ -240,6 +279,8 @@ class FileTemplateAnimMaya(FileTemplateBase):
         script.replaceVariable("$$SAVE_PATH_EDIT_SETD$$", save_path_edit_setD)
         script.replaceVariable("$$RIGS_CHARS_PATHS$$", products_rigs_chars_str)
         script.replaceVariable("$$RIGS_PROPS_PATHS$$", products_rigs_props_str)
+
+        script.replaceVariable("$$FLO_ANIMS_PATHS$$", products_flo_anims_str)
 
         script.replaceVariable("$$CREATE_BOOKMARKS$$", "True" if create_bookmarks else "False")
 

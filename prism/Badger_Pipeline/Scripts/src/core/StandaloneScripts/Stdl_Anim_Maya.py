@@ -29,6 +29,8 @@ save_path_edit_setD = "$$SAVE_PATH_EDIT_SETD$$"  # This is a path to the folder 
 rigs_chars_paths = "$$RIGS_CHARS_PATHS$$"  # This is a string representation of a list of paths
 rigs_props_paths = "$$RIGS_PROPS_PATHS$$"  # This is a string representation of a list of paths
 
+flo_animations_paths = "$$FLO_ANIMS_PATHS$$"  # This is a string representation of a list of paths
+
 create_bookmarks = "$$CREATE_BOOKMARKS$$"  # "True" or "False"
 
 
