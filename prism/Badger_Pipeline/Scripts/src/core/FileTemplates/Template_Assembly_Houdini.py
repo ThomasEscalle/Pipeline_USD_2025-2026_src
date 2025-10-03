@@ -72,7 +72,7 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
 
 
         # Recuperer les animations des personnages "anims"
-        # Todo
+        character_animations = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc"], origin, ["Anim_Char", "_Publish"])
 
 
         # Demande a l'utilisateur quel produits a eventuelement importer, ainsi que les settings
@@ -98,6 +98,17 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
                     ]
                 },
                 "items" : camera_file,
+                "select_only_one_file": True
+            },
+            {
+                "type" : "folder",
+                "name" : "Character Animations",
+                "settings" : {
+                    "accepted_files" : [
+                        "usd", "usda", "usdc"
+                    ]
+                },
+                "items" : character_animations,
                 "select_only_one_file": True
             }
         ]
@@ -145,6 +156,19 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
 
 
 
+        ############################################################################
+        # On recupere les products des character animations associés aux items #####
+        ############################################################################
+        products_character_animations = dialog.getResult().get("Character Animations", [])
+        products_character_animations_files = self.getPreferedFilePathsFromProductList(products_character_animations, origin)
+        for i in range(len(products_character_animations_files)):
+            print("Character Animation File Selected : ", products_character_animations_files[i])
+            products_character_animations[i]["product_file_path"] = products_character_animations_files[i]
+            
+        products_character_animations_str = str(products_character_animations) if len(products_character_animations) > 0 else ""
+
+
+
 
 
         # Get the settings results from the dialog
@@ -175,9 +199,12 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
         script.replaceVariable("$$SHOT_PREROLL$$", str(shot_preroll))
         script.replaceVariable("$$SHOT_POSTROLL$$", str(shot_postroll))
 
+
         script.replaceVariable("$$CAMERA_FILEPATH$$", products_camera_str.replace("\\", "/"))
 
         script.replaceVariable("$$SETDRESS_FILEPATH$$", products_setDress_str.replace("\\", "/"))
+
+        script.replaceVariable("$$CHARACTER_ANIMATIONS_FILEPATH$$", products_character_animations_str.replace("\\", "/"))
 
         try:
             script.run()

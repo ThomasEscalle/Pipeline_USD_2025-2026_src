@@ -41,6 +41,29 @@ camera_filepath = "$$CAMERA_FILEPATH$$"
 
 set_dress_filepath = "$$SETDRESS_FILEPATH$$"
 
+character_animations_filepaths = "$$CHARACTER_ANIMATIONS_FILEPATH$$"
+"""
+[
+    {
+        "hierarchy": "sq010/sh010",
+        "itemType": "shot",
+        "sequence": "sq010",
+        "shot": "sh010",
+        "type": "shot",
+        "project_path": "C://Users//3D3//Desktop//Uptight",
+        "project_name": "Uptight",
+        "product": "Anim_Char_Albert_Publish",
+        "path": "C://Users//3D3//Desktop//Uptight//03_Production//02_Shots//sq010//sh010//Export//Anim_Char_Albert_Publish",
+        "locations": {
+            "global": "C://Users//3D3//Desktop//Uptight//03_Production//02_Shots//sq010//sh010//Export//Anim_Char_Albert_Publish"
+        },
+        "product_file_path": "C:/Users/3D3/Desktop/Uptight/03_Production/02_Shots/sq010/sh010/Export/Anim_Char_Albert_Publish/master/sq010-sh010_Anim_Char_Albert_Publish_master.usd"
+    }
+]
+"""
+
+
+
 
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
