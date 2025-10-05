@@ -118,11 +118,10 @@ def build_assembly_subnet():
 
         # Create a "Reference" node to import the set dress USD
         if set_dress_filepath and os.path.isfile(set_dress_filepath):
-            reference_node = set_dress_subnet.createNode("reference", "Set_Dress_Reference")
+            reference_node = set_dress_subnet.createNode("sublayer", "SetDress_Sublayer")
             reference_node.setPosition(in_set_dress.position() + hou.Vector2(0, -2))
             reference_node.parm("filepath1").set(set_dress_filepath.replace("\\", "/"))
-            reference_node.parm("primpath1").set(f"/Set_Dress_grp")
-            reference_node.setComment(f"Reference the Set Dress USD:\n{set_dress_filepath}")
+            reference_node.setComment(f"Sublayer the Set Dress USD:\n{set_dress_filepath}")
             reference_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
             # Connect the nodes together

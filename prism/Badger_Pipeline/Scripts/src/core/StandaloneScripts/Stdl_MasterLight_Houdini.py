@@ -48,21 +48,19 @@ def build_import_subnet():
     in_import.setPosition(hou.Vector2(0, 0))
 
     # Create a "Reference" node called "Reference"
-    reference = import_subnet.createNode("reference::2.0", "Object_Reference")
+    reference = import_subnet.createNode("sublayer", "setDress_Sublayer")
     reference.setPosition(hou.Vector2(0, -1))
     reference.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
     if import_reference == "True" and reference_pathstr != "":
         
         # If we are importing a reference, set the reference path
         reference.setParms({
-            "filepath1": reference_pathstr,
-            "primpath1" : f"/setDress",
+            "filepath1": reference_pathstr
         })
     else:
         # If we are not importing a reference, set the reference path to an empty string
         reference.setParms({
-            "filepath1": "",
-            "primpath1" : f"/setDress",
+            "filepath1": ""
         })
         # Set the color to red to indicate no reference
         reference.setColor(hou.Color(0.776, 0.157, 0.157)) # Red

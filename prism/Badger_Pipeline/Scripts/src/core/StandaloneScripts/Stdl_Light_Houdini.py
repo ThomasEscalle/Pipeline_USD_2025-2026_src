@@ -54,16 +54,14 @@ def build_assembly_subnet():
 
     
     # Create a reference node for the assembly
-    assembly_ref = import_subnet.createNode("reference", "Assembly_Ref")
+    assembly_ref = import_subnet.createNode("sublayer", "Assembly_Sublayer")
     assembly_ref.parm("filepath1").set( assemblyPath if assemblyPath != "" else "")
-    assembly_ref.parm("primpath1").set(f"/{assetName}")
     assembly_ref.setPosition(in_import.position() + hou.Vector2(0, -2))
 
 
     # Create a reference node for the master light
-    master_light_ref = import_subnet.createNode("reference", "Master_Light_Ref")
+    master_light_ref = import_subnet.createNode("sublayer", "Master_Light_Sublayer")
     master_light_ref.parm("filepath1").set(masterLightPath)
-    master_light_ref.parm("primpath1").set("/Master_Light")
     master_light_ref.setPosition(assembly_ref.position() + hou.Vector2(0, -2))
 
 

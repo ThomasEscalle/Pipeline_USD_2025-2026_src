@@ -49,6 +49,10 @@ def build_assembly_subnet():
     in_import.setPosition(hou.Vector2(0, 0))
 
 
+    # Create a "sublayer" node to import the light usd
+    sublayer_node = import_subnet.createNode("sublayer", "Light_Sublayer")
+    sublayer_node.parm("filepath1").set(light_path if os.path.exists(light_path) else "")
+
 
     # Create a "Null" node called "OUT_IMPORT"
     out_import = import_subnet.createNode("null", "OUT_IMPORT")
@@ -57,15 +61,20 @@ def build_assembly_subnet():
 
     # Place the input and output nodes
     input_stage.setPosition(hou.Vector2(0, 2))
-    output0.setPosition( out_import.position() + hou.Vector2(0, -2))
+    in_import.setPosition(input_stage.position() + hou.Vector2(0, -2))
+    sublayer_node.setPosition(in_import.position() + hou.Vector2(0, -2))
+    out_import.setPosition(sublayer_node.position() + hou.Vector2(0, -2))
+    output0.setPosition(out_import.position() + hou.Vector2(0, -2))
 
     ####################################
     #### Connect the nodes together ####
     ####################################
     # Connect the IN_IMPORT node to the input_stage node
     in_import.setInput(0, input_stage, 0)
+    # Connect the sublayer node to the in_import node
+    sublayer_node.setInput(0, in_import, 0)
     # Connect the out_import to the in_import node
-    out_import.setInput(0, in_import, 0)
+    out_import.setInput(0, sublayer_node, 0)
     # Connect the output0 node to the out_import node
     output0.setInput(0, out_import, 0)
     #####################################
@@ -73,7 +82,6 @@ def build_assembly_subnet():
 
 
 build_assembly_subnet()
-
 
 # Create a "TLO" subnet
 TLO_subnet = stage.createNode("subnet", "TLO")
@@ -164,10 +172,6 @@ out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, 
 
 
 
-# Add a "rendergeometrysettings" node to the stage
-render_geometry_settings = stage.createNode("rendergeometrysettings", "Render_Geometry_Settings_0")
-
-
 
 # Create a "Export" node
 export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
@@ -193,23 +197,6 @@ sceneCleaning_subnet.setInput(0, TLO_subnet, 0)
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
 # connect the OUT_SCENE_ASSEMBLY node to the Export subnet
 export_node.setInput(0, out_scene_building, 0)
-
-
-
-##################
-#### Comments ####
-##################
-
-# Add a sticky note 
-sticky_note = stage.createStickyNote("stage_comment")
-sticky_note.setPosition(hou.Vector2(3, -4))
-sticky_note_text = "Cette scene sert a preparer les render settings.\n"
-sticky_note_text += "C'est ici que l'on vas gerer les Render Layers, AOVS, render settings...\n"
-sticky_note_text += "Une fois finis, utilise le node \"Export\" pour exporter ta scène.\n\n"
-sticky_note.setText(sticky_note_text)
-sticky_note.resize(hou.Vector2(5, 2))
-sticky_note.setDrawBackground(False)
-sticky_note.setTextColor(hou.Color(1, 1, 1)) # White
 
 
 # Set the display flag on the "OUT_SCENE_BUILDING" node
