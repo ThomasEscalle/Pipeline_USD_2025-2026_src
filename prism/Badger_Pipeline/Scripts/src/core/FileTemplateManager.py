@@ -14,6 +14,7 @@ from src.core.FileTemplates.Template_TLO_Houdini import FileTemplateTLOHoudini
 from src.core.FileTemplates.Template_RLO_Maya import FileTemplateRLOMaya
 from src.core.FileTemplates.Template_FLO_Maya import FileTemplateFLOMaya
 from src.core.FileTemplates.Template_Anim_Maya import FileTemplateAnimMaya
+from src.core.FileTemplates.Template_Anim_Occ_Houdini import FileTemplateAnimHoudini
 
 from src.core.FileTemplates.Template_Autorig_RigLow_01_Maya import FileTemplateAutorigRigLow01Maya
 from src.core.FileTemplates.Template_Autorig_RigHigh_01_Maya import FileTemplateAutorigRigHigh01Maya
@@ -41,6 +42,7 @@ templates = {
 
             "AutorigRigL01/Maya" : FileTemplateAutorigRigLow01Maya(),
             "AutorigRigH01/Maya" : FileTemplateAutorigRigHigh01Maya(),
+            "anim/Houdini" : FileTemplateAnimHoudini(),
 
         }
 
