@@ -73,6 +73,8 @@ class Prism_Badger_Pipeline_Functions(object):
         # This function is called when the user wants to create a new product
         self.core.registerCallback("openPBAssetContextMenu", self.onOpenPBAssetContextMenu, plugin=self)
             
+        # This function is called when the user wants to create a new asset
+        self.core.registerCallback("onAssetDlgOpen", self.onAssetDlgOpen, plugin=self)
 
         ### All of the Maya Export USD Callbacks
         # use a lower priority than 50 to make sure the function gets called after the "onStateStartup" function of the Deadline plugin
@@ -161,6 +163,16 @@ class Prism_Badger_Pipeline_Functions(object):
         variantsConnectionAction.setToolTip("Connect the asset to the variants")
         variantsConnectionAction.triggered.connect(lambda: self.openVariantsConnection(item))
         rcMenu.addAction(variantsConnectionAction)
+
+
+    def onAssetDlgOpen(self, origin, dlg):
+        # If the dialog is type of "CreateAssetDlg"
+        if dlg.__class__.__name__ == "CreateAssetDlg":
+            print("CreateAssetDlg opened")
+            # Add a checkbox to the dialog to create the asset USD file
+            self.chk_create_usd = QCheckBox("Subdivide the mesh (Catmull–Clark)", dlg)
+            dlg.layout().addWidget(self.chk_create_usd)
+            self.chk_create_usd.setChecked(True)
 
     # Open the variant connection dialog
     def openVariantsConnection(self, item):

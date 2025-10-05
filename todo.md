@@ -24,7 +24,7 @@
 
 12. 🟢 Sauvegarder les fichiers houdini en .hipnc plutot que .hip
 
-13. Ajouter des attributs sur les assets pour : Ajouter des subdivisions, water , etc..
+13. 🟡 Ajouter des attributs sur les assets pour : Ajouter des subdivisions, water , etc..
 
 
 
