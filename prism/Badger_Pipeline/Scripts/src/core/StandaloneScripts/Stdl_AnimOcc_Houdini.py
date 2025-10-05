@@ -162,7 +162,7 @@ def build_import_subnet():
     # Create a Subnet called "CAMERA"
     camera_subnet = import_subnet.createNode("subnet", "CAMERA")
     camera_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
-    camera_subnet.setPosition(fx_subnet.position() + hou.Vector2(0, -2))
+    camera_subnet.setPosition(characters_and_props_subnet.position() + hou.Vector2(0, -2))
     camera_subnet.setComment("Import the Camera elements here")
 
     def build_camera_subnet():
@@ -214,7 +214,7 @@ def build_import_subnet():
     build_camera_subnet()
 
     # Create a "Null" node called "OUT_ASSEMBLY"
-    out_assembly = assembly_subnet.createNode("null", "OUT_ASSEMBLY")
+    out_assembly = import_subnet.createNode("null", "OUT_ASSEMBLY")
     out_assembly.setPosition(camera_subnet.position() + hou.Vector2(0, -2))
 
 
