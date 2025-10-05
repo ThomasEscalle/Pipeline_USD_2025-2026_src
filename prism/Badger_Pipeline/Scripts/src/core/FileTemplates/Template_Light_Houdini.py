@@ -25,7 +25,7 @@ class FileTemplateLightHoudini(FileTemplateBase):
 
         # Define the output Houdini temp file path
         filepath = os.path.dirname(__file__)
-        outputHoudiniFilePath = os.path.join(filepath, "output.hip")
+        outputHoudiniFilePath = os.path.join(filepath, "output.hipnc")
         outputHoudiniFilePath = outputHoudiniFilePath.replace("\\", "/")
 
         

@@ -16,7 +16,7 @@
 
 8. 🟢 Fix les autorigs pour avoir les nomenclatures nécessaires à l'application de l'anim sur les assets
 
-9. En assembly, Light, et TLO, utiliser des nodes Sublayer plutot que des references USD
+9. 🟢 En assembly, Light, et TLO, utiliser des nodes Sublayer plutot que des references USD
 
 10. Trouver comment faire pour que le script SaveAs marche avec les playblasts
 

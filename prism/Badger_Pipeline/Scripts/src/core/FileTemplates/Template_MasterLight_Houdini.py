@@ -21,7 +21,7 @@ class FileTemplateMasterLightHoudini(FileTemplateBase):
         # Crées le chemin ou maya vas enregistrer son fichier.
         # A la fin, on copiras le fichier crée dans Prism sous une nouvelle version.
         filepath = os.path.dirname(__file__)
-        outputHoudiniFilePath = os.path.join(filepath, "output.hip")
+        outputHoudiniFilePath = os.path.join(filepath, "output.hipnc")
         outputHoudiniFilePath = outputHoudiniFilePath.replace("\\", "/")
 
         # Ici on recuperer tous products qui sont des ".usd" , et dont le nom contiens "SetD" et Publish, 
