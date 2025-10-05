@@ -125,7 +125,7 @@ def build_import_subnet():
     # Create a Subnet called "CHARACTERS_AND_PROPS"
     characters_and_props_subnet = import_subnet.createNode("subnet", "CHARACTERS_AND_PROPS")
     characters_and_props_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
-    characters_and_props_subnet.setPosition(import_subnet.position() + hou.Vector2(0, -2))
+    characters_and_props_subnet.setPosition(set_dress_subnet.position() + hou.Vector2(0, -2))
     characters_and_props_subnet.setComment("Import the Characters and Props elements here")
 
     
@@ -140,21 +140,68 @@ def build_import_subnet():
         in_characters_and_props = characters_and_props_subnet.createNode("null", "IN_CHARACTERS_AND_PROPS")
         in_characters_and_props.setPosition(hou.Vector2(0, 0))
 
-        last_node = in_characters_and_props
+        last_node = None
+        first_node = None
         for char_anim in eval(character_animations_filepaths):
 
             # Create a "sublayer" node to import the character animation USD  # TODO FINISH THIS
             sublayer_node = characters_and_props_subnet.createNode("sublayer", f"{char_anim['shot']}_{char_anim['product']}_Sublayer")
-            sublayer_node.setPosition(last_node.position() + hou.Vector2(0, -2))
+            if last_node is None:
+                sublayer_node.setPosition(hou.Vector2(4, 2))
+            else:
+                sublayer_node.setPosition(last_node.position() + hou.Vector2(4, 2))
             sublayer_node.parm("filepath1").set(char_anim['product_file_path'].replace("\\", "/"))
 
-        # Connect the nodes together
-        in_characters_and_props.setInput(0, char_input_stage, 0)
-        char_output0.setInput(0, last_node, 0)
+            sublayer_node.setComment(f"Sublayer the Character Animation USD:\n{char_anim['product_file_path']}")
+            sublayer_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
-        # Place the input and output nodes
-        char_input_stage.setPosition(hou.Vector2(0, 2))
-        char_output0.setPosition(last_node.position() + hou.Vector2(0, -2))
+            if last_node != None:
+                sublayer_node.setInput(0, last_node, 0)
+            else:
+                first_node = sublayer_node
+
+            last_node = sublayer_node
+
+        if first_node is not None:
+            # add a graftstages node to merge all the chars imports together
+            graftstages_node = characters_and_props_subnet.createNode("graftstages", "Merge_Characters_Animations")
+            graftstages_node.setPosition(first_node.position() + hou.Vector2(0, -2))
+            graftstages_node.setComment("Merge all the Character Animation USDs together")
+            graftstages_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+            graftstages_node.setInput(1, first_node, 0)
+            graftstages_node.parm("destpath").set("/Chars_grp")
+
+            # Add a transfor node to transform from cm to m to apply on all the chars at once
+            transform_node = characters_and_props_subnet.createNode("xform", "Transform_cm_to_m")
+            transform_node.setPosition(graftstages_node.position() + hou.Vector2(0, -2))
+            transform_node.parm("scale").set(0.01)  # Scale down by a factor of 100 (cm to m)
+            transform_node.parm("primpattern").set("/Chars_grp")
+            transform_node.setInput(0, graftstages_node, 0)
+
+            # Add a merge node to merge the transform node to the in_characters_and_props node
+            merge_node = characters_and_props_subnet.createNode("merge", "Merge_Chars_and_Props")
+            merge_node.setPosition(transform_node.position() + hou.Vector2(-3, -2))
+            merge_node.setInput(0, in_characters_and_props, 0)
+            merge_node.setInput(1, transform_node, 0)
+
+        
+
+            # Connect the nodes together
+            in_characters_and_props.setInput(0, char_input_stage, 0)
+            char_output0.setInput(0, merge_node, 0)
+
+            # Place the input and output nodes
+            char_input_stage.setPosition(hou.Vector2(0, 2))
+            char_output0.setPosition(merge_node.position() + hou.Vector2(0, -2))
+        else:
+            # If no valid character animation filepaths are provided, connect IN_CHARACTERS_AND_PROPS directly to output0
+            char_output0.setInput(0, in_characters_and_props, 0)
+            in_characters_and_props.setInput(0, char_input_stage, 0)
+
+            # Place the input and output nodes
+            char_input_stage.setPosition(hou.Vector2(0, 2))
+            char_output0.setPosition(hou.Vector2(0, -4))
+
         pass
     build_characters_and_props_subnet()
 
@@ -225,20 +272,14 @@ def build_import_subnet():
     ####################################
     #### Connect the nodes together ####
     ####################################
-    # Connect the input0 node to the in_assembly node
-    in_assembly.setInput(0, input_stage, 0)
-    # Connect the set_dress_subnet to the in_assembly node
-    set_dress_subnet.setInput(0, in_assembly, 0)
-    # Connect the items_subnet to the set_dress_subnet
-    items_subnet.setInput(0, set_dress_subnet, 0)
-    # Connect the characters_and_props_subnet to the items_subnet
-    characters_and_props_subnet.setInput(0, items_subnet, 0)
-    # Connect the cfx_subnet to the characters_and_props_subnet
-    cfx_subnet.setInput(0, characters_and_props_subnet, 0)
-    # Connect the fx_subnet to the cfx_subnet
-    fx_subnet.setInput(0, cfx_subnet, 0)
-    # Connect the camera_subnet to the fx_subnet
-    camera_subnet.setInput(0, fx_subnet, 0)
+    # Connect the input0 node to the in_import node
+    in_import.setInput(0, input_stage, 0)
+    # Connect the set_dress_subnet to the in_import node
+    set_dress_subnet.setInput(0, in_import, 0)
+    # Connect the characters_and_props_subnet to the set_dress_subnet
+    characters_and_props_subnet.setInput(0, set_dress_subnet, 0)
+    # Connect the camera_subnet to the characters_and_props_subnet
+    camera_subnet.setInput(0, characters_and_props_subnet, 0)
     # Connect the output0 node to the fx_subnet
     out_assembly.setInput(0, camera_subnet, 0)
     # Connect the output0 node to the out_assembly node
@@ -247,7 +288,8 @@ def build_import_subnet():
 
 
 
-build_assembly_subnet()
+
+build_import_subnet()
 
 
 
@@ -255,7 +297,7 @@ build_assembly_subnet()
 # Create a "Scene_Cleaning" subnet 
 sceneCleaning_subnet = stage.createNode("subnet", "Scene_Cleaning")
 sceneCleaning_subnet.setColor(hou.Color(0.776, 0.157, 0.157))  # Red
-sceneCleaning_subnet.setPosition(assembly_subnet.position() + hou.Vector2(0, -2))
+sceneCleaning_subnet.setPosition(import_subnet.position() + hou.Vector2(0, -2))
 # Add a comment to the Scene_Cleaning subnet
 sceneCleaning_subnet.setComment("Ne pas toucher a ce node !")
 sceneCleaning_subnet.setGenericFlag(hou.nodeFlag.DisplayComment,True)
@@ -317,8 +359,8 @@ export_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 #### Connect the nodes together #####
 #####################################
 
-# assembly_subnet[0]->sceneCleaning_subnet[0]
-sceneCleaning_subnet.setInput(0, assembly_subnet, 0)
+# import_subnet[0]->sceneCleaning_subnet[0]
+sceneCleaning_subnet.setInput(0, import_subnet, 0)
 # sceneCleaning_subnet[0]->out_scene_building[0]
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
 # out_scene_building[0]->usd_rop[0]
