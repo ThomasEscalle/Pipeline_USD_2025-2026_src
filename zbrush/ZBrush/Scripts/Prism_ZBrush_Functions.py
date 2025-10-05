@@ -1019,6 +1019,7 @@ class TurntableWindow(QDialog):
         # Layouts
         main_layout = QVBoxLayout()
         padding_layout = QHBoxLayout()
+        camera_layout = QHBoxLayout()
 
         # Padding label and spinbox
         padding_label = QLabel("Padding:")
@@ -1029,16 +1030,58 @@ class TurntableWindow(QDialog):
         padding_layout.addWidget(padding_label)
         padding_layout.addWidget(self.padding_input)
 
+        # Camera label and creation
+        #need to save current views if it exists in a local folder 
+        #add a button that create a custom view based on the current cam and saves it into prism to be able to find it again next time
+        #check if there is already a usable view in prism if so enable turntable else don't
+        #let the user be able to override the prism cam.
+        camLabel = QLabel("Camera :")
+        self.currentCam = self.currentCamWidget()
+
+        camera_layout.addWidget(camLabel)
+        camera_layout.addWidget(self.currentCam)
+
         # Turntable button
         self.turntable_button = QPushButton("Turntable")
         self.turntable_button.clicked.connect(self.on_turntable_clicked)
 
         # Add widgets to main layout
         main_layout.addLayout(padding_layout)
+        main_layout.addLayout(camera_layout)
         main_layout.addWidget(self.turntable_button)
 
         self.setLayout(main_layout)
+
+        if hasattr(self, "createViewBtn"):
+            self.createViewBtn.clicked.connect(self.createView)
     
+    def currentCamWidget(self):
+        #check if there is an existing save view in prism, if so just add a QLabel of the name of the view, else add a button to create one
+        path = self.core.appPlugin.getCurrentFileName()
+        dataPath = path[:-4] + "versioninfo.json"
+        with open(dataPath) as f:
+            data = json.load(f)
+        self.viewPath = data["project_path"] + os.sep + data["asset_path"] + os.sep + "ZBrushView" + os.sep + data["asset"] + "_view.vws"
+
+        if os.path.exists(self.viewPath) == True:
+            self.viewLabel = QLabel(data["asset"] + "_view")
+            return self.viewLabel
+        else:
+            if not os.path.exists(pathlib.Path(self.viewPath).parent.resolve()):
+                os.makedirs(pathlib.Path(self.viewPath).parent.resolve())
+            self.createViewBtn = QPushButton("Create Asset Camera")
+            return self.createViewBtn
+    
+    def createView(self):
+        commands = ["[RoutineDef, command,\n[If, [IGetStatus,Document:ZAppLink Properties:Cust1:Cust1],\n\t[IPress,Document:ZAppLink Properties:Clear To]\n\t[IPress,Document:ZAppLink Properties:Cust1:Cust1]\n]\n]\n[RoutineCall, command]",      #\n\t[IUnPress,Document:ZAppLink Properties:Clear To]
+                    #"[RoutineDef, command,\n[IPress,Document:ZAppLink Properties:Cust1:Cust1]\n]\n[RoutineCall, command]",
+                    #"[RoutineDef, command,\n[FileNameSetNext,\"" + self.viewPath.replace("\\", "/") + "\"][IPress,Document:ZAppLink Properties:Save Views]\n]\n[RoutineCall, command]"
+                    ]
+
+        for command in commands:
+            self.core.appPlugin.send_command_to_zbrush(command)
+            self.core.appPlugin.activate_zbrush()
+
     def on_turntable_clicked(self):
         if self.path == None:
             self.path = self.core.appPlugin.path

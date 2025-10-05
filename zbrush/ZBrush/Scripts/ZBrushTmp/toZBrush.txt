@@ -1,37 +1,7 @@
-[VarSet, padding, 45]
-[VarSet, gTotalFrames, 360/padding]
-[VarSet, fileName, "C:\Users\3D5\Desktop\desktop\03_Production\Assets\CHAR\Dkt\Renders\2dRender\sculpt\v0003\Dkt_sculpt_v0003"]
-[VarSet, ext, ".png"]
-[VarSet, gFrameCount, 0]
-
 [RoutineDef, command,
-[VarSet, path, fileName]
-
-[Loop, gTotalFrames,
-[VarSet, curAngle, padding]
-[VarSet, n, 0]
-[Loop, [SubToolGetCount],
-[SubToolSelect, n]
-[VarSet, n, n+1]
-[IModSet, Tool:Deformation:Rotate, 2]   // Y axis only
-[ISet, Tool:Deformation:Rotate, curAngle]
-]
-
-// Force redraw / update
-[IUpdate, 1]
-
-// Export image
-[VarSet, frame, gFrameCount/padding]
-[VarSet, fill, 4-[StrLength, frame]]
-[VarSet, strFill, ]
-[Loop, fill,
-[VarSet, strFill, [StrMerge, strFill, "0"]]
-]
-[VarSet, path, [StrMerge, fileName, "_", strFill, frame, ext]]
-[FileNameSetNext, path]
-[IPress, Document:Export]
-
-[VarSet, gFrameCount, gFrameCount + padding]
+[If, [IGetStatus,Document:ZAppLink Properties:Cust1:Cust1],
+	//[IClick,Document:ZAppLink Properties:Clear To]
+	[IUnPress,Document:ZAppLink Properties:Cust1:Cust1]
 ]
 ]
 [RoutineCall, command]
