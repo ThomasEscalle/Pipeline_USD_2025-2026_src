@@ -18,13 +18,13 @@
 
 9. 🟢 En assembly, Light, et TLO, utiliser des nodes Sublayer plutot que des references USD
 
-10. Trouver comment faire pour que le script SaveAs marche avec les playblasts
+10. 🟢 Trouver comment faire pour que le script SaveAs marche avec les playblasts
 
-11. Sauvegarder le SCRIPT.py dans le dossier temp plutot que dans le dossier d'instalation de Prism
+11. 🔴 Sauvegarder le SCRIPT.py dans le dossier temp plutot que dans le dossier d'instalation de Prism
 
-12. Sauvegarder les fichiers houdini en .hipnc plutot que .hip
+12. 🟢 Sauvegarder les fichiers houdini en .hipnc plutot que .hip
 
-
+13. Ajouter des attributs sur les assets pour : Ajouter des subdivisions, water , etc..
 
 
 

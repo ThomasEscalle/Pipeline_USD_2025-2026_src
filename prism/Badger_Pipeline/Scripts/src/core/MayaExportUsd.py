@@ -66,8 +66,13 @@ class MayaExportUsd:
         pass
 
     def onCbOutTypeValueChanged(self):
+        
         print("State is now:", self.state)
+        if self.state.className != "Export":
+            return
+
         # If the new value is ".usda" or ".usdc", update the UI accordingly
+        
         if self.state.cb_outType.currentText() == ".usd":
             self.exportFormat.setVisible(True)
             self.exportNamespace.setVisible(True)
@@ -102,14 +107,17 @@ class MayaExportUsd:
         #     "outputpath": "E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/TEST/Export/ModL_Publish/v0003/TEST_ModL_Publish_v0003.usda"
         # }
 
+        if kwargs["state"].className != "Export":
+            return
 
         # create the "Setting1" widgets only in Maya
         if self.core.appPlugin.pluginName == "Maya":
+            
 
             # Import cmds
             import maya.cmds as cmds
 
-            if self.state.cb_outType.currentText() != ".usd":
+            if kwargs["state"].cb_outType.currentText() != ".usd":
                 return
             
             # this function will be executed before the export started
