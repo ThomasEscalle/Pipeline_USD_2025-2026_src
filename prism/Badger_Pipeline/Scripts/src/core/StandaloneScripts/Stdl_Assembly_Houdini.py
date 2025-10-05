@@ -153,6 +153,63 @@ def build_assembly_subnet():
     characters_and_props_subnet.setPosition(items_subnet.position() + hou.Vector2(0, -2))
     characters_and_props_subnet.setComment("Import the Characters and Props elements here")
 
+    
+    def build_characters_and_props_subnet():
+        # Get the ouput0 node of the characters_and_props subnet
+        char_output0 = characters_and_props_subnet.node("output0")
+        # Get the input0 node of the characters_and_props subnet
+        char_inputs = characters_and_props_subnet.indirectInputs()
+        char_input_stage = char_inputs[0] if char_inputs else None
+
+        # Create a "Null" node called "IN_CHARACTERS_AND_PROPS"
+        in_characters_and_props = characters_and_props_subnet.createNode("null", "IN_CHARACTERS_AND_PROPS")
+        in_characters_and_props.setPosition(hou.Vector2(0, 0))
+
+        last_node = in_characters_and_props
+        for char_anim in eval(character_animations_filepaths):
+
+            # Check if all the required keys are present
+            required_keys = ['connected_entity', 'asset_file_path', 'product_file_path']
+            if not all(key in char_anim for key in required_keys):
+                print(f"Skipping invalid character animation entry: {char_anim}")
+                continue
+
+            # Create a "Bp_Anim_Import" node (custom node)
+            asset_name_clean = char_anim['connected_entity']['asset_path'].split('//')[-1].replace(" ","_").replace("-","_")
+
+
+
+            bp_anim_import = characters_and_props_subnet.createNode("Thomas::BP_Anim_Import::1.0", f"Anim_Import_{asset_name_clean}")
+            bp_anim_import.setPosition(last_node.position() + hou.Vector2(0, -2))
+
+            bp_anim_import.parm("import_method").set("method_0")
+
+            ## Asset setup
+            bp_anim_import.parm("filepath").set(char_anim['asset_file_path'].replace("\\", "/"))
+            if "chars" in char_anim['connected_entity']['asset_path'].lower():
+                bp_anim_import.parm("primpath").set(f"/Assets_grp/Characters_grp/{asset_name_clean}")
+            elif "props" in char_anim['connected_entity']['asset_path'].lower():
+                bp_anim_import.parm("primpath").set(f"/Assets_grp/Props_grp/{asset_name_clean}")
+            
+            ## Animation setup
+            bp_anim_import.parm("filePathAnim").set(char_anim['product_file_path'].replace("\\", "/"))
+
+            # Connect the nodes together
+            bp_anim_import.setInput(0, last_node, 0)
+            last_node = bp_anim_import
+
+        # Connect the nodes together
+        in_characters_and_props.setInput(0, char_input_stage, 0)
+        char_output0.setInput(0, last_node, 0)
+
+        # Place the input and output nodes
+        char_input_stage.setPosition(hou.Vector2(0, 2))
+        char_output0.setPosition(last_node.position() + hou.Vector2(0, -2))
+        pass
+    build_characters_and_props_subnet()
+
+
+
     # Create a Subnet called "CFX"
     cfx_subnet = assembly_subnet.createNode("subnet", "CFX")
     cfx_subnet.setColor(hou.Color(0.273, 0.627, 0.278)) # Green

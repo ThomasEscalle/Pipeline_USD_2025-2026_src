@@ -12,14 +12,13 @@
 
 6. 🟢 Importation du ghost de du FLO dans l'animation (obligé de passer par le USD pluggin)
 
-7. Import des animations et 🟡 des cameras dans le assembly
+7. 🟢 Import des animations et 🟢 des cameras dans le assembly
 
 8. 🟢 Fix les autorigs pour avoir les nomenclatures nécessaires à l'application de l'anim sur les assets
 
+9. En assembly, Light, et TLO, utiliser des nodes Sublayer plutot que des references USD
 
-
-
-
+10. Trouver comment faire pour que le script SaveAs marche avec les playblasts
 
 
 

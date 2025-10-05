@@ -177,15 +177,27 @@ class FileTemplateAssemblyHoudini(FileTemplateBase):
                     products_character_animations[i]["connected_entity"] = entity
                     
                     # 1. Recuperer la liste de products dans l'entitée connectée.
+                    products_in_entity = origin.core.products.getProductsFromEntity(entity)
                     
                     # 2. Trouver le product qui s'appelle "USD_Asset"
+                    for p in products_in_entity:
+                        if "USD_Asset" in p["product"]:
+                            products_character_animations[i]["asset_product"] = p
+                            print("   - Found USD_Asset Product : ", p)
+                            
+                            # 3. Recuperer le "asset.usda" du product
+                            path = p.get("path", "")
+                            path = path.replace("\\", "/")
+                            path = os.path.join(path, "asset.usda")
+                            path = path.replace("\\", "/")  
 
-                    # 3. 
+                            if os.path.exists(path):
+                                products_character_animations[i]["asset_file_path"] = path
+                            break
+
 
         # To str
         products_character_animations_str = str(products_character_animations) if len(products_character_animations) > 0 else ""
-
-
 
         # Get the settings results from the dialog
         settings = dialog.getSettings()
