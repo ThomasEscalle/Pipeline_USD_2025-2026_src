@@ -61,6 +61,8 @@ public:
     static QJsonObject GetJsonObjectFromFile(const QString& filePath);
     static bool WriteJsonObjectToFile(const QString& filePath, const QJsonObject& obj);
 
+    static bool ReplaceVariableInFile(const QString& filePath, const QString& variable, const QString& value);
+
 
 public:
 

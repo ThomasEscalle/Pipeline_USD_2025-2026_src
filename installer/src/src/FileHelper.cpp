@@ -305,3 +305,21 @@ bool FileHelper::DeleteDir(const QString &path)
     }
     return dir.removeRecursively();
 }
+
+bool FileHelper::ReplaceVariableInFile(const QString &filePath, const QString &variable, const QString &value)
+{
+    QString content;
+    if(!ReadFile(filePath, content)) {
+        qDebug() << "Failed to read file for variable replacement:" << filePath;
+        return false;
+    }
+
+    content.replace(variable, value);
+
+    if(!WriteFile(filePath, content)) {
+        qDebug() << "Failed to write file after variable replacement:" << filePath;
+        return false;
+    }
+
+    return true;
+}

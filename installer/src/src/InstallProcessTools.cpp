@@ -269,17 +269,6 @@ bool InstallProcessTools::install_MainPrismPlugin()
 
 
 
-    //// Installation du pluggin "patch" pour le versionning
-
-    QString sourcePatchPluginPath = FileHelper::JoinPath(rootRepoPath , "prism/PatchUpdateMaster");
-    if(!FileHelper::DirExists(sourcePatchPluginPath)) {
-        logError("The path to the prism patch plugin source is not valid : " + sourcePatchPluginPath);
-        return false;
-    }
-
-
-    
-
 
     return true;
 }
@@ -351,6 +340,39 @@ bool InstallProcessTools::install_SubstancePrismPlugin()
 
 
 
+
+    //// Installation du pluggin "patch" pour le versionning
+
+    QString sourcePatchPluginPath = FileHelper::JoinPath(rootRepoPath , "prism/PatchUpdateMaster");
+    if(!FileHelper::DirExists(sourcePatchPluginPath)) {
+        logError("The path to the prism patch plugin source is not valid : " + sourcePatchPluginPath);
+        return false;
+    }
+
+    QString destPatchPluginPath = FileHelper::JoinPath( prism_path , "Plugins/Custom/PatchUpdateMaster");
+
+
+    if(FileHelper::DirExists(destPatchPluginPath)) {
+        /// We remove the existing Badger_Pipeline folder if it exists and replace it with the new one
+        if(!FileHelper::DeleteDir(destPatchPluginPath)) {
+            logError("Failed to remove the existing Patch installed directory: " + destPatchPluginPath);
+            return false;
+        }
+
+        log("Removed the existing Badger_Pipeline directory: " + destPatchPluginPath);
+        processEvents();
+    }
+    FileHelper::CreateDir(destPatchPluginPath);
+
+
+    if(!copyFolderRecursive(sourcePatchPluginPath, destPatchPluginPath)) {
+        logError("Failed to copy the prism plugin from : " + sourcePatchPluginPath + " to " + destPatchPluginPath);
+        return false;
+    }
+
+
+
+    
     qDebug() << substance_path;
     qDebug() << substanceRepoPath;
     qDebug() << rootRepoPath;
@@ -361,7 +383,68 @@ bool InstallProcessTools::install_SubstancePrismPlugin()
 bool InstallProcessTools::install_ZBrushPrismPlugin()
 {
     QString zbrush_path = SoftwareHelpers::getZbrushPath();
+    QString prism_path = SoftwareHelpers::getPrismPath();
+    QString prism_path_app = FileHelper::JoinPath(prism_path , "Plugins/Apps/ZBrush");
 
+    if(!FileHelper::DirExists(zbrush_path)) {
+        logError("Impossible to find the path to Zbrush : " + zbrush_path);
+        return false;
+    }
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
+    QString zbrushRepoPath = FileHelper::JoinPath(rootRepoPath , "zbrush/ZBrush");
+
+    if(!FileHelper::DirExists(zbrushRepoPath)) {
+        logError("Impossible to find the path" + zbrushRepoPath);
+        return false;
+    }
+
+    if(FileHelper::DirExists(prism_path_app)) {
+        /// We remove the existing Badger_Pipeline folder if it exists and replace it with the new one
+        if(!FileHelper::DeleteDir(prism_path_app)) {
+            logError("Failed to remove the existing ZBrush installed directory: " + prism_path_app);
+            return false;
+        }
+
+        log("Removed the existing Badger_Pipeline directory: " + prism_path_app);
+        processEvents();
+    }
+
+    FileHelper::CreateDir(prism_path_app);
+
+    /// Copy the prism plugin to the prism plugins folder recursively
+    if(!copyFolderRecursive(zbrushRepoPath, prism_path_app)) {
+        logError("Failed to copy the prism plugin from : " + zbrushRepoPath + " to " + prism_path_app);
+        return false;
+    }
+
+
+
+    /// Copy the file from zbrushRepoPath/Integration/prism_menu.txt to zbrush_path/ZStartup/ZPlugs64/prism_menu.txt
+    QString integrationFilePath = FileHelper::JoinPath(zbrushRepoPath , "Integration/prism_menu.txt");
+    if(!FileHelper::FileExists(integrationFilePath)) {
+        logError("The template file " + integrationFilePath + " does not exists");
+        return false;
+    }
+    QString destIntegrationFilePath = FileHelper::JoinPath(zbrush_path , "ZStartup/ZPlugs64/prism_menu.txt");
+    FileHelper::CopyFile(integrationFilePath  , destIntegrationFilePath);
+
+    // Check if the file was successfully copied
+    if(!FileHelper::FileExists(destIntegrationFilePath)) {
+        logError("Failed to copy the integration file to ZBrush's ZPlugs64 directory: " + destIntegrationFilePath);
+        return false;
+    }
+
+    processEvents();
+
+    FileHelper::ReplaceVariableInFile(destIntegrationFilePath , "$$Prism_ZBrush_MenuTools.py$$" , FileHelper::JoinPath(prism_path_app , "Scripts/Prism_ZBrush_MenuTools.py") );
+    processEvents();
+    FileHelper::ReplaceVariableInFile(destIntegrationFilePath , "$$pythonw.exe$$" , FileHelper::JoinPath(prism_path , "Python311/pythonw.exe") );
+    processEvents();
+    FileHelper::ReplaceVariableInFile(destIntegrationFilePath , "$$prism_path$$" , prism_path );
+    processEvents();
+    FileHelper::ReplaceVariableInFile(destIntegrationFilePath , "$$ZBrushTmp/toZBrush.txt$$" , FileHelper::JoinPath(prism_path_app , "Scripts/ZBrushTmp/toZBrush.txt") );
 
     return true;
 }
