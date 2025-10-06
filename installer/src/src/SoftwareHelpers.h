@@ -17,6 +17,7 @@ public:
     static QString getZbrushPath();
 
     static QString getSubstancePainterPath();
+    static QString getSubstancePrefsPath();
 
     static QString getPrismPath();
     static QString getPrismPrefsPath();

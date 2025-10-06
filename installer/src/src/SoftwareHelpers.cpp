@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QStandardPaths>
+#include "FileHelper.h"
 
 
 QString SoftwareHelpers::getMayaPath()
@@ -356,6 +357,24 @@ QString SoftwareHelpers::getSubstancePainterPath()
 #else
     return "";
 #endif
+}
+
+QString SoftwareHelpers::getSubstancePrefsPath()
+{
+    /// Prism prefs path is located in:
+    /// Documents/Prism2/Prism.json
+    /// Documents/Prism/Prism.json
+
+    QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation).replace("\\", "/");
+    QString substancePrefsPath =FileHelper::JoinPath( documentsPath , "Adobe/Adobe Substance 3D Painter");
+
+    if(!FileHelper::DirExists(substancePrefsPath)) {
+        if(!FileHelper::CreateDir(substancePrefsPath) ) {
+            return "";
+        }
+    }
+
+    return substancePrefsPath;
 }
 
 

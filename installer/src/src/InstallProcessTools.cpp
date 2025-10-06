@@ -267,6 +267,10 @@ bool InstallProcessTools::install_MainPrismPlugin()
         return false;
     }
 
+
+
+    
+
     return true;
 }
 
@@ -276,8 +280,70 @@ bool InstallProcessTools::install_MainPrismPlugin()
 
 bool InstallProcessTools::install_SubstancePrismPlugin()
 {
+
     QString substance_path = SoftwareHelpers::getSubstancePainterPath();
+    QString substance_prefs_path = SoftwareHelpers::getSubstancePrefsPath();
     QString prism_path = SoftwareHelpers::getPrismPath();
+    QString prism_path_app = FileHelper::JoinPath(prism_path , "Plugins/Apps/SubstancePainter");
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
+    QString substanceRepoPath = FileHelper::JoinPath(rootRepoPath , "substance/SubstancePainter");
+
+    if(!FileHelper::DirExists(substanceRepoPath)) {
+        logError("Impossible to find the path" + substanceRepoPath);
+        return false;
+    }
+
+
+    if(FileHelper::DirExists(prism_path_app)) {
+        /// We remove the existing Badger_Pipeline folder if it exists and replace it with the new one
+        if(!FileHelper::DeleteDir(prism_path_app)) {
+            logError("Failed to remove the existing Substance installed directory: " + prism_path_app);
+            return false;
+        }
+
+        log("Removed the existing Badger_Pipeline directory: " + prism_path_app);
+        processEvents();
+    }
+
+    FileHelper::CreateDir(prism_path_app);
+
+    /// Check if the pipeline path contains a "Badger_Pipeline" folder
+    if(!FileHelper::DirExists(prism_path_app)) {
+        logError("The path to the prism plugin source is not valid : " + prism_path_app);
+        return false;
+    }
+
+    /// Copy the prism plugin to the prism plugins folder recursively
+    if(!copyFolderRecursive(substanceRepoPath, prism_path_app)) {
+        logError("Failed to copy the prism plugin from : " + substanceRepoPath + " to " + prism_path_app);
+        return false;
+    }
+
+
+
+
+    //// Copy the integration file to substance's script directory
+    QString integrationFilePath = FileHelper::JoinPath(substanceRepoPath , "Integration/prism_init.py");
+
+    if(!FileHelper::FileExists(integrationFilePath)) {
+        logError("The template file " + integrationFilePath + " does not exists");
+        return false;
+    }
+
+    QString destIntegrationFilePath = FileHelper::JoinPath(substance_prefs_path , "python/plugins");
+    if(!FileHelper::DirExists(destIntegrationFilePath)) {
+        FileHelper::CreateDir(destIntegrationFilePath);
+    }
+
+    FileHelper::CopyFile(integrationFilePath  , FileHelper::JoinPath(destIntegrationFilePath , "prism_init.py"));
+
+
+
+    qDebug() << substance_path;
+    qDebug() << substanceRepoPath;
+    qDebug() << rootRepoPath;
 
     return true;
 }

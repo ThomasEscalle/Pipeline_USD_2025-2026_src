@@ -37,7 +37,8 @@ int main(int argc, char *argv[])
 
     qDebug()<< "Zbrush path : " << SoftwareHelpers::getZbrushPath();
     qDebug()<< "Substance Painter path : " << SoftwareHelpers::getSubstancePainterPath();
-    
+    qDebug()<< "Substance Painter prefs path : " << SoftwareHelpers::getSubstancePrefsPath();
+
     qDebug()<< "Prism path : " << SoftwareHelpers::getPrismPath();
     qDebug()<< "Prism preferences path : " << SoftwareHelpers::getPrismPrefsPath();
 

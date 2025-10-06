@@ -3,6 +3,7 @@
 
 #include "InstallProcess.h"
 
+
 class InstallProcessTools : public InstallProcess
 {
     Q_OBJECT
