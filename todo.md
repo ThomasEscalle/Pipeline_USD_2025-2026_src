@@ -28,6 +28,12 @@
 
 14. Implementer usd view pour plus de fichiers
 
+15. Implementer le RenderLayer de Romain
+
+16. Ajouter la résolution de projet dans toutes les scènes procédurales
+
+
+
 ## Notes de Hugo :
 
 Les gros enviros : 
