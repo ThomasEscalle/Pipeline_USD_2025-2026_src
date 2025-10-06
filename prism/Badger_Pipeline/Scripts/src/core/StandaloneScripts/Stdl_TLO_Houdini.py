@@ -172,6 +172,13 @@ out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, 
 
 
 
+# Create a "Renderlayer" node (romsav_3D5::RenderLayer::2.0)
+renderlayer_node = stage.createNode("romsav_3D5::RenderLayer::2.0", "RenderLayer_Chars")
+renderlayer_node.setColor(hou.Color(0.157, 0.157, 0.776))  # Blue
+renderlayer_node.setPosition(out_scene_building.position() + hou.Vector2(0, -6))
+renderlayer_node.parm("layer_name").set("Char")
+
+
 
 # Create a "Export" node
 export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
@@ -195,8 +202,11 @@ TLO_subnet.setInput(0, import_subnet, 0)
 sceneCleaning_subnet.setInput(0, TLO_subnet, 0)
 # connect the Scene Cleaning subnet to the OUT_SCENE_ASSEMBLY node
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
+
 # connect the OUT_SCENE_ASSEMBLY node to the Export subnet
-export_node.setInput(0, out_scene_building, 0)
+renderlayer_node.setInput(0, out_scene_building, 0)
+# connect the Export subnet to the Export node
+export_node.setInput(0, renderlayer_node, 0)
 
 
 # Set the display flag on the "OUT_SCENE_BUILDING" node

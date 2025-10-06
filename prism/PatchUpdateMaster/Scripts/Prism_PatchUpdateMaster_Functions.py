@@ -3,10 +3,13 @@ import os
 import json
 import shutil
 
-try:
-    from pyqt import QtWidgets, QtCore
-except ImportError:
-    from PySide2 import QtWidgets, QtCore
+
+from qtpy import QtWidgets, QtCore
+
+from qtpy.QtCore import *
+from qtpy.QtGui import *
+from qtpy.QtWidgets import *
+
     
 import sys
 
