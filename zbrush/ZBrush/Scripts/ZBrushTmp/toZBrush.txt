@@ -1,0 +1,7 @@
+[RoutineDef, command,
+[If, [IGetStatus,Document:ZAppLink Properties:Cust1:Cust1],
+	//[IClick,Document:ZAppLink Properties:Clear To]
+	[IUnPress,Document:ZAppLink Properties:Cust1:Cust1]
+]
+]
+[RoutineCall, command]
