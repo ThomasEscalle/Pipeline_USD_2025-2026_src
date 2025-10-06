@@ -269,7 +269,17 @@ bool InstallProcessTools::install_MainPrismPlugin()
 
 
 
+    //// Installation du pluggin "patch" pour le versionning
+
+    QString sourcePatchPluginPath = FileHelper::JoinPath(rootRepoPath , "prism/PatchUpdateMaster");
+    if(!FileHelper::DirExists(sourcePatchPluginPath)) {
+        logError("The path to the prism patch plugin source is not valid : " + sourcePatchPluginPath);
+        return false;
+    }
+
+
     
+
 
     return true;
 }
