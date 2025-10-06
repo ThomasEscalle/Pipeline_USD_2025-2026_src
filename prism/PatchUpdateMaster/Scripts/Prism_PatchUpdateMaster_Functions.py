@@ -3,7 +3,11 @@ import os
 import json
 import shutil
 
-from PySide6 import QtWidgets, QtCore
+try:
+    from pyqt import QtWidgets, QtCore
+except ImportError:
+    from PySide2 import QtWidgets, QtCore
+    
 import sys
 
 

@@ -238,7 +238,7 @@ bool InstallProcessTools::install_MainPrismPlugin()
     
     QString templatePath = FileHelper::GetResourcesPath();
     QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
-    QString pipeline_plugin_source = FileHelper::JoinPath(rootRepoPath, "prism");
+    QString pipeline_plugin_source = FileHelper::JoinPath(rootRepoPath, "prism/Badger_Pipeline");
 
     QString badger_pipeline_path = FileHelper::JoinPath(prism_plugins_path, "Badger_Pipeline");
     if(FileHelper::DirExists(badger_pipeline_path)) {
@@ -262,7 +262,7 @@ bool InstallProcessTools::install_MainPrismPlugin()
     }
 
     /// Copy the prism plugin to the prism plugins folder recursively
-    if(!copyFolderRecursive(pipeline_plugin_source, prism_plugins_path)) {
+    if(!copyFolderRecursive(pipeline_plugin_source, badger_pipeline_path)) {
         logError("Failed to copy the prism plugin from : " + pipeline_plugin_source + " to " + prism_plugins_path);
         return false;
     }
@@ -697,7 +697,7 @@ bool InstallProcessTools::install_HoudiniCustomNodes()
             "lop_Thomas.Bp_AssetReference.1.0.hdanc",
             "lop_Thomas.BP_Export.1.0.hdanc",
             "lop_Thomas.BP_Anim_Import.1.0.hdanc",
-            "lop_romsav_3D5.RenderLayer.1.0.hdanc"
+            "lop_romsav_3D5.RenderLayer.2.0.hdanc"
         };
         for(auto it : filesToCopy) {
             copyFile(houdini_otls_path_template + "/" + it , houdini_otls_path + "/" + it );
