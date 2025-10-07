@@ -377,14 +377,13 @@ class Prism_ZBrush_Functions(object):
             # Save as JPG, with quality (0–100)
             image.save(newThumbnailPath, "JPG", 100)
             if os.path.exists(thumbnailPath):
-                try:
-                    os.remove(thumbnailPath)
-                except PermissionError:
-                    time.sleep(0.2)
+                for i in range(15):
                     try:
                         os.remove(thumbnailPath)
+                        return
                     except PermissionError:
-                        print("not the rigth way to do it")
+                        time.sleep(0.2)
+
             
 
     def Tools(self):
