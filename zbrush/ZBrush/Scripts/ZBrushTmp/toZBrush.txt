@@ -1,7 +1,3 @@
-[RoutineDef, command,
-[If, [IGetStatus,Document:ZAppLink Properties:Cust1:Cust1],
-	//[IClick,Document:ZAppLink Properties:Clear To]
-	[IUnPress,Document:ZAppLink Properties:Cust1:Cust1]
-]
-]
-[RoutineCall, command]
+[RoutineDef, command, [FileNameSetNext, "//gandalf/3d5_2526/02_TOP_HIT/03_Production/01_Assets/Chars/Rby/Scenefiles/Mod/Sculpt/Rby_Sculpt_v0003preview.png"]
+[IPress, "Document:Export"]]
+[RoutineCall,command]

@@ -113,6 +113,7 @@ class Prism_ZBrush_Functions(object):
     @err_catcher(name=__name__)
     def saveScene(self, origin, filepath, details={}):
         # save scenefile
+        self.exportThumbnail(origin, filepath)
         ext = os.path.splitext(filepath)[1]
         self.saveCurrentFileName(filepath.replace("\\", "/"))
         if ext == ".zpr" or ext == ".ZPR":
@@ -122,7 +123,6 @@ class Prism_ZBrush_Functions(object):
         self.send_command_to_zbrush(command)
         self.activate_zbrush()
 
-        self.exportThumbnail(origin, filepath)
 
     @err_catcher(name=__name__)
     def getImportPaths(self, origin):
@@ -377,12 +377,12 @@ class Prism_ZBrush_Functions(object):
             # Save as JPG, with quality (0–100)
             image.save(newThumbnailPath, "JPG", 100)
             if os.path.exists(thumbnailPath):
-                for i in range(15):
+                for i in range(5):
                     try:
                         os.remove(thumbnailPath)
                         return
                     except PermissionError:
-                        time.sleep(0.2)
+                        time.sleep(0.5)
 
             
 
