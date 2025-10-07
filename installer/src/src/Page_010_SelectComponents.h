@@ -24,6 +24,9 @@ public:
 
     int nextId() const override;
 
+private slots:
+    void on_uncheckAll_clicked();
+
 private:
     Ui::Page_010_SelectComponents *ui;
 
