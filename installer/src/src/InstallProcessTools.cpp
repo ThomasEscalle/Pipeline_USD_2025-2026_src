@@ -446,6 +446,18 @@ bool InstallProcessTools::install_ZBrushPrismPlugin()
     processEvents();
     FileHelper::ReplaceVariableInFile(destIntegrationFilePath , "$$ZBrushTmp/toZBrush.txt$$" , FileHelper::JoinPath(prism_path_app , "Scripts/ZBrushTmp/toZBrush.txt") );
 
+
+    /// Copy the file from zbrushRepoPath/Integration/load.zsc to zbrush_path/ZStartup/ZPlugs64/load.zsc
+    QString loadFilePath = FileHelper::JoinPath(zbrushRepoPath , "Integration/load.zsc");
+    if(!FileHelper::FileExists(loadFilePath)) {
+        logError("The template file " + loadFilePath + " does not exists");
+        return false;
+    }
+    QString destLoadFilePath = FileHelper::JoinPath(zbrush_path , "ZStartup/ZPlugs64/load.zsc");
+    FileHelper::CopyFile(loadFilePath  , destLoadFilePath);
+    processEvents();
+
+
     return true;
 }
 

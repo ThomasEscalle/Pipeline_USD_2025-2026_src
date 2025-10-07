@@ -132,3 +132,15 @@ int Page_010_SelectComponents::nextId() const
 {
     return MainWizard::PAGE_011_SELECTLOCATION;
 }
+
+void Page_010_SelectComponents::on_uncheckAll_clicked()
+{
+    for (auto it = m_items.begin(); it != m_items.end(); ++it) {
+        QTreeWidgetItem* item = it.value();
+        // Vérifier si l'item est coché et n'est pas un item racine
+        if (item->checkState(0) == Qt::Checked && item->parent() != nullptr) {
+            item->setCheckState(0, Qt::Unchecked);
+        }
+    }
+}
+

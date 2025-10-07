@@ -26,6 +26,13 @@
      </column>
     </widget>
    </item>
+   <item>
+    <widget class="QPushButton" name="uncheckAll">
+     <property name="text">
+      <string>Uncheck all</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>
