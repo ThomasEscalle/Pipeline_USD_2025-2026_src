@@ -567,10 +567,10 @@ class Prism_Badger_Pipeline_Functions(object):
 
         # Animation
         animation_MayaAction = QAction(self.getIcon("maya.png"), "Maya - Anim", animationMenu)
-        animation_MayaAction.triggered.connect(lambda: self.createTemplate("Anim/Maya", origin))
+        animation_MayaAction.triggered.connect(lambda: self.createTemplate("anim/Maya", origin))
         animationMenu.addAction(animation_MayaAction)
         animation_HoudiniOCCAction = QAction(self.getIcon("houdini.png"), "Houdini - Anim OCC", animationMenu)
-        animation_HoudiniOCCAction.triggered.connect(lambda: self.createTemplate("Anim/Houdini", origin))
+        animation_HoudiniOCCAction.triggered.connect(lambda: self.createTemplate("anim/Houdini", origin))
         animationMenu.addAction(animation_HoudiniOCCAction)
 
         # Assembly  

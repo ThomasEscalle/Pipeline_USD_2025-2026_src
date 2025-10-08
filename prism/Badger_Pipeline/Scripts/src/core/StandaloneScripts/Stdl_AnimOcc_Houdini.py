@@ -341,10 +341,19 @@ out_scene_building = stage.createNode("null", "OUT_SCENE_ASSEMBLY")
 out_scene_building.setPosition(sceneCleaning_subnet.position() + hou.Vector2(0, -2))
 
 
+
+# Create a "Renderlayer" node (romsav_3D5::RenderLayer::2.0)
+renderlayer_node = stage.createNode("romsav_3D5::RenderLayer::2.0", "RenderLayer_OCC")
+renderlayer_node.setColor(hou.Color(0.157, 0.157, 0.776))  # Blue
+renderlayer_node.setPosition(out_scene_building.position() + hou.Vector2(0,-2))
+renderlayer_node.parm("layer_name").set("OCC")
+renderlayer_node.parm("xn__riintegratorname_01ak").set("PxrOcclusion")
+
+
 # Create a "Export" node
 export_node = stage.createNode("Thomas::BP_Export::1.0", "Publish")
 export_node.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
-export_node.setPosition(out_scene_building.position() + hou.Vector2(0, -2))
+export_node.setPosition(renderlayer_node.position() + hou.Vector2(0, -2))
 export_node.parm("productName").set("Assembly_Publish")
 export_node.parm("nextVersion").set(True)
 export_node.parm("updateMaster").set(True)
@@ -364,7 +373,8 @@ sceneCleaning_subnet.setInput(0, import_subnet, 0)
 # sceneCleaning_subnet[0]->out_scene_building[0]
 out_scene_building.setInput(0, sceneCleaning_subnet, 0)
 # out_scene_building[0]->usd_rop[0]
-export_node.setInput(0, out_scene_building, 0)
+renderlayer_node.setInput(0, out_scene_building, 0)
+export_node.setInput(0, renderlayer_node, 0)
 
 
 # Set the display flag on the "OUT_SCENE_BUILDING" node
