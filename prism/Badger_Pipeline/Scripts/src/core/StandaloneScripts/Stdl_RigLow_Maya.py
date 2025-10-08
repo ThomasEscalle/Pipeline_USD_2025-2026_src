@@ -33,6 +33,7 @@ createRiggingGroups = "CREATE_RIGGING_GROUPS"
 #          - ExtraNodes_To_Show_01
 #          - ExtraNodes_To_Hide_01
 
+
 def build_template():
     cmds.file(new=True, force=True)
 

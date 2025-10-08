@@ -55,7 +55,7 @@ class FileTemplateAnimHoudini(FileTemplateBase):
         
         # On cherche d'abord un éventuel setdress éditable sur le shot courant.
         # Si on en trouve pas, on prend celui du master.
-        edit_setDress_Files = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc"], origin, ["FLO_Edit_SetD_Publish"], onlyOne=True)
+        edit_setDress_Files = self.getMatchingProductsFromEntity(current_entity, [".usd", ".usda" , ".usdc"], origin, ["Anim_Edit_SetD_Publish"], onlyOne=True)
         if len(edit_setDress_Files) > 0 :
             setDress_Files = edit_setDress_Files
         else :
