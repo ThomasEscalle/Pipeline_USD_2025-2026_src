@@ -79,6 +79,7 @@ class USDUtils:
 
         # Create the asset.usda
         self.createAssetRoot(entity, usd_asset, parent)
+        self.createAssetRootSurfacing(entity, usd_asset, parent)
 
         # Create the usd_info.json
         self.createDefaultAssetJsonDefinition(entity, os.path.join(usd_asset, "usd_info.json") , parent)
@@ -92,6 +93,7 @@ class USDUtils:
             }
         ]
         self.createAssetPayload(entity, usd_asset, parent.core , payload_variants)
+        self.createAssetPayloadSurfacing(entity, usd_asset, parent.core , payload_variants)
 
         pass
 
@@ -158,6 +160,46 @@ class USDUtils:
         # Save the file
         stage.SetDefaultPrim(prim)
         stage.GetRootLayer().Save()
+
+
+    def createAssetRootSurfacing(self, entity, assetPath, parent):
+        try:
+            from pxr import Usd, UsdGeom, Kind, Sdf
+        except ImportError as e:
+            parent.console.log("Error importing pxr module: %s" % e)
+            parent.console.showMessageBoxError("Import Error", "Could not import the 'pxr' module. Please ensure that the USD Python bindings are installed and accessible.")
+            return
+
+        # Create the USD Stage
+        stage = Usd.Stage.CreateNew(os.path.join(assetPath, "asset_surf.usda"))
+        stage.SetFramesPerSecond(24)
+        stage.SetTimeCodesPerSecond(24)
+        stage.SetMetadata("metersPerUnit", 1)
+        stage.SetMetadata("upAxis", "Y")
+
+        # Create a xForm 
+        prim = stage.DefinePrim("/" + entity["asset"], "Xform")
+        prim.SetTypeName("Xform")
+
+        # Apply the GeomModelAPI
+        prim.ApplyAPI("GeomModelAPI") # Older USD versions: prim.ApplyAPI("UsdGeomModelAPI")
+
+        # Add the asset information
+        prim.SetAssetInfoByKey("name", entity["asset"])
+        prim.SetAssetInfoByKey("thumbnail", Sdf.AssetPath("./thumbnail.png"))
+        prim.SetAssetInfoByKey("identifier", Sdf.AssetPath("./" + entity["asset"] + ".usda"))
+
+        # Set the kind to component
+        model_API = Usd.ModelAPI(prim)
+        model_API.SetKind(Kind.Tokens.component) # Set the kind to component
+
+        # Add a payload to the payload.usda file
+        prim.GetPayloads().AddPayload("./payload_surf.usda")
+
+        # Save the file
+        stage.SetDefaultPrim(prim)
+        stage.GetRootLayer().Save()
+
 
     # Creates a payload file (payload.usda)
     def createAssetPayload(self, entity, assetPath, core , items = []):
@@ -228,6 +270,75 @@ class USDUtils:
         # Save the file
         stage.SetDefaultPrim(prim)
         stage.GetRootLayer().Save()
+
+    # Exactly like the createAssetPayload, but only adds the material reference
+    # This is used to reference an asset that only has surfacing to apply the geometry again on an animation
+    def createAssetPayloadSurfacing(self, entity, assetPath, core , items = []):
+        try:
+            from pxr import Usd, UsdGeom, Kind, Sdf
+        except ImportError as e:
+            return
+        
+        # Create the USD Stage
+        stage = Usd.Stage.CreateNew(os.path.join(assetPath, "payload_surf.usda"))
+        stage.SetFramesPerSecond(24)
+        stage.SetTimeCodesPerSecond(24)
+        stage.SetMetadata("metersPerUnit", 1)
+        stage.SetMetadata("upAxis", "Y")
+
+        # Create a simple primitive 
+        prim = stage.DefinePrim("/" + entity["asset"])
+
+        # Set the kind to component
+        model_API = Usd.ModelAPI(prim)
+        model_API.SetKind(Kind.Tokens.component) # Set the kind to component
+
+
+        variant_sets_api = prim.GetVariantSets()
+
+        variant_set_api = variant_sets_api.AddVariantSet("variant", position=Usd.ListPositionBackOfPrependList)
+        
+
+
+        # Iterate over the items and add the variants
+        index = 0
+        for item in items:
+            name = item["name"]
+            geo_path = item["geo"]
+            mtl_path = item["mtl"]
+
+            # Check if the items are not empty
+            if geo_path == "" or mtl_path == "":
+                continue
+            variant_set_api.AddVariant(name)
+            variant_set_api.SetVariantSelection(name)
+
+            # Create a "Asset_root" 
+            with variant_set_api.GetVariantEditContext():
+                # Anything we write in the context, goes into the variant (prims and properties)
+                rootVariant = stage.DefinePrim("/" + entity["asset"] + "/Asset_root")
+
+                # Add the references, relative to the current directory
+                relative_mtl = os.path.relpath(mtl_path, assetPath).replace("\\", "/")
+                rootVariant.GetReferences().AddReference(relative_mtl)
+                print("Adding reference to: " + relative_mtl + " for item " + name)
+
+            index += 1
+
+
+        # If there are item, set the variant selection to the first item's name
+        if items:
+            variant_set_api.SetVariantSelection(items[0]["name"])
+
+        # Add references to the geo and the material
+        # prim.GetReferences().AddReference("./geo.usda")
+        # prim.GetReferences().AddReference("./mtl.usda")
+
+        # Save the file
+        stage.SetDefaultPrim(prim)
+        stage.GetRootLayer().Save()
+
+
 
     def createAssetGeo(self, entity, assetPath, core , geo_low_path, geo_high_path, subdirectory = ""):
         try:
@@ -653,6 +764,17 @@ class USDUtils:
                 print(f"Warning: Could not delete payload file {payload_usda_path}: {e}")
             except Exception as e:
                 print(f"Warning: Unexpected error deleting payload file {payload_usda_path}: {e}")
+
+        payload_surf_usda_path = os.path.join(json_file_parent_dir, "payload_surf.usda")
+        if os.path.exists(payload_surf_usda_path):
+            try:
+                os.remove(payload_surf_usda_path)
+            except PermissionError as e:
+                print(f"Warning: Could not delete payload file {payload_surf_usda_path}: {e}")
+            except Exception as e:
+                print(f"Warning: Unexpected error deleting payload file {payload_surf_usda_path}: {e}")
+
+                
         # Delete all the subdirectories in the json_file_parent_dir
         for item in os.listdir(json_file_parent_dir):
             item_path = os.path.join(json_file_parent_dir, item)
@@ -708,5 +830,6 @@ class USDUtils:
 
 
         self.createAssetPayload(entity, json_file_parent_dir, core , payload_variants)
+        self.createAssetPayloadSurfacing(entity, json_file_parent_dir, core , payload_variants)
 
         pass
