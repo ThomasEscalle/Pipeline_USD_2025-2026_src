@@ -168,7 +168,8 @@ class MayaExportUsd:
                 materials=export_materials,
                 catmull_clark=export_catmull_clark,
                 exportUVs=export_uvs,
-                parentPrim=create_usd_parent_scope
+                parentPrim=create_usd_parent_scope,
+                exportFormat=export_format
             )
 
 
