@@ -42,7 +42,16 @@ character_animations_filepaths = "$$CHARACTER_ANIMATIONS_FILEPATH$$"
 ]
 """
 
-
+# Function to convert a file path to a URI using the Badger_Pipeline plugin
+def convertPathToUri(path):
+    try:
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        uri = plugin.convertPathToUri(path)
+        return uri
+    except Exception as e:
+        return path
 
 
 # Create a new Houdini scene
@@ -100,7 +109,8 @@ def build_import_subnet():
         if set_dress_filepath and os.path.isfile(set_dress_filepath):
             reference_node = set_dress_subnet.createNode("sublayer", "SetDress_Sublayer")
             reference_node.setPosition(in_set_dress.position() + hou.Vector2(0, -2))
-            reference_node.parm("filepath1").set(set_dress_filepath.replace("\\", "/"))
+            set_dress_uri = convertPathToUri(set_dress_filepath)
+            reference_node.parm("filepath1").set(set_dress_uri.replace("\\", "/"))
             reference_node.setComment(f"Sublayer the Set Dress USD:\n{set_dress_filepath}")
             reference_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
 
@@ -150,7 +160,8 @@ def build_import_subnet():
                 sublayer_node.setPosition(hou.Vector2(4, 2))
             else:
                 sublayer_node.setPosition(last_node.position() + hou.Vector2(4, 2))
-            sublayer_node.parm("filepath1").set(char_anim['product_file_path'].replace("\\", "/"))
+            char_anim_uri = convertPathToUri(char_anim['product_file_path'])
+            sublayer_node.parm("filepath1").set(char_anim_uri.replace("\\", "/"))
 
             sublayer_node.setComment(f"Sublayer the Character Animation USD:\n{char_anim['product_file_path']}")
             sublayer_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
@@ -227,7 +238,8 @@ def build_import_subnet():
         if camera_filepath and os.path.isfile(camera_filepath):
             cam_reference_node = camera_subnet.createNode("reference", "Camera_Reference")
             cam_reference_node.setPosition(in_camera.position() + hou.Vector2(0, -2))
-            cam_reference_node.parm("filepath1").set(camera_filepath.replace("\\", "/"))
+            camera_uri = convertPathToUri(camera_filepath)
+            cam_reference_node.parm("filepath1").set(camera_uri.replace("\\", "/"))
             cam_reference_node.parm("primpath1").set(f"/Camera_grp")
             cam_reference_node.setComment(f"Reference the Camera USD:\n{camera_filepath}")
             cam_reference_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)

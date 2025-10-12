@@ -41,6 +41,9 @@ from src.ui.Aniversaires import get_anniversaires_aujourd_hui
 from src.ui.Games_Snake import Snake
 from src.ui.USD_View import USD_View
 
+from src.ui.URI_Converter import URI_Converter_Dialog
+from src.core.URI_Helper import URI_Helper
+
 class Prism_Badger_Pipeline_Functions(object):
 
 
@@ -75,6 +78,10 @@ class Prism_Badger_Pipeline_Functions(object):
             
         # This function is called when the user wants to create a new asset
         self.core.registerCallback("onAssetDlgOpen", self.onAssetDlgOpen, plugin=self)
+
+        # When a right click is done on a product
+        # "productSelectorContextMenuRequested", args=[self, viewUi, pos, rcmenu]
+        self.core.registerCallback("productSelectorContextMenuRequested", self.onProductSelectorContextMenuRequested, plugin=self)
 
         ### All of the Maya Export USD Callbacks
         # use a lower priority than 50 to make sure the function gets called after the "onStateStartup" function of the Deadline plugin
@@ -174,6 +181,51 @@ class Prism_Badger_Pipeline_Functions(object):
             dlg.layout().addWidget(self.chk_create_usd)
             self.chk_create_usd.setChecked(True)
 
+    # When a right click is done on a product
+    # "productSelectorContextMenuRequested", args=[self, viewUi, pos, rcmenu]
+    def onProductSelectorContextMenuRequested(self, origin, viewUi, pos, rcMenu):
+        print("Product selector context menu requested")
+        # Get the selected product
+        selectedIndexes = viewUi.selectedIndexes()
+        if not selectedIndexes:
+            return
+        index = selectedIndexes[0]
+        product = index.data(Qt.UserRole)
+        if product is None:
+            return
+        print("Selected product: %s" % product)
+
+        pathC = viewUi.model().columnCount() - 1
+        path = viewUi.model().index(index.row(), pathC).data(Qt.UserRole)
+        if path is None:
+            path = viewUi.model().index(index.row(), pathC).data()
+            if path is None:
+                return
+        else :
+            path = path.get("path" , "")
+            path = path.replace("\\", "/")  # Ensure the path is in the correct format
+
+        # Create an action named "Copy product URI"
+        getProductUriAction = QAction(self.getIcon("uri.png"), "Copy product URI", origin)
+        getProductUriAction.setToolTip("Copy the URI of the selected product")
+        getProductUriAction.triggered.connect(lambda: self.getProductUri(path))
+        rcMenu.addAction(getProductUriAction)
+        return
+
+    def getProductUri(self, product):
+        # Product is a string containing the product path
+        print("Getting URI for product: %s" % product)
+        URI = URI_Helper.createFromPath(product)
+        if URI is None:
+            QMessageBox.warning(self.projectBrowser, "Error", "Could not create URI from path: %s" % product)
+            return
+        self.console.log("Product URI: %s" % URI)
+
+        # Copy the URI to the clipboard
+        clipboard = QApplication.clipboard()
+        clipboard.setText(URI)
+
+
     # Open the variant connection dialog
     def openVariantsConnection(self, item):
         widget = AssignVariantsDialog(core=self.core, pluggin_parent=self, parent=self.projectBrowser)
@@ -267,7 +319,11 @@ class Prism_Badger_Pipeline_Functions(object):
         testAction.setShortcut(QKeySequence("Ctrl+T"))
         origin.mainMenu.addAction(testAction)
 
-
+        # Create a URI converter action
+        uriConverterAction = QAction(self.getIcon("uri.png"), "URI Converter", origin)
+        uriConverterAction.triggered.connect(self.onActionURIConverter)
+        uriConverterAction.setShortcut(QKeySequence("Ctrl+Shift+I"))
+        origin.mainMenu.addAction(uriConverterAction)
 
         # Create a help action
         helpAction = QAction(self.getIcon("help.png"), "Help", origin)
@@ -300,7 +356,6 @@ class Prism_Badger_Pipeline_Functions(object):
             self.projectBrowser.setWindowTitle(aniversairesTxt)
         else:
             self.projectBrowser.setWindowTitle("Prism - Badger Pipeline")
-
 
 
 
@@ -363,7 +418,11 @@ class Prism_Badger_Pipeline_Functions(object):
             self.product3DViewer.setFileStage("E:/3D/Projects/06_Ouyang/03_Production/01_Assets/Chars/Nathan/Export/USD_Asset/asset.usda")
         self.product3DViewer.show()
 
+    
+    def onActionURIConverter(self):
 
+        widget = URI_Converter_Dialog(core=self.core, pluggin_parent=self, parent=self.projectBrowser)
+        widget.exec_()
 
     
     def onActionTest(self):
@@ -630,6 +689,14 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
     #region Helper functions
+
+    def convertPathToUri(self, path):
+        URI = URI_Helper.createFromPath(path)
+        if URI is None:
+            self.console.log("Could not create URI from path: %s" % path)
+            return ""
+        return URI
+
 
     # Create a placeholder USD file (for now just an empty file)
     def createPlaceholderUSD(self, path):

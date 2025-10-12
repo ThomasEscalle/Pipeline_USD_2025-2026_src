@@ -16,6 +16,19 @@ shot_postroll = int("$$SHOT_POSTROLL$$")
 
 light_path = "$$LIGHT_PATH$$"
 
+# Function to convert a file path to a URI using the Badger_Pipeline plugin
+def convertPathToUri(path):
+    try:
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        uri = plugin.convertPathToUri(path)
+        return uri
+    except Exception as e:
+        return path
+
+
+
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
 
@@ -51,7 +64,8 @@ def build_assembly_subnet():
 
     # Create a "sublayer" node to import the light usd
     sublayer_node = import_subnet.createNode("sublayer", "Light_Sublayer")
-    sublayer_node.parm("filepath1").set(light_path if os.path.exists(light_path) else "")
+    light_uri = convertPathToUri(light_path)
+    sublayer_node.parm("filepath1").set(light_uri.replace("\\", "/"))
 
 
     # Create a "Null" node called "OUT_IMPORT"

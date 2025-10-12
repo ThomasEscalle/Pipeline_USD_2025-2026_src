@@ -12,6 +12,20 @@ department = "$$DEPARTMENT_NAME$$"
 import_reference = "$$IMPORT_REFERENCE$$"
 reference_path = "$$REFERENCE_PATH$$"
 
+
+# Function to convert a file path to a URI using the Badger_Pipeline plugin
+def convertPathToUri(path):
+    try:
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        uri = plugin.convertPathToUri(path)
+        return uri
+    except Exception as e:
+        return path
+
+
+
 # Convert the reference path to a list (eval), and take the first element if there are multiple paths
 reference_paths_list = eval(reference_path) if reference_path else []
 reference_pathstr = reference_paths_list[0] if reference_paths_list else ""
@@ -52,10 +66,10 @@ def build_import_subnet():
     reference.setPosition(hou.Vector2(0, -1))
     reference.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
     if import_reference == "True" and reference_pathstr != "":
-        
+        reference_uri = convertPathToUri(reference_pathstr)
         # If we are importing a reference, set the reference path
         reference.setParms({
-            "filepath1": reference_pathstr
+            "filepath1": reference_uri.replace("\\", "/")
         })
     else:
         # If we are not importing a reference, set the reference path to an empty string
