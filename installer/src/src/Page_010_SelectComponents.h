@@ -26,6 +26,7 @@ public:
 
 private slots:
     void on_uncheckAll_clicked();
+    void on_treeWidget_itemClicked(QTreeWidgetItem *item, int column);
 
 private:
     Ui::Page_010_SelectComponents *ui;

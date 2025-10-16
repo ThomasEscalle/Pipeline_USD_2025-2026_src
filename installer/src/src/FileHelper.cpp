@@ -323,3 +323,19 @@ bool FileHelper::ReplaceVariableInFile(const QString &filePath, const QString &v
 
     return true;
 }
+
+bool FileHelper::AppendLineToFile(const QString &filePath, const QString &line)
+{
+    QFile file(filePath);
+    if(!file.open(QIODevice::Append | QIODevice::Text))
+    {
+        qDebug() << "Failed to open file for appending:" << filePath;
+        return false;
+    }
+
+    QTextStream out(&file);
+    out << line << "\n";
+    file.flush();
+    file.close();
+    return true;
+}

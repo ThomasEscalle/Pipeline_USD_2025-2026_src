@@ -55,13 +55,28 @@ def build_assembly_subnet():
     
     # Create a reference node for the assembly
     assembly_ref = import_subnet.createNode("sublayer", "Assembly_Sublayer")
-    assembly_ref.parm("filepath1").set( assemblyPath if assemblyPath != "" else "")
+    try: # Try to convert the path to an URI
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        assembly_uri = plugin.convertPathToUri(assemblyPath)
+    except Exception as e:
+        assembly_uri = assemblyPath
+    assembly_ref.parm("filepath1").set(assembly_uri if assembly_uri != "" else "")
     assembly_ref.setPosition(in_import.position() + hou.Vector2(0, -2))
 
 
     # Create a reference node for the master light
     master_light_ref = import_subnet.createNode("sublayer", "Master_Light_Sublayer")
-    master_light_ref.parm("filepath1").set(masterLightPath)
+    try: # Try to convert the path to an URI
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        masterLightPath_uri = plugin.convertPathToUri(masterLightPath)
+    except Exception as e:
+        masterLightPath_uri = masterLightPath
+        
+    master_light_ref.parm("filepath1").set(masterLightPath_uri if masterLightPath_uri != "" else "")
     master_light_ref.setPosition(assembly_ref.position() + hou.Vector2(0, -2))
 
 

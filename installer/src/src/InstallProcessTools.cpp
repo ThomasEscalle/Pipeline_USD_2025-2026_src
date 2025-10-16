@@ -67,6 +67,10 @@ bool InstallProcessTools::install()
             processEvents();
             installResult = install_MayaShotManager();
         }
+        else if( it == "Maya environment variables") {
+            processEvents();
+            installResult = install_MayaEnvironmentVariables();
+        }
         else if (it == "Houdini Asset Browser") {
             processEvents();
             installResult = install_HoudiniAssetBrowser();
@@ -74,6 +78,10 @@ bool InstallProcessTools::install()
         else if (it == "Houdini custom nodes") {
             processEvents();
             installResult = install_HoudiniCustomNodes();
+        }
+        else if (it == "Houdini environment variables") {
+            processEvents();
+            installResult = install_HoudiniEnvironmentVariables();
         }
         else if (it == "Substance painter plugin") {
             processEvents();
@@ -220,6 +228,7 @@ bool InstallProcessTools::verify()
         logError("The abreviation is empty. Please provide a valid abreviation.");
         return false;
     }
+
 
     return true;
 }
@@ -674,6 +683,86 @@ bool InstallProcessTools::install_MayaShotManager()
     return true;
 }
 
+bool InstallProcessTools::install_MayaEnvironmentVariables()
+{
+    QString maya_prefs_path = SoftwareHelpers::getMayaPrefsPath();
+    QString maya_env_path = FileHelper::JoinPath(maya_prefs_path, "Maya.env");
+
+    /// Check if the file exists
+    if(!FileHelper::FileExists(maya_env_path)) {
+        logError("The Maya.env file does not exist: " + maya_env_path);
+        return false;
+    }
+
+
+    QString arPathR = arPath();
+    if(arPathR.isEmpty()) {
+        logError("The AR path is empty. Please provide a valid AR path.");
+        return false;
+    }
+
+    /// IF the environment variables are already set
+    bool USD_ASSET_RESOLVER_found = false;
+    bool PATH_found = false;
+    bool PXR_PLUGINPATH_NAME_found = false;
+    bool PYTHONPATH_found = false;
+
+    /// Read the file content
+    QString envContent = FileHelper::ReadFile(maya_env_path);
+    
+    /// Split the content by lines
+    QStringList envLines = envContent.split("\n");
+
+    for(auto& line : envLines) {
+        qDebug() << line;
+        if(line.contains("USD_ASSET_RESOLVER")) {
+            USD_ASSET_RESOLVER_found = true;
+        }
+        if(line.contains("PATH")) {
+            PATH_found = true;
+        }
+        if(line.contains("PXR_PLUGINPATH_NAME")) {
+            PXR_PLUGINPATH_NAME_found = true;
+        }
+        if(line.contains("PYTHONPATH")) {
+            PYTHONPATH_found = true;
+        }
+    }
+
+
+    /// If the variables are not found, we append them to the file
+    if(!USD_ASSET_RESOLVER_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "maya/UsdAssetResolver_v0.7.7");
+        QString usd_asset_resolver = "USD_ASSET_RESOLVER=" + pathToAdd;
+        FileHelper::AppendLineToFile(maya_env_path, usd_asset_resolver);
+        processEvents();
+    }
+    
+    if(!PATH_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "maya/UsdAssetResolver_v0.7.7/cachedResolver/lib");
+        QString path_var = "PATH=" + pathToAdd + ";%PATH%";
+        FileHelper::AppendLineToFile(maya_env_path, path_var);
+        processEvents();
+    }
+
+    if(!PXR_PLUGINPATH_NAME_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "maya/UsdAssetResolver_v0.7.7/cachedResolver/resources");
+        QString pxr_pluginpath_name = "PXR_PLUGINPATH_NAME=" + pathToAdd;
+        FileHelper::AppendLineToFile(maya_env_path, pxr_pluginpath_name);
+        processEvents();
+    }
+
+    if(!PYTHONPATH_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "maya/UsdAssetResolver_v0.7.7/cachedResolver/lib/python");
+        QString pythonpath = "PYTHONPATH=" + pathToAdd + ";%PYTHONPATH%";
+        FileHelper::AppendLineToFile(maya_env_path, pythonpath);
+        processEvents();
+    }
+    
+
+    return true;
+}
+
 
 
 bool InstallProcessTools::install_HoudiniAssetBrowser()
@@ -753,6 +842,99 @@ bool InstallProcessTools::install_HoudiniCustomNodes()
     return true;
 }
 
+bool InstallProcessTools::install_HoudiniEnvironmentVariables()
+{
+    QString houdini_prefs_path = SoftwareHelpers::getHoudiniPrefsPath();
+    QString houdini_env_path = FileHelper::JoinPath(houdini_prefs_path, "houdini.env");
+
+    /// Check if the file exists, if not create it
+    if(!FileHelper::FileExists(houdini_env_path)) {
+        // Create an empty houdini.env file if it doesn't exist
+        if(!FileHelper::WriteFile(houdini_env_path, "")) {
+            logError("Failed to create the houdini.env file: " + houdini_env_path);
+            return false;
+        }
+        log("Created houdini.env file: " + houdini_env_path);
+        processEvents();
+    }
+
+    QString arPathR = arPath();
+    if(arPathR.isEmpty()) {
+        logError("The AR path is empty. Please provide a valid AR path.");
+        return false;
+    }
+
+    /// IF the environment variables are already set
+    bool USD_ASSET_RESOLVER_found = false;
+    bool PATH_found = false;
+    bool PXR_PLUGINPATH_NAME_found = false;
+    bool PYTHONPATH_found = false;
+    bool HOUDINI_PATH_found = false;
+
+    /// Read the file content
+    QString envContent = FileHelper::ReadFile(houdini_env_path);
+    
+    /// Split the content by lines
+    QStringList envLines = envContent.split("\n");
+
+    for(auto& line : envLines) {
+        qDebug() << line;
+        if(line.contains("USD_ASSET_RESOLVER")) {
+            USD_ASSET_RESOLVER_found = true;
+        }
+        if(line.contains("PATH")) {
+            PATH_found = true;
+        }
+        if(line.contains("PXR_PLUGINPATH_NAME")) {
+            PXR_PLUGINPATH_NAME_found = true;
+        }
+        if(line.contains("PYTHONPATH")) {
+            PYTHONPATH_found = true;
+        }
+        if(line.contains("HOUDINI_PATH")) {
+            HOUDINI_PATH_found = true;
+        }
+    }
+
+    /// If the variables are not found, we append them to the file
+    if(!USD_ASSET_RESOLVER_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "hou/UsdAssetResolver_v0.7.7");
+        QString usd_asset_resolver = "USD_ASSET_RESOLVER=" + pathToAdd;
+        FileHelper::AppendLineToFile(houdini_env_path, usd_asset_resolver);
+        processEvents();
+    }
+    
+    if(!PATH_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "hou/UsdAssetResolver_v0.7.7/cachedResolver/lib");
+        QString path_var = "PATH=" + pathToAdd + ";$PATH";
+        FileHelper::AppendLineToFile(houdini_env_path, path_var);
+        processEvents();
+    }
+
+    if(!PXR_PLUGINPATH_NAME_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "hou/UsdAssetResolver_v0.7.7/cachedResolver/resources");
+        QString pxr_pluginpath_name = "PXR_PLUGINPATH_NAME=" + pathToAdd;
+        FileHelper::AppendLineToFile(houdini_env_path, pxr_pluginpath_name);
+        processEvents();
+    }
+
+    if(!PYTHONPATH_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "hou/UsdAssetResolver_v0.7.7/cachedResolver/lib/python");
+        QString pythonpath = "PYTHONPATH=" + pathToAdd + ";$PYTHONPATH";
+        FileHelper::AppendLineToFile(houdini_env_path, pythonpath);
+        processEvents();
+    }
+
+    if(!HOUDINI_PATH_found) {
+        QString pathToAdd = FileHelper::JoinPath(arPathR , "hou/UsdAssetResolver_v0.7.7/houdini");
+        QString houdini_path = "HOUDINI_PATH=" + pathToAdd + ";$HOUDINI_PATH";
+        FileHelper::AppendLineToFile(houdini_env_path, houdini_path);
+        processEvents();
+    }
+
+    return true;
+}
+
 bool InstallProcessTools::install_nameAndUsernamePrism()
 {
     QString prism_prefs_path = SoftwareHelpers::getPrismPrefsPath();
@@ -795,6 +977,16 @@ QString InstallProcessTools::username() const
 void InstallProcessTools::setUsername(const QString &newUsername)
 {
     m_username = newUsername;
+}
+
+QString InstallProcessTools::arPath() const
+{
+    return m_arPath;
+}
+
+void InstallProcessTools::setArPath(const QString &newArPath)
+{
+    m_arPath = newArPath;
 }
 
 bool InstallProcessTools::copyFile(const QString& sourcePath, const QString& destPath)

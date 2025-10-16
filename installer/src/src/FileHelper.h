@@ -63,7 +63,7 @@ public:
 
     static bool ReplaceVariableInFile(const QString& filePath, const QString& variable, const QString& value);
 
-
+    static bool AppendLineToFile(const QString& filePath, const QString& line);
 public:
 
 

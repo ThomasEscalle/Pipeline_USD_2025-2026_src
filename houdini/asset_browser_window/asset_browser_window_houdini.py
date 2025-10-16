@@ -470,7 +470,16 @@ class ItemsListWidget(QtWidgets.QListWidget):
 
                 # Create a "assetreference" node named after the asset's name
                 node = current_context.createNode("Thomas::Bp_AssetReference::1.0", item.text())
-                node.parm("filepath").set(product_path)
+
+                # Convert the product path to an URI using the core function
+                core = PrismInit.pcore
+                plugin = core.getPlugin("Badger_Pipeline")
+                # Print the plugin functions
+                print(dir(plugin))
+
+                uri = plugin.convertPathToUri(product_path)
+
+                node.parm("filepath").set(uri)
 
 
                 displayed_node = current_context.displayNode()

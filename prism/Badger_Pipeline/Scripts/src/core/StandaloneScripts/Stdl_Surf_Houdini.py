@@ -18,6 +18,18 @@ referencePath = "$$REFERENCE_PATH$$"       # <-- Path to the reference file if i
 importReference = "$$IMPORT_REFERENCE$$"   # <-- If we want to import the reference, string set to "True", otherwise "False"
 
 
+# Function to convert a file path to a URI using the Badger_Pipeline plugin
+def convertPathToUri(path):
+    try:
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        uri = plugin.convertPathToUri(path)
+        return uri
+    except Exception as e:
+        return path
+
+
 
 # Create a new Houdini scene
 hou.hipFile.clear(suppress_save_prompt=True)
@@ -123,10 +135,11 @@ for i in range(numberOfGroupsInt):
             reference.setPosition(hou.Vector2(0, -1))
             reference.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
             if importReference == "True" and creationMethod == "Modeling high first" :
+                reference_uri = convertPathToUri(importReferencePathsArray[reference_index])
                 reference.setParms(
                     {
-                        "filepath1": importReferencePathsArray[reference_index],
-                        "primpath1": f"/{assetName}/geo/render"
+                        "filepath1": reference_uri.replace("\\", "/"),
+                        "primpath1": f"/{assetName}/Asset_root/geo/render"
                     }
                 )
                 import_subnet.setComment(f"Importing reference: {importReferencePathsArray[reference_index]}")
@@ -135,7 +148,7 @@ for i in range(numberOfGroupsInt):
                 reference.setParms(
                     {
                         "filepath1": "", 
-                        "primpath1": ""
+                        "primpath1": f"/{assetName}/Asset_root/geo/render"
                     }
                 )
 

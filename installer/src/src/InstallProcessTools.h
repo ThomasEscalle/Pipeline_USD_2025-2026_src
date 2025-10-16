@@ -26,9 +26,11 @@ public:
     bool install_MayaShelf();
     bool install_MayaAssetBrowser();
     bool install_MayaShotManager();
+    bool install_MayaEnvironmentVariables();
 
     bool install_HoudiniAssetBrowser();
     bool install_HoudiniCustomNodes();
+    bool install_HoudiniEnvironmentVariables();
 
 
     bool install_nameAndUsernamePrism();
@@ -39,6 +41,8 @@ public:
     QString username() const;
     void setUsername(const QString &newUsername);
 
+    QString arPath() const;
+    void setArPath(const QString &newArPath);
 
 public:
 
@@ -47,6 +51,7 @@ public:
 private:
     QString m_username;
     QString m_abreviation;
+    QString m_arPath;
     QStringList m_successfulComponents;
     QStringList m_failedComponents;
 

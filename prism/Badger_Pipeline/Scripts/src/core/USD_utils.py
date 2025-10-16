@@ -1,5 +1,5 @@
 from src.core.USD_FileTemplate import USDFileTemplate
-
+from src.core.URI_Helper import URI_Helper
 from qtpy.QtWidgets import *
 
 import os
@@ -399,8 +399,9 @@ class USDUtils:
         purpose_attr = imageable_API.CreatePurposeAttr()
         purpose_attr.Set(UsdGeom.Tokens.proxy)
         # Add a reference to the geo_low
-        relative_low = os.path.relpath(geo_low_path, directory).replace("\\", "/")
-        proxy_scope.GetReferences().AddReference(relative_low)
+        # relative_low = os.path.relpath(geo_low_path, directory).replace("\\", "/")
+        uri_path = URI_Helper.createFromPath(geo_low_path.replace("\\", "/"), latest_version=True).replace("\\", "/")
+        proxy_scope.GetReferences().AddReference(uri_path)
 
 
 
@@ -413,8 +414,8 @@ class USDUtils:
         purpose_attr.Set(UsdGeom.Tokens.render)
         imageable_API.SetProxyPrim(proxy_scope)
         # Add a reference to the geo_high
-        relative_high = os.path.relpath(geo_high_path, directory).replace("\\", "/")
-        render_scope.GetReferences().AddReference(relative_high)
+        uri_path = URI_Helper.createFromPath(geo_high_path.replace("\\", "/"), latest_version=True).replace("\\", "/")
+        render_scope.GetReferences().AddReference(uri_path)
 
         
 
@@ -456,8 +457,9 @@ class USDUtils:
         prim = stage.DefinePrim("/" + entity["asset"])
 
         # Add a reference to the material
+        mtl_uri_path = URI_Helper.createFromPath(mtl_path.replace("\\", "/"), latest_version=True).replace("\\", "/")
         mtl_relative = os.path.relpath(mtl_path, directory).replace("\\", "/")
-        prim.GetReferences().AddReference(mtl_relative)
+        prim.GetReferences().AddReference(mtl_uri_path)
 
         # Save the stage
         stage.SetDefaultPrim(prim)

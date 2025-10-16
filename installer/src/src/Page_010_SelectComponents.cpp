@@ -2,6 +2,7 @@
 #include "ui_Page_010_SelectComponents.h"
 
 #include "MainWizard.h"
+#include <QTimer>
 
 Page_010_SelectComponents::Page_010_SelectComponents()
     : QWizardPage()
@@ -15,6 +16,9 @@ Page_010_SelectComponents::Page_010_SelectComponents()
     setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/ICON_64.png"));
 
     createItems();
+    
+    // Connecter le signal itemClicked pour permettre de toggle les items
+    //connect(ui->treeWidget, &QTreeWidget::itemClicked, this, &Page_010_SelectComponents::on_treeWidget_itemClicked);
 }
 
 Page_010_SelectComponents::~Page_010_SelectComponents()
@@ -28,6 +32,7 @@ void Page_010_SelectComponents::createItems()
     /// Create a root tree widget for "Prism"
     QTreeWidgetItem* rootItem = new QTreeWidgetItem(ui->treeWidget);
     rootItem->setText(0, "Prism");
+    rootItem->setIcon(0, QIcon(":/icons/prism.png"));
     m_items["Prism"] = rootItem;
     ui->treeWidget->addTopLevelItem(rootItem);
 
@@ -55,6 +60,7 @@ void Page_010_SelectComponents::createItems()
     QTreeWidgetItem* mayaRootItem = new QTreeWidgetItem(ui->treeWidget);
     mayaRootItem->setText(0, "Maya");
     m_items["Maya"] = mayaRootItem;
+    mayaRootItem->setIcon(0, QIcon(":/icons/maya.png"));
     ui->treeWidget->addTopLevelItem(mayaRootItem);
 
     /// Add a "Save as script" item, checkable  
@@ -81,11 +87,22 @@ void Page_010_SelectComponents::createItems()
     shotManagerItem->setCheckState(0, Qt::Checked);
     m_items["Maya shot manager"] = shotManagerItem;
 
+    /// Add a "Maya environment variables" item checkable
+    QTreeWidgetItem* mayaEnvVarsItem = new QTreeWidgetItem(mayaRootItem);
+    mayaEnvVarsItem->setText(0, "Maya Environment Variables");
+    mayaEnvVarsItem->setCheckState(0, Qt::Checked);
+    m_items["Maya environment variables"] = mayaEnvVarsItem;
+
+
+
+
+
 
     /// Create a root tree widget for "Houdini"
     QTreeWidgetItem* houdiniRootItem = new QTreeWidgetItem(ui->treeWidget);
     houdiniRootItem->setText(0, "Houdini");
     m_items["Houdini"] = houdiniRootItem;
+    houdiniRootItem->setIcon(0, QIcon(":/icons/houdini.png"));
     ui->treeWidget->addTopLevelItem(houdiniRootItem);
 
     /// Add a "Houdini Asset browser" item checkable
@@ -100,6 +117,12 @@ void Page_010_SelectComponents::createItems()
     houdiniCustomNodesItem->setText(0, "Houdini Custom nodes");
     houdiniCustomNodesItem->setCheckState(0, Qt::Checked);
     m_items["Houdini custom nodes"] = houdiniCustomNodesItem;
+
+    /// Add a "Houdini environment variables" item checkable
+    QTreeWidgetItem* houdiniEnvVarsItem = new QTreeWidgetItem(houdiniRootItem);
+    houdiniEnvVarsItem->setText(0, "Houdini Environment Variables");
+    houdiniEnvVarsItem->setCheckState(0, Qt::Checked);
+    m_items["Houdini environment variables"] = houdiniEnvVarsItem;
 
 
 
@@ -142,5 +165,9 @@ void Page_010_SelectComponents::on_uncheckAll_clicked()
             item->setCheckState(0, Qt::Unchecked);
         }
     }
+}
+
+void Page_010_SelectComponents::on_treeWidget_itemClicked(QTreeWidgetItem *item, int column)
+{
 }
 

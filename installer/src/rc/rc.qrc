@@ -2,5 +2,9 @@
     <qresource prefix="/icons">
         <file>ICON.png</file>
         <file>ICON_64.png</file>
+        <file>appico.ico</file>
+        <file>houdini.png</file>
+        <file>maya.png</file>
+        <file>prism.png</file>
     </qresource>
 </RCC>

@@ -58,8 +58,10 @@ void Page_012_Instalation::initializePage()
             InstallProcessTools* install_tools = dynamic_cast<InstallProcessTools*>(m_installProcess);
             QString username = locationPage->getUsername();
             QString abbreviation = locationPage->getAbbreviation();
+            QString arPath = locationPage->getArPath();
             install_tools->setUsername(username);
             install_tools->setAbreviation(abbreviation);
+            install_tools->setArPath(arPath);
         }
     }
     
