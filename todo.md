@@ -34,6 +34,10 @@
 
 
 
+Faire une option T pose pour l'autorig, et le prefered angle pour les bras et jambes 
+
+
+
 ## Notes de Hugo :
 
 Les gros enviros : 

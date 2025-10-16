@@ -527,8 +527,38 @@ bool InstallProcessTools::install_MayaSaveAs()
 
 bool InstallProcessTools::install_MayaShelf()
 {
-    QString maya_prefs_path = SoftwareHelpers::getMayaPrefsPath();
 
+    /// Le shelf de maya est situé dans Pipeline_USD_2025-2026_src\maya\shelf\shelf_Bp.mel
+
+    QString maya_prefs_path = SoftwareHelpers::getMayaPrefsPath();
+    QString maya_shelf_path = FileHelper::JoinPath(maya_prefs_path, "prefs/shelves");
+
+    // Check if the maya shelf path exists, if not create it
+    if(!FileHelper::DirExists(maya_shelf_path)) {
+        if(!QDir().mkpath(maya_shelf_path)) {
+            logError("Failed to create the Maya shelf directory: " + maya_shelf_path);
+            return false;
+        }
+    }
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
+    QString maya_shelf_template = FileHelper::JoinPath(rootRepoPath, "maya/shelf/shelf_Bp.mel");
+
+    /// Check if the maya_shelf_template path exists
+    if(!FileHelper::FileExists(maya_shelf_template)) {
+        logError("The path to the maya shelf is not valid : " + maya_shelf_template);
+        return false;
+    }
+
+    /// Copy the shelf_Bp.mel file to the Maya shelf folder
+    QString destShelfPath = FileHelper::JoinPath(maya_shelf_path, "shelf_Bp.mel");
+    if(!copyFile(maya_shelf_template, destShelfPath)) {
+        logError("Failed to copy the shelf_Bp.mel file from : " + maya_shelf_template + " to " + destShelfPath);
+        return false;
+    }
+    
+    
 
     return true;
 }
