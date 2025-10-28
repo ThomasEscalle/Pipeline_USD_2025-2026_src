@@ -162,7 +162,7 @@ for i in range(numberOfGroupsInt):
 
             # Create a "layerbreak" node called "LayerBreak"
             layerbreak = import_subnet.createNode("layerbreak", "LayerBreak")
-            layerbreak.setPosition(mesh_edit.position() + hou.Vector2(0, -1))
+            layerbreak.setPosition(transform_cm_to_m.position() + hou.Vector2(0, -1))
 
             # Create a "Null" node called "OUT_IMPORT"
             out_import = import_subnet.createNode("null", "OUT_IMPORT")
@@ -185,10 +185,8 @@ for i in range(numberOfGroupsInt):
             reference.setInput(0, in_import, 0)
             # Connect the Reference node to the Transform node
             transform_cm_to_m.setInput(0, reference, 0)
-            # Connect the Transform node to the Mesh_edit node
-            mesh_edit.setInput(0, transform_cm_to_m, 0)
             # Connect the Transform node to the LayerBreak node
-            layerbreak.setInput(0, mesh_edit, 0)
+            layerbreak.setInput(0, transform_cm_to_m, 0)
             # Connect the LayerBreak node to the OUT_IMPORT node
             out_import.setInput(0, layerbreak, 0)
             # Connect the OUT_IMPORT node to the output0 node
