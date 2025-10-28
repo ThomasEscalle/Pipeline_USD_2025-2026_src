@@ -37,6 +37,8 @@ class URI_Helper:
             # Si un dossier contient "proj" dans son nom, on le prend
             project_name = next((p for p in parts if "proj" in p.lower()), "UnknownProject")
 
+        print(f"URI_Helper.createFromPath: Detected project -> {project_name}")
+
         # --- Détection du type / nom / produit / version ---
         type_param = ""
         name_param = ""

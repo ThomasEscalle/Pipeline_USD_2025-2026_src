@@ -160,14 +160,6 @@ for i in range(numberOfGroupsInt):
             transform_cm_to_m.parm("sz").set(0.01)  # Scale Z to convert from cm to m
             transform_cm_to_m.parm("primpattern").set(f"/{assetName}")  # Apply to all children of the reference
 
-            # Create a "mesh" node called "Mesh_edit"
-            mesh_edit = import_subnet.createNode("mesh", "Mesh_edit")
-            mesh_edit.setPosition(transform_cm_to_m.position() + hou.Vector2(0, -1))
-            mesh_edit.parm("createprims").set(0)
-            mesh_edit.parm("primpattern").set("%type:Boundable")  # Apply to all the geometries
-            mesh_edit.parm("subdivisionScheme_control").set("set")
-            mesh_edit.parm("subdivisionScheme").set("catmullClark")  # Set subdivision scheme to Catmull-Clark
-
             # Create a "layerbreak" node called "LayerBreak"
             layerbreak = import_subnet.createNode("layerbreak", "LayerBreak")
             layerbreak.setPosition(mesh_edit.position() + hou.Vector2(0, -1))
@@ -210,11 +202,27 @@ for i in range(numberOfGroupsInt):
 
 
 
+    # Create a "mesh" node called "Mesh_edit"
+    mesh_edit = parent_node.createNode("mesh", "Mesh_edit")
+    mesh_edit.setPosition( hou.Vector2(0, -2))
+    mesh_edit.parm("createprims").set(0)
+    mesh_edit.parm("primpattern").set("%type:Boundable %type:Mesh")  # Apply to all the geometries
+    mesh_edit.parm("subdivisionScheme_control").set("set")
+    mesh_edit.parm("subdivisionScheme").set("catmullClark")  # Set subdivision scheme to Catmull-Clark
+    mesh_edit.parm("triangleSubdivisionRule_control").set("set")
+    mesh_edit.parm("triangleSubdivisionRule").set("catmullClark")  # Set triangle subdivision rule to Catmull-Clark
+
+    # Create a "rendergeometrysettings" node called "Render_Geometry_Settings"
+    render_geometry_settings = parent_node.createNode("rendergeometrysettings", "Render_Geometry_Settings")
+    render_geometry_settings.setPosition(mesh_edit.position() + hou.Vector2(0, -2))
+    render_geometry_settings.parm("primpattern").set("%type:Boundable %type:Mesh")  # Apply to all the geometries
+
+
 
     # Create a "MaterialLibrary" node called "Materials"
     material_library = parent_node.createNode("materiallibrary", "Materials")
     material_library.setColor(hou.Color(0.273, 0.627, 0.278)) # Green
-    material_library.setPosition(hou.Vector2(0, -2))
+    material_library.setPosition(render_geometry_settings.position() + hou.Vector2(0, -2))
     material_library.setParms({
         "matpathprefix": f"/{assetName}/mtl/"
     })
@@ -256,8 +264,13 @@ for i in range(numberOfGroupsInt):
 
 
     # Create a "LOOKDEV_SCENE" subnet
-    lookdev_scene = parent_node.createNode("subnet", "LOOKDEV_SCENE")
-    lookdev_scene.setColor(hou.Color(0.776, 0.776, 0.157))  # Cyan
+    lookdev_scene = parent_node.createNode("Michel::LOOKDEV::1.5", "LOOKDEV_SCENE")
+    lookdev_scene.setParms({
+        "lookdevPath" : "//Minerva/3d5_2526/100_RESOURCES/Pipe/LookdevScene/",
+        "asset_prim" : "/" + assetName,
+        "lights_off" : False
+    })
+    lookdev_scene.setColor(hou.Color(0.776, 0.776, 0.157))  # Yellow
     lookdev_scene.setPosition(out_scene_lookdev.position() + hou.Vector2(-4, -2))
 
 
@@ -269,7 +282,13 @@ for i in range(numberOfGroupsInt):
     # Materials -> Import
     if variantsShareSameMaterials == "True":
         import_subnet = switch_import_node
-    material_library.setInput(0, import_subnet, 0)
+    
+    # Mesh_edit -> Import
+    mesh_edit.setInput(0, import_subnet, 0)
+    # Render_Geometry_Settings -> Mesh_edit
+    render_geometry_settings.setInput(0, mesh_edit, 0)
+    # Materials -> Render_Geometry_Settings
+    material_library.setInput(0, render_geometry_settings, 0)
     # Assign_Material -> Materials
     assign_material.setInput(0, material_library, 0)
     # SceneCleaning -> Assign_Material

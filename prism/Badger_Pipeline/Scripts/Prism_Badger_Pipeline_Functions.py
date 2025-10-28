@@ -40,6 +40,7 @@ from src.ui.AssignVariantsDialog import AssignVariantsDialog
 from src.ui.Aniversaires import get_anniversaires_aujourd_hui
 from src.ui.Games_Snake import Snake
 from src.ui.USD_View import USD_View
+from src.ui.GeometrySettings import GeometrySettingsDialog
 
 from src.ui.URI_Converter import URI_Converter_Dialog
 from src.core.URI_Helper import URI_Helper
@@ -164,7 +165,13 @@ class Prism_Badger_Pipeline_Functions(object):
         openInUSDViewAction.setToolTip("Open the asset in the USD View")
         openInUSDViewAction.triggered.connect(lambda: self.onOpenAssetInUSDView(item))
         rcMenu.addAction(openInUSDViewAction)
-        
+
+        # Create an action named "Geometry settings"
+        # geometrySettingsAction = QAction(self.getIcon("settings_app.png"), "Geometry settings", origin)
+        # geometrySettingsAction.setToolTip("Open the geometry settings")
+        # geometrySettingsAction.triggered.connect(lambda: self.openGeometrySettings(item))
+        # rcMenu.addAction(geometrySettingsAction)
+
         # Create an action named "Variants connection"
         variantsConnectionAction = QAction(self.getIcon("variant.png"), "Variants connection", origin)
         variantsConnectionAction.setToolTip("Connect the asset to the variants")
@@ -233,6 +240,13 @@ class Prism_Badger_Pipeline_Functions(object):
         widget.setupFromEntity(item)
         widget.exec_()
 
+    def openGeometrySettings(self, item):
+        self.console.log("Open geometry settings for asset: %s" % item["asset"])
+        dialog = GeometrySettingsDialog(self.projectBrowser)
+        dialog.exec_()
+
+
+        
 
 
 
