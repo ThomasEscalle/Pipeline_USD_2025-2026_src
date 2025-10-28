@@ -9,6 +9,8 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 
+#include "FileHelper.h"
+
 #include "MainWizard.h"
 
 Page_011_SelectLocation::Page_011_SelectLocation()
@@ -96,6 +98,17 @@ void Page_011_SelectLocation::loadUserData()
     if (!savedArPath.isEmpty()) {
         ui->le_ArPath->setText(savedArPath);
         qDebug() << "Loaded AR path:" << savedArPath;
+    }
+
+    if(ui->le_ArPath->text() == "") {
+
+        /// We check if the "\\minerva\3d5_2526\100_RESOURCES\Pipe\Pipeline_USD_2025-2026_src\asset_resolver" exist
+        QString path = "//minerva/3d5_2526/100_RESOURCES/Pipe/Pipeline_USD_2025-2026_src/asset_resolver";
+
+        if(FileHelper::DirExists(path)){
+            ui->le_ArPath->setText(path);
+        }
+
     }
 }
 

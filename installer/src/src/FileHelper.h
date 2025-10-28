@@ -18,6 +18,7 @@ public:
     /// Create a directory from a given path
     static bool CreateDir(const QString& path);
     static bool DeleteDir(const QString& path);
+    static bool DeleteFile(const QString& path);
 
     /// Read the content of a text file
     static QString ReadFile(const QString& filePath);

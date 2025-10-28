@@ -306,6 +306,15 @@ bool FileHelper::DeleteDir(const QString &path)
     return dir.removeRecursively();
 }
 
+bool FileHelper::DeleteFile(const QString &path)
+{
+    QFile file(path);
+    if(!file.exists()) {
+        return true; // File does not exist, consider it deleted
+    }
+    return file.remove();
+}
+
 bool FileHelper::ReplaceVariableInFile(const QString &filePath, const QString &variable, const QString &value)
 {
     QString content;

@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
+<<<<<<< HEAD
 <!-- Written by QtCreator 17.0.1, 2025-10-22T16:41:00. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
   <value type="QByteArray">{f759462d-dc37-443e-b525-d9e298975b97}</value>
+=======
+<<<<<<< HEAD
+<!-- Written by QtCreator 17.0.1, 2025-10-10T17:59:54. -->
+<qtcreator>
+ <data>
+  <variable>EnvironmentId</variable>
+  <value type="QByteArray">{f759462d-dc37-443e-b525-d9e298975b97}</value>
+=======
+<!-- Written by QtCreator 9.0.1, 2025-10-12T10:54:39. -->
+<qtcreator>
+ <data>
+  <variable>EnvironmentId</variable>
+  <value type="QByteArray">{226c7097-f588-46e9-9f49-72c165cd30a2}</value>
+>>>>>>> c5bcf4034b5003d2a9c320986a4412535007a737
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
  </data>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -33,7 +49,14 @@
    <value type="bool" key="EditorConfiguration.ConstrainTooltips">false</value>
    <value type="int" key="EditorConfiguration.IndentSize">4</value>
    <value type="bool" key="EditorConfiguration.KeyboardTooltips">false</value>
+<<<<<<< HEAD
    <value type="int" key="EditorConfiguration.LineEndingBehavior">1</value>
+=======
+<<<<<<< HEAD
+   <value type="int" key="EditorConfiguration.LineEndingBehavior">1</value>
+=======
+>>>>>>> c5bcf4034b5003d2a9c320986a4412535007a737
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
    <value type="int" key="EditorConfiguration.MarginColumn">80</value>
    <value type="bool" key="EditorConfiguration.MouseHiding">true</value>
    <value type="bool" key="EditorConfiguration.MouseNavigation">true</value>
@@ -100,8 +123,19 @@
    <value type="qlonglong" key="ProjectExplorer.Target.ActiveDeployConfiguration">0</value>
    <value type="qlonglong" key="ProjectExplorer.Target.ActiveRunConfiguration">0</value>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.BuildConfiguration.0">
+<<<<<<< HEAD
     <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">D:\Pipeline_USD_2025-2026_src\installer\src\build\Desktop_Qt_6_9_2_MinGW_64_bit-Release</value>
     <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory.shadowDir">D:/Pipeline_USD_2025-2026_src/installer/src/build/Desktop_Qt_6_9_2_MinGW_64_bit-Release</value>
+=======
+<<<<<<< HEAD
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">D:\Pipeline_USD_2025-2026_src\installer\src\build\Desktop_Qt_6_9_2_MinGW_64_bit-Release</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory.shadowDir">D:/Pipeline_USD_2025-2026_src/installer/src/build/Desktop_Qt_6_9_2_MinGW_64_bit-Release</value>
+=======
+    <value type="int" key="EnableQmlDebugging">0</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">C:\Users\Thomas\OneDrive\Bureau\Pipeline 2025\Pipeline_USD_2025-2026_src\installer\src\..\build-Installer-Desktop_Qt_6_9_1_MinGW_64_bit-Debug</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory.shadowDir">C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/installer/build-Installer-Desktop_Qt_6_9_1_MinGW_64_bit-Debug</value>
+>>>>>>> c5bcf4034b5003d2a9c320986a4412535007a737
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
@@ -150,6 +184,10 @@
      <value type="bool" key="ProjectExplorer.DeployConfiguration.CustomDataEnabled">false</value>
      <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.DefaultDeployConfiguration</value>
     </valuemap>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
     <value type="qlonglong" key="ProjectExplorer.Target.DeployConfigurationCount">1</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.Target.RunConfiguration.0">
      <value type="bool" key="Analyzer.Perf.Settings.UseGlobalSettings">true</value>
@@ -169,6 +207,21 @@
      <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
      <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
      <value type="QString" key="RunConfiguration.WorkingDirectory.default">D:/Pipeline_USD_2025-2026_src/installer/src/build/Desktop_Qt_6_9_2_MinGW_64_bit-Release</value>
+<<<<<<< HEAD
+=======
+=======
+    <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.1">
+     <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
+      <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
+      <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.MakeStep</value>
+      <value type="QString" key="Qt4ProjectManager.MakeStep.MakeArguments">clean</value>
+     </valuemap>
+     <value type="qlonglong" key="ProjectExplorer.BuildStepList.StepsCount">1</value>
+     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Clean</value>
+     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Clean</value>
+     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.BuildSteps.Clean</value>
+>>>>>>> c5bcf4034b5003d2a9c320986a4412535007a737
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
     </valuemap>
     <value type="qlonglong" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
     <value type="int" key="Qt4ProjectManager.Qt4BuildConfiguration.BuildConfiguration">0</value>
@@ -196,16 +249,36 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
     <value type="bool" key="PE.EnvironmentAspect.PrintOnRun">false</value>
     <value type="QString" key="PerfRecordArgsId">-e cpu-cycles --call-graph &quot;dwarf,4096&quot; -F 250</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">D:/Pipeline_USD_2025-2026_src/installer/src/Installer.pro</value>
     <value type="bool" key="ProjectExplorer.RunConfiguration.Customized">false</value>
+<<<<<<< HEAD
+=======
+=======
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/installer/src/Installer.pro</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/installer/src/Installer.pro</value>
+    <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
+>>>>>>> c5bcf4034b5003d2a9c320986a4412535007a737
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
+<<<<<<< HEAD
     <value type="QString" key="RunConfiguration.WorkingDirectory.default">D:/Pipeline_USD_2025-2026_src/installer/src/build/Desktop_Qt_6_9_2_MinGW_64_bit-Release</value>
+=======
+<<<<<<< HEAD
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">D:/Pipeline_USD_2025-2026_src/installer/src/build/Desktop_Qt_6_9_2_MinGW_64_bit-Release</value>
+=======
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/Thomas/OneDrive/Bureau/Pipeline 2025/Pipeline_USD_2025-2026_src/installer/build-Installer-Desktop_Qt_6_9_1_MinGW_64_bit-Release</value>
+>>>>>>> c5bcf4034b5003d2a9c320986a4412535007a737
+>>>>>>> 642e640f706a1b1bc3488567b24b24ca1ff4ca47
    </valuemap>
    <value type="qlonglong" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>

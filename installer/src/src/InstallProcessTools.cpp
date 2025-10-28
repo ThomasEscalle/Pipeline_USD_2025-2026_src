@@ -974,6 +974,10 @@ bool InstallProcessTools::install_PrismTitle()
         return false;
     }
 
+    if(FileHelper::FileExists(prism_title_path)) {
+        FileHelper::DeleteFile(prism_title_path);
+    }
+
     FileHelper::CopyFile(source_path , prism_title_path);
 
 
