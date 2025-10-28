@@ -248,13 +248,14 @@ class USDUtils:
                 rootVariant = stage.DefinePrim("/" + entity["asset"] + "/Asset_root")
 
                 # Add the references, relative to the current directory
+                relative_mtl = os.path.relpath(mtl_path, assetPath).replace("\\", "/")
+                rootVariant.GetReferences().AddReference("./" + relative_mtl)
+                print("Adding reference to: " + relative_mtl + " for item " + name)
+                
                 relative_geo = os.path.relpath(geo_path, assetPath).replace("\\", "/")
                 rootVariant.GetReferences().AddReference("./" + relative_geo)
                 print("Adding reference to: " + relative_geo + " for item " + name)
 
-                relative_mtl = os.path.relpath(mtl_path, assetPath).replace("\\", "/")
-                rootVariant.GetReferences().AddReference("./" + relative_mtl)
-                print("Adding reference to: " + relative_mtl + " for item " + name)
 
             index += 1
 
