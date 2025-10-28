@@ -348,7 +348,7 @@ class Prism_Badger_Pipeline_Functions(object):
 
 
         if len(aniversaires) > 0:
-            aniversairesTxt = "Aniversaires du jour: 🥳🎉🎂 "
+            aniversairesTxt = "Anniverssaires du jour: 🥳🎉🎂 "
             for aniversaire in aniversaires:
                 # Print the aniversaire
                 print("Aniversaire: %s" % (aniversaire["nom"]))

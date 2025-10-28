@@ -113,6 +113,12 @@ bool InstallProcessTools::install()
     }
 
 
+    if(!install_PrismTitle()) {
+
+    }
+
+
+
     // Afficher le résumé des installations
     log("=== Installation Summary ===");
 
@@ -466,6 +472,31 @@ bool InstallProcessTools::install_ZBrushPrismPlugin()
     FileHelper::CopyFile(loadFilePath  , destLoadFilePath);
     processEvents();
 
+
+
+
+    /// Add the line
+    /// [ZPlugin:Prism:GetCommands, 880] //CTRL+SHIFT+P pour prism
+    /// to the StartupHotkeys.TXT in ZStartup/HotKeys
+
+
+    QString HotkeyFile = FileHelper::JoinPath(SoftwareHelpers::getZbrushPath() , "ZStartup/HotKeys/StartupHotkeys.TXT");
+    if(!FileHelper::FileExists(HotkeyFile)) {
+        FileHelper::WriteFile(HotkeyFile , "");
+    }
+
+    QString content = FileHelper::ReadFile(HotkeyFile);
+    QStringList splited = content.split("\n");
+    bool found = false;
+    for(auto it : splited) {
+        if(it.contains("[ZPlugin:Prism:GetCommands, 880]")) {
+            found = true;
+        }
+    }
+
+    if(!found) {
+        FileHelper::AppendLineToFile(HotkeyFile , "[ZPlugin:Prism:GetCommands, 880] //CTRL+SHIFT+P pour prism");
+    }
 
     return true;
 }
@@ -828,7 +859,8 @@ bool InstallProcessTools::install_HoudiniCustomNodes()
             "lop_Thomas.Bp_AssetReference.1.0.hdanc",
             "lop_Thomas.BP_Export.1.0.hdanc",
             "lop_Thomas.BP_Anim_Import.1.0.hdanc",
-            "lop_romsav_3D5.RenderLayer.2.0.hdanc"
+            "lop_romsav_3D5.RenderLayer.2.0.hdanc",
+            "lop_Michel.LOOKDEV.1.5.hdalc"
         };
         for(auto it : filesToCopy) {
             copyFile(houdini_otls_path_template + "/" + it , houdini_otls_path + "/" + it );
@@ -925,12 +957,25 @@ bool InstallProcessTools::install_HoudiniEnvironmentVariables()
         processEvents();
     }
 
-    if(!HOUDINI_PATH_found) {
-        QString pathToAdd = FileHelper::JoinPath(arPathR , "hou/UsdAssetResolver_v0.7.7/houdini");
-        QString houdini_path = "HOUDINI_PATH=" + pathToAdd + ";$HOUDINI_PATH";
-        FileHelper::AppendLineToFile(houdini_env_path, houdini_path);
-        processEvents();
+    return true;
+}
+
+bool InstallProcessTools::install_PrismTitle()
+{
+    QString prism_path = SoftwareHelpers::getPrismPath();
+    QString prism_title_path = FileHelper::JoinPath(prism_path, "Scripts/UserInterfacesPrism/prism_title.png");
+
+
+    QString templatePath = FileHelper::GetResourcesPath();
+    QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
+    QString source_path = FileHelper::JoinPath(rootRepoPath, "resources/prism_title.png");
+
+    if(!FileHelper::FileExists(source_path)) {
+        return false;
     }
+
+    FileHelper::CopyFile(source_path , prism_title_path);
+
 
     return true;
 }

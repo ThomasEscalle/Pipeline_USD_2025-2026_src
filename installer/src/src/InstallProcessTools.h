@@ -33,6 +33,8 @@ public:
     bool install_HoudiniEnvironmentVariables();
 
 
+    bool install_PrismTitle();
+
     bool install_nameAndUsernamePrism();
 
     QString abreviation() const;
