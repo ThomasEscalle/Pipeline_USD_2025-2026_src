@@ -326,13 +326,6 @@ class Prism_Badger_Pipeline_Functions(object):
         snakeGameAction.setShortcut(QKeySequence("Ctrl+Shift+S"))
         origin.mainMenu.addAction(snakeGameAction)
 
-
-        # Create a test action
-        testAction = QAction(self.getIcon("test.png"), "Test Action", origin)
-        testAction.triggered.connect(self.onActionTest)
-        testAction.setShortcut(QKeySequence("Ctrl+T"))
-        origin.mainMenu.addAction(testAction)
-
         # Create a URI converter action
         uriConverterAction = QAction(self.getIcon("uri.png"), "URI Converter", origin)
         uriConverterAction.triggered.connect(self.onActionURIConverter)
