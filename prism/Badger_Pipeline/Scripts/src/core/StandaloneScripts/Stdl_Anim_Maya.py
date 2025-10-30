@@ -1,10 +1,28 @@
+# Add the environment variables for the USD asset resolver, before initializing Maya standalone 
+# Very important to do this BEFORE importing maya.standalone otherwise Maya crashes on startup
+import os
+def add_env_variable():
+    #$$ASSET_RESOLVER_PATH$$
+    os.environ["USD_ASSET_RESOLVER"] = "$$ASSET_RESOLVER_PATH$$"
+    os.environ["PATH"] = "$$ASSET_RESOLVER_PATH$$/cachedResolver/lib;" + os.environ.get("PATH", "")
+    os.environ["PXR_PLUGINPATH_NAME"] = "$$ASSET_RESOLVER_PATH$$/cachedResolver/resources"
+    os.environ["PYTHONPATH"] = "$$ASSET_RESOLVER_PATH$$/cachedResolver/lib/python;" + os.environ.get("PYTHONPATH", "")
+add_env_variable()
+
+import sys
+from PySide6 import QtCore, QtWidgets, QtGui
+app = QtWidgets.QApplication.instance()
+if not app:
+    app = QtWidgets.QApplication(sys.argv)
+
+# Initialize Maya standalone
 import maya.standalone
 maya.standalone.initialize(name='python')
+
 
 import maya.api.OpenMaya as om2
 import maya.cmds as cmds
 import random
-import os
 
 outputPath = "$$OUTPUT_PATH$$"
 
@@ -33,7 +51,16 @@ flo_animations_paths = "$$FLO_ANIMS_PATHS$$"  # This is a string representation 
 
 create_bookmarks = "$$CREATE_BOOKMARKS$$"  # "True" or "False"
 
-
+# Function to convert a file path to a URI using the Badger_Pipeline plugin
+def convertPathToUri(path):
+    try:
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        uri = plugin.convertPathToUri(path)
+        return uri
+    except Exception as e:
+        return path
 
 # Create a bookmark in the timeline
 def createBookmark(name, start, stop, color):
@@ -323,7 +350,8 @@ def build_template():
 
     # Import the set dress as a usd reference in the usd layer editor
     setDress_path_valid = eval(set_dress_path)
-    data = createOverrideLayer("SetDress", setDress_path_valid[0], "/SetDress")
+    uri_setDress_path = convertPathToUri(setDress_path_valid[0])
+    data = createOverrideLayer("SetDress", uri_setDress_path, "/SetDress")
 
     proxy_shape_node = data[0]
     transform_proxy_node = cmds.listRelatives(proxy_shape_node, parent=True)[0]

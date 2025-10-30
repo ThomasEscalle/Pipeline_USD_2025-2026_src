@@ -91,6 +91,14 @@ bool InstallProcessTools::install()
             processEvents();
             installResult = install_ZBrushPrismPlugin();
         }
+        else if (it == "Prism Sync Media") {
+            processEvents();
+            installResult = install_PrismSyncMedia();
+        }
+        else {
+            logError("Unknown component: \"" + it + "\". Skipping installation for this component.");
+            continue;
+        }
 
         // Enregistrer le résultat de l'installation
         if(installResult) {
@@ -289,7 +297,30 @@ bool InstallProcessTools::install_MainPrismPlugin()
 }
 
 
+bool InstallProcessTools::install_PrismSyncMedia() {
+    QString templatePath = FileHelper::GetResourcesPath();
+    QString rootRepoPath = FileHelper::CdUp(templatePath, 2);
+    QString prism = FileHelper::JoinPath(rootRepoPath , "prism/sync_media");
 
+    if(!FileHelper::DirExists(prism)) {
+        logError("The path to the prism sync media is not valid : " + prism);
+        return false;
+    }
+
+    QString prism_path = SoftwareHelpers::getPrismPath();
+    QString destPath = FileHelper::JoinPath(prism_path , "Plugins/Custom/sync_media");
+
+    if(!FileHelper::DirExists(destPath)) {
+        FileHelper::CreateDir(destPath);
+    }
+
+    if(!copyFolderRecursive(prism, destPath)) {
+        logError("Failed to copy the prism sync media from : " + prism + " to " + destPath);
+        return false;
+    }
+
+    return true;
+}
 
 
 bool InstallProcessTools::install_SubstancePrismPlugin()
@@ -598,7 +629,30 @@ bool InstallProcessTools::install_MayaShelf()
         return false;
     }
     
+
+
+
+    // Importe les icons
+    /// Ils sont situés dans Pipeline_USD_2025-2026_src\maya\shelf\icons
+    /// On les copies dans le dossier icons de maya prefs
+    QString maya_icons_path = FileHelper::JoinPath(maya_prefs_path, "prefs/icons");
+    QString maya_icons_template = FileHelper::JoinPath(rootRepoPath, "maya/icons");
     
+    QStringList iconFiles = {
+        "home.png",
+        "import.png"
+    };
+
+    for(auto it : iconFiles) {
+        QString sourceIconPath = FileHelper::JoinPath(maya_icons_template, it);
+        QString destIconPath = FileHelper::JoinPath(maya_icons_path, it);
+
+        if(!copyFile(sourceIconPath, destIconPath)) {
+            logError("Failed to copy the icon file from : " + sourceIconPath + " to " + destIconPath);
+            return false;
+        }
+    }
+
 
     return true;
 }

@@ -87,6 +87,12 @@ bool FileHelper::CopyFile(const QString &sourcePath, const QString &destPath)
         return false;
     }
 
+    /// If the destination file exists, remove it first
+    QFileInfo destFileInfo(destPath);
+    if(destFileInfo.exists() && destFileInfo.isFile()) {
+        QFile::remove(destPath);
+    }
+
     QFile sourceFile(sourcePath);
     if(!sourceFile.copy(destPath)) {
         qDebug() << "Failed to copy file from" << sourcePath << "to" << destPath << ":" << sourceFile.errorString();

@@ -54,6 +54,13 @@ void Page_010_SelectComponents::createItems()
     substancePluginItem->setCheckState(0, Qt::Checked);
     m_items["Substance painter plugin"] = substancePluginItem;
 
+    /// Add a "Prism Sync Media" item, checkable
+    QTreeWidgetItem* syncMediaItem = new QTreeWidgetItem(rootItem);
+    syncMediaItem->setText(0, "Prism Sync Media");
+    syncMediaItem->setCheckState(0, Qt::Checked);
+    m_items["Prism Sync Media"] = syncMediaItem;
+
+
 
 
     /// Create a root tree widget for "Maya"

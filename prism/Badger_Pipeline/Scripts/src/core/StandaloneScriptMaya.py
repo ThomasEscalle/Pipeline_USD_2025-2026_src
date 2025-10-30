@@ -58,9 +58,5 @@ class StandaloneScriptMaya:
         
 
         # Run the script
-        subprocess.run([mayapyPath, self.scriptPath], check=True, env=cenv)
+        returnvalue = subprocess.run([mayapyPath, self.scriptPath], check=True, env=cenv)
 
-        
-
-
-        

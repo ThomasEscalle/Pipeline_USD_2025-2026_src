@@ -1,10 +1,36 @@
+# Add the environment variables for the USD asset resolver, before initializing Maya standalone 
+# Very important to do this BEFORE importing maya.standalone otherwise Maya crashes on startup
+import os
+def add_env_variable():
+    #$$ASSET_RESOLVER_PATH$$
+    os.environ["USD_ASSET_RESOLVER"] = "$$ASSET_RESOLVER_PATH$$"
+    os.environ["PATH"] = "$$ASSET_RESOLVER_PATH$$/cachedResolver/lib;" + os.environ.get("PATH", "")
+    os.environ["PXR_PLUGINPATH_NAME"] = "$$ASSET_RESOLVER_PATH$$/cachedResolver/resources"
+    os.environ["PYTHONPATH"] = "$$ASSET_RESOLVER_PATH$$/cachedResolver/lib/python;" + os.environ.get("PYTHONPATH", "")
+add_env_variable()
+
+import sys
+from PySide6 import QtCore, QtWidgets, QtGui
+app = QtWidgets.QApplication.instance()
+if not app:
+    app = QtWidgets.QApplication(sys.argv)
+
+# Initialize Maya standalone
 import maya.standalone
 maya.standalone.initialize(name='python')
+
+
+
+
 
 import maya.api.OpenMaya as om2
 import maya.cmds as cmds
 import random
-import os
+
+
+
+
+
 
 outputPath = "$$OUTPUT_PATH$$"
 
@@ -30,6 +56,18 @@ auto_hide_cameras = "$$AUTO_HIDE_CAMERAS$$"  # "True" or "False"
 
 # shots_str looks something like this : "[{'sequence': 'sq_010', 'shot': 'sh_010', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_010', 'location': 'global', 'type': 'shot', 'paths': [{'location': 'global', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_010'}], 'range': [1001, 1100], 'length': 100, 'metadata': {}}, {'sequence': 'sq_010', 'shot': 'sh_020', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_020', 'location': 'global', 'type': 'shot', 'paths': [{'location': 'global', 'path': 'E:\\3D\\Projects\\06_Ouyang\\03_Production\\02_Shots\\sq_010\\sh_020'}], 'range': [1001, 1080], 'length': 80, 'metadata': {'preroll': {'value': '50', 'show': True}, 'postroll': {'value': '50', 'show': True}}}]" 
 shots_str = "$$SHOTS$$" 
+
+
+# Function to convert a file path to a URI using the Badger_Pipeline plugin
+def convertPathToUri(path):
+    try:
+        import PrismInit
+        core = PrismInit.pcore
+        plugin = core.getPlugin("Badger_Pipeline")
+        uri = plugin.convertPathToUri(path)
+        return uri
+    except Exception as e:
+        return path
 
 
 # Create a bookmark in the timeline
@@ -209,6 +247,7 @@ def build_template():
         cmds.loadPlugin("timeSliderBookmark")
 
 
+
     # Set the framerange from first_frame to first_frame + number_of_frames - 1
     try:
         first_frame = int(first_frame_str)
@@ -331,13 +370,16 @@ def build_template():
     ####################################################################
 
     # Import the set dress as a usd reference in the usd layer editor
+    
     setDress_path_valid = eval(set_dress_path)
-    data = createOverrideLayer("SetDress", setDress_path_valid[0], "/SetDress")
+    uri_setDress_path = convertPathToUri(setDress_path_valid[0])
+    data = createOverrideLayer("SetDress", uri_setDress_path, "/SetDress")
 
     proxy_shape_node = data[0]
     transform_proxy_node = cmds.listRelatives(proxy_shape_node, parent=True)[0]
     cmds.parent(transform_proxy_node, set_grp)
     setColor(proxy_shape_node, "#D4D400")  # RGB values for yellow
+    
     # Set the scale of the group to 100
     cmds.setAttr(set_grp + ".scaleX", 100)
     cmds.setAttr(set_grp + ".scaleY", 100)

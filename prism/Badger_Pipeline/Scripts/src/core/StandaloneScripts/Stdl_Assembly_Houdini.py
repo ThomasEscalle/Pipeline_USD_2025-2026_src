@@ -177,7 +177,8 @@ def build_assembly_subnet():
         in_characters_and_props.setPosition(hou.Vector2(0, 0))
 
         last_node = in_characters_and_props
-        for char_anim in eval(character_animations_filepaths):
+        chars_anim_list = eval(character_animations_filepaths) if character_animations_filepaths else []
+        for char_anim in chars_anim_list:
 
             # Check if all the required keys are present
             required_keys = ['connected_entity', 'asset_file_path', 'product_file_path']

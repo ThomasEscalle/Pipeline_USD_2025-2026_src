@@ -93,6 +93,12 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         self.addItem(self.item_modules)
         # Set the current_path to "Modules"
 
+        self.item_enviros = QtWidgets.QListWidgetItem("Enviros")
+        self.item_enviros.setIcon( self.core.getPlugin("Badger_Pipeline").getIcon("enviros.png"))
+        self.item_enviros.setFont(bold_font)
+        self.addItem(self.item_enviros)
+        # Set the current_path to "Enviros"
+
         self.setMinimumWidth(150)
     
     
@@ -210,7 +216,7 @@ class NavigatorListWidget(QtWidgets.QListWidget):
         self.items_list_widget.set_current_path(folder_path)
 
     def on_nav_item_clicked(self, item):
-        nav_names = ["Chars", "Items", "Props", "Modules"]
+        nav_names = ["Chars", "Items", "Props", "Modules", "Enviros"]
         if item.text() in nav_names and hasattr(self, "items_list_widget"):
             self.parent_widget.search_bar.setText("")
             self.items_list_widget.set_filter("")

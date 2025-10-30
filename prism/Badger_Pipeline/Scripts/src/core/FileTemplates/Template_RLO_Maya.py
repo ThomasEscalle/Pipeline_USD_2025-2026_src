@@ -53,7 +53,7 @@ class FileTemplateRLOMaya(FileTemplateBase):
 
         # Ici, on vas recuperer le setdress de l'entitée "Current".
         importReference_SetDress = True
-        setDress_Files = self.getMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc"], origin, ["SetD", "Publish"])
+        setDress_Files = self.getExactMatchingProductsFromEntity(origin.getCurrentEntity(), [".usd", ".usda" , ".usdc"], origin, "SetD_Publish", onlyOne=True)
 
 
         # On vas récupérer tous les assets connectés a l'entitée courante.
@@ -233,6 +233,8 @@ class FileTemplateRLOMaya(FileTemplateBase):
         ###################################################################
         script = StandaloneScriptMaya("Stdl_RLO_Maya.py")
         script.replaceVariable("$$OUTPUT_PATH$$", outputMayaFilePath)
+        # Essayer avec une variable d'environement
+        script.replaceVariable("$$ASSET_RESOLVER_PATH$$", "D:/Pipeline_USD_2025-2026_src/asset_resolver/maya/UsdAssetResolver_v0.7.7")
 
         script.replaceVariable("$$SEQUENCE_TYPE$$", assetType)
         script.replaceVariable("$$ASSET_NAME$$", assetName)

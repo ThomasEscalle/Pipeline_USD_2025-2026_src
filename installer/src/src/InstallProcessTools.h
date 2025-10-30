@@ -20,6 +20,7 @@ public:
     bool install_MainPrismPlugin();
     bool install_SubstancePrismPlugin();
     bool install_ZBrushPrismPlugin();
+    bool install_PrismSyncMedia();
 
 
     bool install_MayaSaveAs();

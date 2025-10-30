@@ -45,6 +45,8 @@ from src.ui.GeometrySettings import GeometrySettingsDialog
 from src.ui.URI_Converter import URI_Converter_Dialog
 from src.core.URI_Helper import URI_Helper
 
+from src.ui.DlgAreYouSure import AreYouSureDialog
+
 class Prism_Badger_Pipeline_Functions(object):
 
 
@@ -217,6 +219,13 @@ class Prism_Badger_Pipeline_Functions(object):
         getProductUriAction.setToolTip("Copy the URI of the selected product")
         getProductUriAction.triggered.connect(lambda: self.getProductUri(path))
         rcMenu.addAction(getProductUriAction)
+
+        # Create an action named "Delete product"
+        deleteProductAction = QAction(self.getIcon("delete.png"), "Delete product", origin)
+        deleteProductAction.setToolTip("Delete the selected product")
+        deleteProductAction.triggered.connect(lambda: self.deleteProduct(path))
+        rcMenu.addAction(deleteProductAction)
+
         return
 
     def getProductUri(self, product):
@@ -232,6 +241,77 @@ class Prism_Badger_Pipeline_Functions(object):
         clipboard = QApplication.clipboard()
         clipboard.setText(URI)
 
+    def deleteProduct(self, product):
+        print("Deleting product: %s" % product)
+        # Check if the product path exists
+        if not os.path.exists(product):
+            QMessageBox.warning(self.projectBrowser, "Error", "Product path does not exist: %s" % product)
+            return
+        # Check if the product path is a file, we take it's parent folder
+        if os.path.isfile(product):
+            product = os.path.dirname(product)
+
+        # Ask the user if he is sure
+        dlg = AreYouSureDialog(parent=self.projectBrowser, pparent=self)
+        dlg.setPath(product)
+        result = dlg.exec_()
+        if result != QDialog.Accepted:
+            self.console.log("User cancelled product deletion")
+            return
+
+        # Delete the product folder
+        try:
+            import shutil
+            shutil.rmtree(product)
+            QMessageBox.information(self.projectBrowser, "Product deleted", "Product deleted: %s" % product)
+            # Refresh the project browser
+            self.projectBrowser.refreshUiTriggered()
+        except Exception as e:
+            self.console.log("Error deleting product: %s" % e)
+
+    def deleteScene(self, scene):
+        print("Deleting scene: %s" % scene)
+        # Check if the scene path exists
+        if not os.path.exists(scene):
+            QMessageBox.warning(self.projectBrowser, "Error", "Scene path does not exist: %s" % scene)
+            return
+
+
+        scenes = [scene.replace("\\", "/")]  # Ensure the path is in the correct format
+        # Get the scene name without the extension, 
+        # and iterate over the files in the file's directory, and remove all the files with the same name but different extensions
+        scene_name_no_ext = os.path.splitext(os.path.basename(scene))[0]
+        scene_dir = os.path.dirname(scene)
+        for file in os.listdir(scene_dir):
+            file = file.replace("\\", "/")  # Ensure the path is in the correct format
+            if file.startswith(scene_name_no_ext):
+                file_path = os.path.join(scene_dir, file)
+                file_path = file_path.replace("\\", "/")  # Ensure the path is in the correct format
+                if file_path != scene:
+                    scenes.append(file_path)
+
+        # Ask the user if he is sure
+        dlg = AreYouSureDialog(parent=self.projectBrowser, pparent=self)
+        dlg.setPath("\n".join(scenes))
+        result = dlg.exec_()
+        if result != QDialog.Accepted:
+            self.console.log("User cancelled scene deletion")
+            return
+        # Delete the scene file
+        try:
+            for file_path in scenes:
+                os.remove(file_path)
+                self.console.log("Deleted file: %s" % file_path)
+
+
+
+            self.console.log("Scene name without extension: %s" % scene_name_no_ext)
+
+            QMessageBox.information(self.projectBrowser, "Scene deleted", "Scene deleted: %s" % ", ".join(scenes))
+            # Refresh the project browser
+            self.projectBrowser.refreshUiTriggered()
+        except Exception as e:
+            self.console.log("Error deleting scene: %s" % e)
 
     # Open the variant connection dialog
     def openVariantsConnection(self, item):
@@ -283,7 +363,7 @@ class Prism_Badger_Pipeline_Functions(object):
 
         # Create the console
         self.console = ConsoleDialog(origin)
-        self.console.show()
+        # self.console.show()
 
 
 
@@ -661,7 +741,19 @@ class Prism_Badger_Pipeline_Functions(object):
         tloMenu.addAction(tlo_HoudiniAction)
 
 
+
+
+        
+
+
         self.console.log("Right click on file: %s" % filePath)
+
+        if os.path.exists(filePath):
+            # Add a "Delete File" action to the context menu
+            deleteFileAction = QAction(self.getIcon("delete.png"), "Delete File", origin)
+            deleteFileAction.setToolTip("Delete the selected file")
+            deleteFileAction.triggered.connect(lambda: self.deleteScene(filePath))
+            rcMenu.addAction(deleteFileAction)
 
 
 
