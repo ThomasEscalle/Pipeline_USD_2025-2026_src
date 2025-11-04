@@ -1,3 +1,3 @@
-[FileNameSetNext, "//gandalf/3d5_2526/02_TOP_HIT/03_Production/01_Assets/Chars/Sly/Scenefiles/Mod/Sculpt/Sly_Sculpt_v0010.zpr"]
-[RoutineDef, command,[IPress, File:Open]]
+[FileNameSetNext, "//gandalf/3d5_2526/02_TOP_HIT/03_Production/01_Assets/Chars/Dkt/Scenefiles/Mod/Sculpt/Dkt_Sculpt_v0054.ZPR"]
+[RoutineDef, command,[IPress, File:Save as]]
 [RoutineCall,command]
