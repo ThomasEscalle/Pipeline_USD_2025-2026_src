@@ -59,6 +59,8 @@ class TextureExportUI(QDialog):
         products = self.core.products.getProductNamesFromEntity(data)
 
         for product in products:
+            if product == "USD_Asset":
+                continue
             #check if the product is texturing related
             productPath = self.core.products.getProductPathFromEntity(data, product)
             productPath = productPath.split(os.sep)
