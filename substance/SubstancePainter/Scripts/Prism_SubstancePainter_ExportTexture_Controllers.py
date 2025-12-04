@@ -21,19 +21,58 @@ class TextureExportController(TextureExportUI):
     def __init__(self, core, parent):
         super().__init__(parent, core)
         self.core = core
-
         self.edit_preset_btn.clicked.connect(self.on_edit_preset)
-        self.preset_check.stateChanged.connect(self.on_preset_toggled)
+        self.preset_combo.currentIndexChanged.connect(self.on_preset_combo_toggled)
+        # Use the toggled(bool) signal so the handler always receives a boolean
+        # (stateChanged(int) emits an int which previously caused a mismatch
+        # when the UI also connected to toggled and passed a bool).
+        self.preset_check.toggled.connect(self.on_preset_toggled)
 
         self.export_btn.clicked.connect(self.on_export_btn_clicked)
         self.use_next_version.stateChanged.connect(self.createVersion)
         self.identifier_edit.currentIndexChanged.connect(self.createVersion)
 
+        # Ensure parent/child checkboxes stay in sync
+        self.texture_tree.itemChanged.connect(self.on_texture_tree_item_changed)
+
+    def on_texture_tree_item_changed(self, item, column):
+        # If parent is checked/unchecked, set all children to same state
+        if item.childCount() > 0:
+            state = item.checkState(0)
+            for i in range(item.childCount()):
+                child = item.child(i)
+                # Only update if different to avoid recursion
+                if child.checkState(0) != state:
+                    child.setCheckState(0, state)
+
     def on_edit_preset(self):
         pass
 
-    def on_preset_toggled(self, state):
-        self.preset_combo.setEnabled(state == Qt.Checked)
+    def on_preset_toggled(self, state: bool):
+        checked = bool(state)
+        self.preset_combo.setEnabled(checked)
+        # Keep the edit button in sync as well
+        try:
+            self.edit_preset_btn.setEnabled(checked)
+        except Exception:
+            pass
+    
+    def on_preset_combo_toggled(self):
+        preset_name = self.preset_combo.currentText()
+        resource_presets = substance_painter.export.list_resource_export_presets()
+        predefined_presets = substance_painter.export.list_predefined_export_presets()
+        selected_preset = None
+        for preset in resource_presets:
+            if preset.resource_id.name == preset_name:
+                selected_preset = preset
+                break
+        for preset in predefined_presets:
+            if preset.name == preset_name:
+                selected_preset = preset
+                break
+        if selected_preset:
+            self.texture_tree.clear()
+            self.populate_texture_tree(selected_preset)
     
     def on_export_btn_clicked(self):
         #self.state = self.sm.createState("Export", setActive=True)
@@ -88,7 +127,6 @@ class TextureExportController(TextureExportUI):
 
         exportResultState = substance_painter.export.export_project_textures(exportConfig)
         exportResult = substance_painter.export.list_project_textures(exportConfig)
-        print("export result :", exportResult)
 
         #move the texture to the final location
         for file in os.listdir(tempPath):
@@ -270,6 +308,18 @@ class TextureExportController(TextureExportUI):
         return export_config
 
     def updateMasterVersion(self, data, path):
+        #delete current files in master version except versioninfo.json if next version is unchecked
+        if not self.use_next_version.isChecked():
+            folderPath = self.core.products.getVersionInfoPathFromProductFilepath(path)
+            infoPath = self.core.getVersioninfoPath(folderPath)
+            infoData = self.core.getConfig(configPath=infoPath)
+            if infoData:
+                origVersion = infoData.get("version")
+                masterFolderPath = os.path.dirname(path).replace(origVersion, "master")
+                if os.path.exists(masterFolderPath):
+                    shutil.rmtree(masterFolderPath)
+                    print("Removed existing master version files...")
+
         ext = path[-4:]
         forcedLoc = os.getenv("PRISM_PRODUCT_MASTER_LOC")
         if forcedLoc:
@@ -286,7 +336,6 @@ class TextureExportController(TextureExportUI):
             version="master",
             location=location,
         )
-        print("masterPath : ", masterPath)
 
         if masterPath:
             print("updating master version: %s from %s" % (masterPath, path))

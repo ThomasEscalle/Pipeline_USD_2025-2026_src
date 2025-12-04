@@ -95,7 +95,7 @@ class TextureExportUI(QDialog):
         self.preset_check = QCheckBox("Preset")
 
         self.preset_combo = QComboBox()
-        self.preset_combo.setEnabled(False)
+        self.populatePreset()
         self.edit_preset_btn = QPushButton("")
         self.edit_preset_btn.setIcon(pen_icon)
 
@@ -129,13 +129,29 @@ class TextureExportUI(QDialog):
 
         #connection
         self.use_next_version.toggled.connect(self.toggle_version_option)
+        self.preset_check.toggled.connect(self.toggle_preset_option)
 
         #init state
         self.toggle_version_option(self.use_next_version.isChecked())
+        self.toggle_preset_option(self.preset_check.isChecked())
     
+    def populatePreset(self):
+        # Retrieve all predefined export presets
+        predefined_presets = substance_painter.export.list_predefined_export_presets()
+        # Retrieve all resource export presets
+        resource_presets = substance_painter.export.list_resource_export_presets()
+        for preset in predefined_presets:
+            self.preset_combo.addItem(preset.name)
+        for preset in resource_presets:
+            self.preset_combo.addItem(preset.resource_id.name)
+
     def toggle_version_option(self, checked):
         self.version_comboBox.setEnabled(not checked)
-    
+
+    def toggle_preset_option(self, checked):
+        self.preset_combo.setEnabled(checked)
+        self.edit_preset_btn.setEnabled(checked)
+
     def createVersion(self):
         #clear the combo
         self.version_comboBox.clear()
@@ -163,8 +179,8 @@ class TextureExportUI(QDialog):
             items.append("v" + str(i+1).zfill(4))
         self.version_comboBox.addItems(items)
 
-    def populate_texture_tree(self):
-        texture_data = self.get_texture_maps()
+    def populate_texture_tree(self, preset=None):
+        texture_data = self.get_texture_maps(preset)
 
         for material_name, maps in texture_data.items():
             material_item = QTreeWidgetItem([material_name, "", ""])
@@ -173,15 +189,33 @@ class TextureExportUI(QDialog):
             self.texture_tree.addTopLevelItem(material_item)
 
             for map_name in maps:
-                map_item = QTreeWidgetItem([map_name, "", ""])
+                if preset:
+                    map_name = eval("{\"baseColor\":"+map_name)  # Convert string representation back to dictionary
+                    if "(" in map_name["fileName"]:
+                        name = map_name["fileName"].split("_")[2][:-1]
+                    else:
+                        name = map_name["fileName"].replace("$textureSet", material_name).split("/")[-1][len(material_name)+1:]  # Extract the map name from the preset structure
+                else:
+                    name = map_name
+                map_item = QTreeWidgetItem([name, "", ""])
                 map_item.setFlags(map_item.flags() | ITEM_IS_USER_CHECKABLE | ITEM_IS_SELECTABLE)
                 map_item.setCheckState(0, Qt.Checked)
 
                 format_combo = QComboBox()
                 format_combo.addItems(["png", "jpg", "tiff", "exr"])
+                if preset:
+                    #set the format according to the preset
+                    format_combo.setCurrentText(map_name["parameters"]["fileFormat"])
 
                 bit_combo = QComboBox()
-                bit_combo.addItems(["8 bit", "8 bit + dithering", "16 bit", "32 bit"])
+                bit_combo.addItems(["8 bit", "8 bit + dithering", "16 bit", "16f bit", "32f bit"])
+                if preset:
+                    #set the bit depth according to the preset
+                    dithering = map_name["parameters"]["dithering"]
+                    if dithering:
+                        bit_combo.setCurrentText("8 bit + dithering")
+                    else:
+                        bit_combo.setCurrentText(map_name["parameters"]["bitDepth"] + " bit")
 
                 material_item.addChild(map_item)
                 self.texture_tree.setItemWidget(map_item, 1, format_combo)
@@ -206,7 +240,7 @@ class TextureExportUI(QDialog):
         if res_widget:
             res_widget.setEnabled(enabled)
 
-    def get_texture_maps(self):
+    def get_texture_maps(self, preset=None):
         #let's build a list that assemble all the texture set and their stack 
         textureData = {}
 
@@ -218,7 +252,13 @@ class TextureExportUI(QDialog):
             stacks = texture_set.all_stacks()
             allStacks = []
             for stack in stacks :
-                dictChannels = stack.all_channels()
+                if not preset:
+                    dictChannels = stack.all_channels()
+                else:
+                    try:
+                        dictChannels = preset.list_output_maps(stack)
+                    except :
+                        dictChannels = preset.list_output_maps()              
                 for channelType in dictChannels:
                     allStacks.append(str(channelType)[12:])
 

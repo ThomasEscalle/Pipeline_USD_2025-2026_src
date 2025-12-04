@@ -476,7 +476,9 @@ class Prism_SubstancePainter_Functions(object):
         #set setting before creating a project
         Settings = substance_painter.project.Settings(
             import_cameras=False,
-            default_texture_resolution = 4096
+            default_texture_resolution = 4096,
+            normal_map_format = substance_painter.project.NormalMapFormat(0),
+            project_workflow  = substance_painter.project.ProjectWorkflow(2)
         )
         #copy the given file into a temp folder before importing
         tempFolder = os.path.join(os.path.dirname(__file__), "importTemp")
