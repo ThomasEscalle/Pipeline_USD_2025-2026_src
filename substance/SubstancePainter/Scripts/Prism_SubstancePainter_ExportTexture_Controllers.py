@@ -258,7 +258,7 @@ class TextureExportController(TextureExportUI):
                 # Each map has its own rootPath and parameters
                 export_parameters.append(
                     {
-                        "fileName" : f"{asset}_{product}_{material_name}_{map_name}(_$colorSpace)(.$udim)",
+                        "fileName" : f"{asset}_{product}_{material_name}_{map_name}_acescg(.$udim)",
                         "channels": [
                             {
                             "destChannel": "R",
@@ -288,7 +288,7 @@ class TextureExportController(TextureExportUI):
                         }
                     }
                 )
-                outputMaps.append(f"{asset}_{product}_{material_name}_{map_name}(_$colorSpace)(.$udim)")
+                outputMaps.append(f"{asset}_{product}_{material_name}_{map_name}_acescg(.$udim)")
 
             export_list["filter"] = {"outputMaps": outputMaps}
             export_lists.append(export_list)
