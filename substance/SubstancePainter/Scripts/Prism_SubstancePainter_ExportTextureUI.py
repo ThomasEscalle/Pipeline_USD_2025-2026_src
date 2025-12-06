@@ -67,10 +67,13 @@ class TextureExportUI(QDialog):
             productPath = os.sep.join(productPath)
             with open(productPath, 'r') as f:
                 productData = json.load(f)
-            if productData["sourceScene"].endswith(".spp"):    
-                self.identifier_edit.addItem(product)
-            else:
-                print("Skipping product ", product, " as it is not a texturing product")
+            try:
+                if productData["sourceScene"].endswith(".spp"):    
+                    self.identifier_edit.addItem(product)
+                else:
+                    print("Skipping product ", product, " as it is not a texturing product")
+            except:
+                pass
 
         self.comment_edit = QLineEdit()
         self.use_next_version = QCheckBox("Version Up")
