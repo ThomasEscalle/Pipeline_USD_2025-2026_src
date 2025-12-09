@@ -206,7 +206,7 @@ class TextureExportUI(QDialog):
                 map_item.setCheckState(0, Qt.Checked)
 
                 format_combo = QComboBox()
-                format_combo.addItems(["png", "jpg", "tiff", "exr"])
+                format_combo.addItems(["png", "jpg", "tif", "exr"])
                 if preset:
                     #set the format according to the preset
                     format_combo.setCurrentText(map_name["parameters"]["fileFormat"])
