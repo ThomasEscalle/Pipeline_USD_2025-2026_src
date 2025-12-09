@@ -254,7 +254,8 @@ class TextureExportController(TextureExportUI):
                 res = list(map(int,res))
 
                 srcMapType = "documentMap"
-
+                if "diffuse" in map_name.lower():
+                    map_name = "baseColor"
                 # Each map has its own rootPath and parameters
                 export_parameters.append(
                     {
@@ -264,19 +265,22 @@ class TextureExportController(TextureExportUI):
                             "destChannel": "R",
                             "srcChannel": "R",
                             "srcMapType": srcMapType,
-                            "srcMapName": map_name
+                            "srcMapName": map_name,
+                            'srcPath': ''
                         },
                         {
                             "destChannel": "G",
                             "srcChannel": "G",
                             "srcMapType": srcMapType,
-                            "srcMapName": map_name
+                            "srcMapName": map_name,
+                            'srcPath': ''
                         },
                         {
                             "destChannel": "B",
                             "srcChannel": "B",
                             "srcMapType": srcMapType,
-                            "srcMapName": map_name
+                            "srcMapName": map_name,
+                            'srcPath': ''
                         }
                         ],
                         "parameters": {

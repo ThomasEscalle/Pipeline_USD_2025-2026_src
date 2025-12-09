@@ -184,6 +184,7 @@ class TextureExportUI(QDialog):
 
     def populate_texture_tree(self, preset=None):
         texture_data = self.get_texture_maps(preset)
+        print(texture_data)
 
         for material_name, maps in texture_data.items():
             material_item = QTreeWidgetItem([material_name, "", ""])
@@ -220,9 +221,19 @@ class TextureExportUI(QDialog):
                     else:
                         bit_combo.setCurrentText(map_name["parameters"]["bitDepth"] + " bit")
 
+                #add a hidden comboBox to store the srcMapType if it's a preset
+                srcMapType_combo = QComboBox()
+                srcMapType_combo.addItems(["documentMap", "virtualMap", "meshMap", "defaultMap"])
+                if preset:
+                    srcMapType_combo.setCurrentText(map_name["baseColor"][0]["srcMapType"])
+                else:
+                    srcMapType_combo.setCurrentText("documentMap")
+                srcMapType_combo.setVisible(False)
+
                 material_item.addChild(map_item)
                 self.texture_tree.setItemWidget(map_item, 1, format_combo)
                 self.texture_tree.setItemWidget(map_item, 2, bit_combo)
+                self.texture_tree.setItemWidget(map_item, 3, srcMapType_combo)
 
 
     def on_item_changed(self, item: QTreeWidgetItem, column: int):
