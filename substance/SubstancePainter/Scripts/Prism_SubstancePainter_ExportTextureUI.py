@@ -67,14 +67,8 @@ class TextureExportUI(QDialog):
             productPath = os.sep.join(productPath)
             with open(productPath, 'r') as f:
                 productData = json.load(f)
-            try:
-                if productData["sourceScene"].endswith(".spp"):    
-                    self.identifier_edit.addItem(product)
-                else:
-                    print("Skipping product ", product, " as it is not a texturing product")
-            except:
-                pass
-
+            self.identifier_edit.addItem(product)
+            
         self.comment_edit = QLineEdit()
         self.use_next_version = QCheckBox("Version Up")
         self.version_comboBox = QComboBox()
@@ -206,7 +200,7 @@ class TextureExportUI(QDialog):
                 map_item.setCheckState(0, Qt.Checked)
 
                 format_combo = QComboBox()
-                format_combo.addItems(["png", "jpg", "tif", "exr"])
+                format_combo.addItems(["png", "jpg", "tiff", "exr"])
                 if preset:
                     #set the format according to the preset
                     format_combo.setCurrentText(map_name["parameters"]["fileFormat"])

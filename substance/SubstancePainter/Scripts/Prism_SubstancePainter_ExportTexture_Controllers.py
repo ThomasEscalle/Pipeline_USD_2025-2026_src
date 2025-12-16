@@ -128,9 +128,6 @@ class TextureExportController(TextureExportUI):
         exportResultState = substance_painter.export.export_project_textures(exportConfig)
         exportResult = substance_painter.export.list_project_textures(exportConfig)
 
-        #move the texture to the final location
-        for file in os.listdir(tempPath):
-            shutil.move(os.path.join(tempPath, file), os.path.join(exportPath, file))
 
         #customise the data to have match product's data
         productContext = context
@@ -172,6 +169,11 @@ class TextureExportController(TextureExportUI):
             for file in os.listdir(masterPath):
                 shutil.move(os.path.join(masterPath, file), os.path.join(productPath, originalMasterDataVersion, file))
         
+        #move the texture to the final location
+        for file in os.listdir(tempPath):
+            shutil.move(os.path.join(tempPath, file), os.path.join(exportPath, file))
+
+            
         #Update the master version
         self.updateMasterVersion(path=exportPathFile, data=productContext)
 
@@ -348,7 +350,7 @@ class TextureExportController(TextureExportUI):
             msg = "Failed to generate masterpath. Please contact the support."
             self.core.popup(msg)
             return None
-        result = self.core.products.deleteMasterVersion(masterPath, "Failed to update master version...")
+        #result = self.core.products.deleteMasterVersion(masterPath, "Failed to update master version...")
 
         if not os.path.exists(masterPath):
             os.makedirs(os.path.dirname(masterPath), exist_ok=True)
