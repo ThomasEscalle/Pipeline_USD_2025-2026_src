@@ -67,9 +67,9 @@ class TextureExportUI(QDialog):
             productPath[-1] = product
             productPath.append(os.sep + "master" + os.sep + "versioninfo.json")
             productPath = os.sep.join(productPath)
-            with open(productPath, 'r') as f:
-                productData = json.load(f)
             try:
+                with open(productPath, 'r') as f:
+                    productData = json.load(f)
                 if productData["sourceScene"].endswith(".spp"):    
                     self.identifier_edit.addItem(product)
             except:

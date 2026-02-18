@@ -14,6 +14,7 @@ import os
 import logging
 import platform
 import shutil
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,7 @@ class TextureExportController(TextureExportUI):
         self.updateMasterVersion(path=exportPathFile, data=productContext)
 
         #remove file of the version folder that is currently in master to avoid double files
+
         if os.path.exists(masterDataPath):
             with open(masterDataPath, 'r') as file:
                 masterData = json.load(file)
@@ -298,7 +300,10 @@ class TextureExportController(TextureExportUI):
         result = self.core.products.deleteMasterVersion(masterPath, "Failed to update master version...")
 
         if not os.path.exists(masterPath):
-            os.makedirs(os.path.dirname(masterPath), exist_ok=True)
+            try:
+                os.makedirs(os.path.dirname(masterPath), exist_ok=True)
+            except Exception as e:
+                print("Error creating directories: ", e)
         masterDrive = os.path.splitdrive(masterPath)[0]
         drive = os.path.splitdrive(path)[0]
         seqFiles = self.core.detectFileSequence(path)
